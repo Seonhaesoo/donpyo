@@ -1,0 +1,115 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=Noto+Sans+KR:wght@400;500;700&amp;display=swap">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #FBF8F1; font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; color: #17211C; -webkit-font-smoothing: antialiased; word-break: keep-all; }
+    a { color: #1E5C46; text-decoration: none; }
+    a:hover { color: #143F30; }
+  </style>
+</helmet>
+<div style="width: 390px; min-height: 1640px; background: #FBF8F1; display: flex; flex-direction: column;">
+
+  <div style="display: flex; align-items: center; justify-content: space-between; padding: 18px 20px 12px;">
+    <a href="#" style="display: flex; align-items: center; gap: 8px;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="4" stroke="#1E5C46" stroke-width="1.6"></rect><path d="M7 9h10M7 12.5h10M7 16h6" stroke="#1E5C46" stroke-width="1.6" stroke-linecap="round"></path></svg>
+      <span style="font-family: 'Gowun Batang', serif; font-size: 22px; font-weight: 700; color: #1E5C46;">돈표</span>
+    </a>
+    <div style="display: flex; align-items: center; gap: 2px;">
+      <span style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;"><svg width="21" height="21" viewBox="0 0 22 22" fill="none" aria-hidden="true"><circle cx="9.5" cy="9.5" r="6" stroke="#17211C" stroke-width="1.6"></circle><path d="M14 14l5 5" stroke="#17211C" stroke-width="1.6" stroke-linecap="round"></path></svg></span>
+      <span style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true"><path d="M3 6.5h16M3 11h16M3 15.5h10" stroke="#17211C" stroke-width="1.6" stroke-linecap="round"></path></svg></span>
+    </div>
+  </div>
+
+  <div style="padding: 14px 20px 0; display: flex; flex-direction: column; gap: 10px;">
+    <div style="display: flex; gap: 6px; font-size: 12px; color: #8A948E;"><a href="#" style="color: #8A948E;">대출 상환</a><span>›</span><a href="#" style="color: #8A948E;">2억원</a></div>
+    <h1 style="margin: 0; font-family: 'Gowun Batang', serif; font-size: 27px; line-height: 1.35; font-weight: 700; color: #17211C;">대출 2억원 30년 상환</h1>
+    <div style="font-size: 12.5px; color: #5F6B64;">연 4.5% · 원리금균등 · 거치 없음</div>
+  </div>
+
+  <div style="margin: 16px 20px 0; background: #1E5C46; color: #FBF8F1; border-radius: 16px; padding: 20px 20px 18px; display: flex; flex-direction: column; gap: 6px;">
+    <div style="font-size: 12.5px; font-weight: 700; letter-spacing: 0.08em; color: #BFD9CD;">매달 갚는 돈</div>
+    <div style="display: flex; align-items: baseline; gap: 4px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 40px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; color: #FBF8F1;">1,013,370</span><span style="font-size: 18px; font-weight: 500; color: #FBF8F1;">원</span></div>
+    <div style="font-size: 13px; line-height: 1.6; color: #D5E6DD;">360회 · 총 이자 164,813,200원 · 총 상환 364,813,200원</div>
+    <div style="margin-top: 8px; height: 6px; border-radius: 3px; background: rgba(251, 248, 241, 0.18); overflow: hidden; display: flex;"><div style="width: 54.8%; height: 100%; background: #E8C979;"></div><div style="width: 45.2%; height: 100%; background: #7FB39A;"></div></div>
+    <div style="display: flex; justify-content: space-between; font-size: 11.5px; color: #BFD9CD;"><span>원금 54.8%</span><span>이자 45.2%</span></div>
+  </div>
+
+  <div style="margin: 16px 20px 0; display: flex; gap: 3px; background: #FFFFFF; border: 1px solid #E3DCCB; border-radius: 10px; padding: 3px;">
+    <span style="flex: 1; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: #1E5C46; color: #FBF8F1; font-size: 13px; font-weight: 700;">원리금균등</span>
+    <span style="flex: 1; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 8px; color: #5F6B64; font-size: 13px;">원금균등</span>
+    <span style="flex: 1; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 8px; color: #5F6B64; font-size: 13px;">만기일시</span>
+  </div>
+
+  <div style="margin: 12px 20px 0; background: #FFFFFF; border: 1px solid #E3DCCB; border-radius: 14px; padding: 6px 18px;">
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px dashed #E3DCCB;"><span style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 14px; font-weight: 700; color: #1E5C46;">원리금균등</span><span style="font-size: 11.5px; color: #8A948E;">매달 같은 금액</span></span><span style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 14.5px; font-weight: 600; color: #1E5C46;">1,013,370</span><span style="font-size: 11px; color: #8A948E;">총 이자 164,813,200</span></span></div>
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px dashed #E3DCCB;"><span style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 14px; font-weight: 500;">원금균등</span><span style="font-size: 11.5px; color: #8A948E;">첫 달 많고 점점 줄어듦</span></span><span style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 14.5px; font-weight: 500;">1,305,556 → 557,639</span><span style="font-size: 11px; color: #8A948E;">총 이자 135,375,000</span></span></div>
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0;"><span style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 14px; font-weight: 500;">만기일시</span><span style="font-size: 11.5px; color: #8A948E;">이자만 내다 만기에 원금</span></span><span style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 14.5px; font-weight: 500;">750,000</span><span style="font-size: 11px; color: #8A948E;">총 이자 270,000,000</span></span></div>
+  </div>
+
+  <div style="padding: 24px 20px 0; display: flex; flex-direction: column; gap: 10px;">
+    <div style="display: flex; align-items: baseline; justify-content: space-between;">
+      <span style="font-family: 'Gowun Batang', serif; font-size: 16px; font-weight: 700;">상환 스케줄</span>
+      <a href="#" style="font-size: 12px; color: #1E5C46;">360회 전체 보기</a>
+    </div>
+    <div style="background: #FFFFFF; border: 1px solid #E3DCCB; border-radius: 12px; padding: 4px 14px 2px; display: flex; flex-direction: column;">
+      <div style="display: grid; grid-template-columns: 40px 1fr 1fr 1.3fr; gap: 6px; padding: 8px 0 6px; font-size: 11px; color: #8A948E; border-bottom: 1px solid #E3DCCB;"><span>회차</span><span style="text-align: right;">원금</span><span style="text-align: right;">이자</span><span style="text-align: right;">잔액</span></div>
+      <div style="display: grid; grid-template-columns: 40px 1fr 1fr 1.3fr; gap: 6px; padding: 9px 0; font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; font-variant-numeric: tabular-nums; border-bottom: 1px dashed #E3DCCB;"><span style="color: #8A948E;">1</span><span style="text-align: right;">263,370</span><span style="text-align: right; color: #5F6B64;">750,000</span><span style="text-align: right;">199,736,630</span></div>
+      <div style="display: grid; grid-template-columns: 40px 1fr 1fr 1.3fr; gap: 6px; padding: 9px 0; font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; font-variant-numeric: tabular-nums; border-bottom: 1px dashed #E3DCCB;"><span style="color: #8A948E;">2</span><span style="text-align: right;">264,358</span><span style="text-align: right; color: #5F6B64;">749,012</span><span style="text-align: right;">199,472,272</span></div>
+      <div style="display: grid; grid-template-columns: 40px 1fr 1fr 1.3fr; gap: 6px; padding: 9px 0; font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; font-variant-numeric: tabular-nums; border-bottom: 1px dashed #E3DCCB;"><span style="color: #8A948E;">3</span><span style="text-align: right;">265,349</span><span style="text-align: right; color: #5F6B64;">748,021</span><span style="text-align: right;">199,206,923</span></div>
+      <div style="display: grid; grid-template-columns: 40px 1fr 1fr 1.3fr; gap: 6px; padding: 9px 0; font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; font-variant-numeric: tabular-nums; border-bottom: 1px dashed #E3DCCB;"><span style="color: #8A948E;">4</span><span style="text-align: right;">266,344</span><span style="text-align: right; color: #5F6B64;">747,026</span><span style="text-align: right;">198,940,579</span></div>
+      <div style="display: grid; grid-template-columns: 40px 1fr 1fr 1.3fr; gap: 6px; padding: 9px 0; font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; font-variant-numeric: tabular-nums; border-bottom: 1px dashed #E3DCCB;"><span style="color: #8A948E;">5</span><span style="text-align: right;">267,343</span><span style="text-align: right; color: #5F6B64;">746,027</span><span style="text-align: right;">198,673,236</span></div>
+      <div style="display: grid; grid-template-columns: 40px 1fr 1fr 1.3fr; gap: 6px; padding: 9px 0; font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; font-variant-numeric: tabular-nums; border-bottom: 1px dashed #E3DCCB;"><span style="color: #8A948E;">6</span><span style="text-align: right;">268,345</span><span style="text-align: right; color: #5F6B64;">745,025</span><span style="text-align: right;">198,404,891</span></div>
+      <div style="padding: 6px 0; text-align: center; font-size: 12px; color: #B0A995; letter-spacing: 0.3em;">···</div>
+      <div style="display: grid; grid-template-columns: 40px 1fr 1fr 1.3fr; gap: 6px; padding: 9px 0 10px; font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; font-variant-numeric: tabular-nums; border-top: 1px dashed #E3DCCB;"><span style="color: #8A948E;">360</span><span style="text-align: right;">1,009,584</span><span style="text-align: right; color: #5F6B64;">3,786</span><span style="text-align: right;">0</span></div>
+    </div>
+  </div>
+
+  <div style="padding: 24px 20px 0; display: flex; flex-direction: column; gap: 10px;">
+    <div style="font-family: 'Gowun Batang', serif; font-size: 16px; font-weight: 700;">금리가 바뀌면</div>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px;">
+      <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 6px; border: 1px solid #E3DCCB; border-radius: 10px; background: #FFFFFF;"><span style="font-size: 12px; color: #5F6B64;">3.5%</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; font-weight: 600; color: #17211C;">898,090</span></a>
+      <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 6px; border: 1px solid #E3DCCB; border-radius: 10px; background: #FFFFFF;"><span style="font-size: 12px; color: #5F6B64;">4.0%</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; font-weight: 600; color: #17211C;">954,830</span></a>
+      <span style="display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 6px; border: 1.5px solid #1E5C46; border-radius: 10px; background: #EEF5F1;"><span style="font-size: 12px; color: #1E5C46; font-weight: 700;">4.5%</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; font-weight: 600; color: #1E5C46;">1,013,370</span></span>
+      <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 6px; border: 1px solid #E3DCCB; border-radius: 10px; background: #FFFFFF;"><span style="font-size: 12px; color: #5F6B64;">5.0%</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; font-weight: 600; color: #17211C;">1,073,640</span></a>
+      <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 6px; border: 1px solid #E3DCCB; border-radius: 10px; background: #FFFFFF;"><span style="font-size: 12px; color: #5F6B64;">5.5%</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; font-weight: 600; color: #17211C;">1,135,580</span></a>
+      <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 6px; border: 1px solid #E3DCCB; border-radius: 10px; background: #FFFFFF;"><span style="font-size: 12px; color: #5F6B64;">6.0%</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; font-weight: 600; color: #17211C;">1,199,100</span></a>
+    </div>
+  </div>
+
+  <div style="padding: 20px 20px 0; display: flex; flex-direction: column; gap: 10px;">
+    <div style="font-family: 'Gowun Batang', serif; font-size: 16px; font-weight: 700;">기간이 바뀌면</div>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px;">
+      <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 6px; border: 1px solid #E3DCCB; border-radius: 10px; background: #FFFFFF;"><span style="font-size: 12px; color: #5F6B64;">10년</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; font-weight: 600; color: #17211C;">2,072,800</span></a>
+      <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 6px; border: 1px solid #E3DCCB; border-radius: 10px; background: #FFFFFF;"><span style="font-size: 12px; color: #5F6B64;">20년</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; font-weight: 600; color: #17211C;">1,265,420</span></a>
+      <span style="display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 6px; border: 1.5px solid #1E5C46; border-radius: 10px; background: #EEF5F1;"><span style="font-size: 12px; color: #1E5C46; font-weight: 700;">30년</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; font-weight: 600; color: #1E5C46;">1,013,370</span></span>
+    </div>
+  </div>
+
+  <div style="margin: 24px 20px 0; height: 100px; border: 1px dashed #D5CDB8; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; color: #B0A995; letter-spacing: 0.08em;">광고 영역 · 반응형</div>
+
+  <div style="padding: 24px 20px 0; display: flex; flex-direction: column; gap: 10px;">
+    <div style="font-family: 'Gowun Batang', serif; font-size: 16px; font-weight: 700;">이어서 계산하기</div>
+    <div style="background: #FFFFFF; border: 1px solid #E3DCCB; border-radius: 12px; padding: 2px 16px;">
+      <a href="#" style="display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 54px; border-bottom: 1px dashed #E3DCCB;"><span style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 14px; font-weight: 500; color: #17211C;">3.5%로 갈아타면</span><span style="font-size: 11.5px; color: #8A948E;">매달 115,280원, 30년이면 41,500,800원 절약</span></span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5L10.5 8 6 12.5" stroke="#8A948E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></a>
+      <a href="#" style="display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 54px; border-bottom: 1px dashed #E3DCCB;"><span style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 14px; font-weight: 500; color: #17211C;">월 100만원으로 받을 수 있는 대출</span><span style="font-size: 11.5px; color: #8A948E;">4.5%·30년이면 1억 9,736만원</span></span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5L10.5 8 6 12.5" stroke="#8A948E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></a>
+      <a href="#" style="display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 54px;"><span style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 14px; font-weight: 500; color: #17211C;">연봉 4,200만원이면 감당될까</span><span style="font-size: 11.5px; color: #8A948E;">실수령액 3,041,200원 중 33%</span></span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5L10.5 8 6 12.5" stroke="#8A948E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></a>
+    </div>
+  </div>
+
+  <div style="margin-top: auto; padding: 30px 20px 28px; display: flex; flex-direction: column; gap: 8px;">
+    <div style="font-size: 11.5px; line-height: 1.65; color: #8A948E;">고정금리·매달 말 상환 기준의 계산값입니다. 실제 대출은 금리 변동, 중도상환수수료, 은행별 계산 방식에 따라 달라집니다.</div>
+    <div style="display: flex; gap: 14px; font-size: 12px;"><a href="#" style="color: #5F6B64;">소개</a><a href="#" style="color: #5F6B64;">이용약관</a><a href="#" style="color: #5F6B64;">개인정보</a></div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

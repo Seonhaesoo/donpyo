@@ -1,0 +1,90 @@
+{
+  "artboards": [
+    {
+      "file": "Main.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 1280,
+      "title": "홈",
+      "page": "page-1"
+    },
+    {
+      "file": "Salary.dc.html",
+      "x": 480,
+      "y": 0,
+      "w": 390,
+      "h": 1570,
+      "title": "연봉 실수령액 페이지",
+      "page": "page-1"
+    },
+    {
+      "file": "Loan.dc.html",
+      "x": 960,
+      "y": 0,
+      "w": 390,
+      "h": 1830,
+      "title": "대출 상환 페이지",
+      "page": "page-1"
+    },
+    {
+      "file": "SalaryDesktop.dc.html",
+      "x": 0,
+      "y": 1980,
+      "w": 1440,
+      "h": 1140,
+      "title": "연봉 페이지 — 데스크톱",
+      "page": "page-1"
+    },
+    {
+      "file": "DirectionB.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 760,
+      "title": "방향 B — 계산기 미니멀",
+      "page": "page-2"
+    },
+    {
+      "file": "DirectionC.dc.html",
+      "x": 480,
+      "y": 0,
+      "w": 390,
+      "h": 760,
+      "title": "방향 C — 경제 신문면",
+      "page": "page-2"
+    }
+  ],
+  "annotations": [
+    {
+      "id": "brief-note",
+      "x": -330,
+      "y": 0,
+      "w": 280,
+      "page": "page-1",
+      "text": "채택안 A — 장부(帳簿)\n녹색 먹 + 크림 종이 + 금색 강조, 숫자는 고정폭 활자.\n\n브랜드명 '돈표'는 가칭(도메인 후보 1순위).\n금액은 2026년 1월 요율 기준 예시값이라 실제 엔진 계산 후 바뀝니다.\n\n화면 흐름: 검색 유입 → 연봉/대출 페이지 → 이웃 값·이어서 계산 링크로 체류"
+    },
+    {
+      "id": "direction-note",
+      "x": 960,
+      "y": 0,
+      "w": 280,
+      "page": "page-2",
+      "text": "방향 탐색 기록\nA(장부)를 메인 시안으로 채택했습니다.\nB(계산기 미니멀)·C(경제 신문면)는 비교용 저해상 스케치입니다."
+    }
+  ],
+  "pages": [
+    {
+      "id": "page-1",
+      "name": "메인 시안"
+    },
+    {
+      "id": "page-2",
+      "name": "다른 방향 탐색"
+    }
+  ],
+  "launch": {
+    "view": "canvas",
+    "page": "page-1"
+  }
+}

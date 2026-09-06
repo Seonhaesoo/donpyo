@@ -1,0 +1,104 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=Noto+Sans+KR:wght@400;500;700&amp;display=swap">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #FBF8F1; font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; color: #17211C; -webkit-font-smoothing: antialiased; word-break: keep-all; }
+    a { color: #1E5C46; text-decoration: none; }
+    a:hover { color: #143F30; }
+  </style>
+</helmet>
+<div style="width: 390px; min-height: 1200px; background: #FBF8F1; display: flex; flex-direction: column;">
+
+  <div style="display: flex; align-items: center; justify-content: space-between; padding: 18px 20px 12px;">
+    <a href="#" style="display: flex; align-items: center; gap: 8px;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="4" stroke="#1E5C46" stroke-width="1.6"></rect><path d="M7 9h10M7 12.5h10M7 16h6" stroke="#1E5C46" stroke-width="1.6" stroke-linecap="round"></path></svg>
+      <span style="font-family: 'Gowun Batang', serif; font-size: 22px; font-weight: 700; color: #1E5C46;">돈표</span>
+    </a>
+    <div style="display: flex; align-items: center; gap: 6px;">
+      <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.04em; color: #B8862B; border: 1px solid #E6D3AE; border-radius: 999px; padding: 4px 9px; background: #FFFBF0;">2026 요율</span>
+      <span style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true"><path d="M3 6.5h16M3 11h16M3 15.5h10" stroke="#17211C" stroke-width="1.6" stroke-linecap="round"></path></svg></span>
+    </div>
+  </div>
+
+  <div style="padding: 20px 20px 4px; display: flex; flex-direction: column; gap: 12px;">
+    <div style="font-size: 12px; font-weight: 700; color: #1E5C46; letter-spacing: 0.14em;">돈 계산 사전</div>
+    <h1 style="margin: 0; font-family: 'Gowun Batang', serif; font-size: 30px; line-height: 1.35; font-weight: 700; color: #17211C;">연봉 4,200만원이면<br>손에 얼마가 남을까</h1>
+    <p style="margin: 0; font-size: 14.5px; line-height: 1.7; color: #5F6B64;">연봉·대출·적금·퇴직금·주휴수당을 금액별로 미리 계산해 표로 묶어 두었습니다. 숫자만 고르면 바로 나옵니다.</p>
+  </div>
+
+  <div style="margin: 18px 20px 0; background: #FFFFFF; border: 1px solid #E3DCCB; border-radius: 14px; padding: 18px 18px 16px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 8px 22px rgba(23, 33, 28, 0.05);">
+    <div style="font-size: 12.5px; font-weight: 700; color: #5F6B64;">연봉으로 바로 찾기</div>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <div style="flex: 1; display: flex; align-items: baseline; justify-content: space-between; border-bottom: 2px solid #1E5C46; padding: 6px 4px 8px;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 26px; font-weight: 600; color: #17211C;">4,200</span>
+        <span style="font-size: 14px; color: #8A948E;">만원</span>
+      </div>
+      <a href="#" style="height: 48px; padding: 0 18px; display: flex; align-items: center; background: #1E5C46; color: #FBF8F1; border-radius: 10px; font-size: 14.5px; font-weight: 700;">실수령액 보기</a>
+    </div>
+    <div style="display: flex; gap: 16px; font-size: 12.5px;">
+      <a href="#" style="color: #1E5C46; font-weight: 500;">월급으로 찾기</a>
+      <a href="#" style="color: #1E5C46; font-weight: 500;">시급으로 찾기</a>
+    </div>
+  </div>
+
+  <div style="padding: 28px 20px 0; display: flex; flex-direction: column; gap: 12px;">
+    <div style="font-family: 'Gowun Batang', serif; font-size: 18px; font-weight: 700;">계산 사전</div>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;">
+      <a href="#" style="display: flex; flex-direction: column; gap: 6px; padding: 14px 14px 13px; background: #FFFFFF; border: 1px solid #E3DCCB; border-radius: 12px; min-height: 84px;">
+        <span style="font-size: 14.5px; font-weight: 700; color: #17211C;">연봉 실수령액</span>
+        <span style="font-size: 12px; line-height: 1.55; color: #5F6B64;">4,200만원 → 월 <span style="font-family: 'IBM Plex Mono', monospace; font-weight: 600; color: #1E5C46;">3,041,200</span>원</span>
+      </a>
+      <a href="#" style="display: flex; flex-direction: column; gap: 6px; padding: 14px 14px 13px; background: #FFFFFF; border: 1px solid #E3DCCB; border-radius: 12px; min-height: 84px;">
+        <span style="font-size: 14.5px; font-weight: 700; color: #17211C;">대출 상환금</span>
+        <span style="font-size: 12px; line-height: 1.55; color: #5F6B64;">2억·30년·4.5% → 월 <span style="font-family: 'IBM Plex Mono', monospace; font-weight: 600; color: #1E5C46;">1,013,370</span>원</span>
+      </a>
+      <a href="#" style="display: flex; flex-direction: column; gap: 6px; padding: 14px 14px 13px; background: #FFFFFF; border: 1px solid #E3DCCB; border-radius: 12px; min-height: 84px;">
+        <span style="font-size: 14.5px; font-weight: 700; color: #17211C;">적금 만기</span>
+        <span style="font-size: 12px; line-height: 1.55; color: #5F6B64;">월 50만·3년·3.5% → 이자 <span style="font-family: 'IBM Plex Mono', monospace; font-weight: 600; color: #1E5C46;">971,250</span>원</span>
+      </a>
+      <a href="#" style="display: flex; flex-direction: column; gap: 6px; padding: 14px 14px 13px; background: #FFFFFF; border: 1px solid #E3DCCB; border-radius: 12px; min-height: 84px;">
+        <span style="font-size: 14.5px; font-weight: 700; color: #17211C;">퇴직금</span>
+        <span style="font-size: 12px; line-height: 1.55; color: #5F6B64;">월급 350만·5년 → <span style="font-family: 'IBM Plex Mono', monospace; font-weight: 600; color: #1E5C46;">17,500,000</span>원</span>
+      </a>
+      <a href="#" style="display: flex; flex-direction: column; gap: 6px; padding: 14px 14px 13px; background: #FFFFFF; border: 1px solid #E3DCCB; border-radius: 12px; min-height: 84px;">
+        <span style="font-size: 14.5px; font-weight: 700; color: #17211C;">주휴수당</span>
+        <span style="font-size: 12px; line-height: 1.55; color: #5F6B64;">시급 10,320원·주 40시간 → <span style="font-family: 'IBM Plex Mono', monospace; font-weight: 600; color: #1E5C46;">82,560</span>원</span>
+      </a>
+      <a href="#" style="display: flex; flex-direction: column; gap: 6px; padding: 14px 14px 13px; background: #FFFFFF; border: 1px solid #E3DCCB; border-radius: 12px; min-height: 84px;">
+        <span style="font-size: 14.5px; font-weight: 700; color: #17211C;">전월세 전환</span>
+        <span style="font-size: 12px; line-height: 1.55; color: #5F6B64;">보증금 1억 → 월세 <span style="font-family: 'IBM Plex Mono', monospace; font-weight: 600; color: #1E5C46;">375,000</span>원</span>
+      </a>
+    </div>
+  </div>
+
+  <div style="padding: 28px 20px 0; display: flex; flex-direction: column; gap: 10px;">
+    <div style="display: flex; align-items: baseline; justify-content: space-between;">
+      <div style="font-family: 'Gowun Batang', serif; font-size: 18px; font-weight: 700;">많이 보는 연봉표</div>
+      <a href="#" style="font-size: 12.5px; color: #1E5C46;">전체 보기</a>
+    </div>
+    <div style="background: #FFFFFF; border: 1px solid #E3DCCB; border-radius: 12px; padding: 2px 16px;">
+      <a href="#" style="display: flex; align-items: center; justify-content: space-between; min-height: 48px; border-bottom: 1px dashed #E3DCCB;"><span style="font-size: 14px; color: #17211C;">연봉 3,000만원</span><span style="display: flex; align-items: baseline; gap: 4px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 14.5px; font-weight: 500; color: #17211C;">2,221,900</span><span style="font-size: 11.5px; color: #8A948E;">원/월</span></span></a>
+      <a href="#" style="display: flex; align-items: center; justify-content: space-between; min-height: 48px; border-bottom: 1px dashed #E3DCCB;"><span style="font-size: 14px; color: #17211C;">연봉 3,600만원</span><span style="display: flex; align-items: baseline; gap: 4px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 14.5px; font-weight: 500; color: #17211C;">2,626,700</span><span style="font-size: 11.5px; color: #8A948E;">원/월</span></span></a>
+      <a href="#" style="display: flex; align-items: center; justify-content: space-between; min-height: 48px; border-bottom: 1px dashed #E3DCCB;"><span style="font-size: 14px; color: #17211C;">연봉 4,200만원</span><span style="display: flex; align-items: baseline; gap: 4px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 14.5px; font-weight: 500; color: #17211C;">3,041,200</span><span style="font-size: 11.5px; color: #8A948E;">원/월</span></span></a>
+      <a href="#" style="display: flex; align-items: center; justify-content: space-between; min-height: 48px; border-bottom: 1px dashed #E3DCCB;"><span style="font-size: 14px; color: #17211C;">연봉 5,000만원</span><span style="display: flex; align-items: baseline; gap: 4px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 14.5px; font-weight: 500; color: #17211C;">3,568,600</span><span style="font-size: 11.5px; color: #8A948E;">원/월</span></span></a>
+      <a href="#" style="display: flex; align-items: center; justify-content: space-between; min-height: 48px;"><span style="font-size: 14px; color: #17211C;">연봉 6,000만원</span><span style="display: flex; align-items: baseline; gap: 4px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 14.5px; font-weight: 500; color: #17211C;">4,194,000</span><span style="font-size: 11.5px; color: #8A948E;">원/월</span></span></a>
+    </div>
+  </div>
+
+  <div style="margin-top: auto; padding: 32px 20px 28px; display: flex; flex-direction: column; gap: 8px;">
+    <div style="display: flex; gap: 14px; font-size: 12px;"><a href="#" style="color: #5F6B64;">소개</a><a href="#" style="color: #5F6B64;">이용약관</a><a href="#" style="color: #5F6B64;">개인정보</a></div>
+    <div style="font-size: 11px; line-height: 1.6; color: #8A948E;">© 돈표 · 2026년 1월 요율 기준 · 계산 결과는 참고용이며 실제 명세와 다를 수 있습니다.</div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

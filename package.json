@@ -1,0 +1,12 @@
+{
+  "name": "donpyo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "돈표 — 연봉 실수령액·대출 상환·퇴직금·알바 월급을 금액별 표로 미리 계산한 돈 계산 사전",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "serve": "node server.js",
+    "test": "node tools/test.mjs"
+  }
+}

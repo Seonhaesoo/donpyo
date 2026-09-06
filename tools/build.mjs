@@ -13,6 +13,10 @@ import * as LB from '../engine/labor.mjs';
 import * as AG from '../engine/age.mjs';
 import { AGE_INCOME as AGE } from '../data/age-income.mjs';
 import { GUIDES } from '../data/guides.mjs';
+import { PRICES, PRICES_ASOF } from '../data/prices.mjs';
+import { HISTORY, CPI } from '../data/rates-history.mjs';
+import * as GO from '../engine/goal.mjs';
+import { makeBundle } from './bundle.mjs';
 import { num, won, manwon, short, pct, rate as fmtRate, rateSlug } from '../engine/fmt.mjs';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -82,6 +86,7 @@ ${o.body}
 </footer>
 </div>
 <script src="/js/app.js" defer></script>
+${(o.scripts || []).map((s) => `<script src="${s}" defer></script>`).join('\n')}
 </body>
 </html>`;
 }
@@ -99,6 +104,23 @@ const ad = () => `<div class="adslot" aria-hidden="true"></div>`;
 const lead = (s) => `<p class="lead">${s}</p>`;
 const gtitle = (g) => g.title.replace(/\$\{YEAR\}/g, YEAR);
 const guideUrl = (slug) => `/guide/${slug}/`;
+const liveSalary = (m) => `<div class="live" data-live="salary">
+<div class="live-head"><b>직접 조정</b><span>끌어서 바로 계산</span></div>
+<label><span>연봉 <output data-out="a"></output></span><input type="range" data-k="a" min="2000" max="30000" step="100" value="${m}"></label>
+<label><span>부양가족 <output data-out="d"></output></span><input type="range" data-k="d" min="1" max="6" step="1" value="1"></label>
+<label><span>비과세 식대 <output data-out="n"></output></span><input type="range" data-k="n" min="0" max="200000" step="200000" value="${NT}"></label>
+<div class="tiles"><div class="tile"><small>월 실수령</small><span class="num" data-out="net"></span></div><div class="tile"><small>4대보험</small><span class="num" data-out="ins"></span></div><div class="tile"><small>세금</small><span class="num" data-out="tax"></span></div></div>
+<div class="live-foot"><span>연 실수령 <b class="num" data-out="year"></b>원</span><a data-out="link" href="#"></a></div>
+</div>`;
+const liveLoan = (a, y, r) => `<div class="live" data-live="loan">
+<div class="live-head"><b>직접 조정</b><span>끌어서 바로 계산</span></div>
+<label><span>금액 <output data-out="p"></output></span><input type="range" data-k="p" min="1000" max="100000" step="1000" value="${a}"></label>
+<label><span>기간 <output data-out="y"></output></span><input type="range" data-k="y" min="1" max="40" step="1" value="${y}"></label>
+<label><span>금리 <output data-out="r"></output></span><input type="range" data-k="r" min="10" max="100" step="1" value="${Math.round(r * 1000)}"></label>
+<div class="tiles"><div class="tile"><small>월 상환액</small><span class="num" data-out="pay"></span></div><div class="tile"><small>총 이자</small><span class="num" data-out="interest"></span></div><div class="tile"><small>총 상환</small><span class="num" data-out="total"></span></div></div>
+<div class="live-foot"><span>원리금균등 · 거치 없음</span><a data-out="link" href="#"></a></div>
+</div>`;
+const hoursText = (h) => h < 1 ? `${Math.max(1, Math.round(h * 60))}분` : h < 8 ? `${(Math.round(h * 10) / 10).toString().replace(/\.0$/, '')}시간` : h < MONTH_HOURS ? `${(Math.round(h / 8 * 10) / 10).toString().replace(/\.0$/, '')}일` : h < MONTH_HOURS * 12 ? `${(Math.round(h / MONTH_HOURS * 10) / 10).toString().replace(/\.0$/, '')}개월` : `${(Math.round(h / MONTH_HOURS / 12 * 10) / 10).toString().replace(/\.0$/, '')}년`;
 const guideLinks = (slugs) => section('더 읽기', null, list(slugs.map((s) => GUIDES.find((g) => g.slug === s)).filter(Boolean).map((g) => ({ href: guideUrl(g.slug), title: gtitle(g), sub: '서재' }))));
 const table = (head, rows, opts = {}) => `<div class="tbl"><table><thead><tr>${head.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.map((r) => `<tr${r.cls ? ` class="${r.cls}"` : ''}>${r.cells.map((c, i) => `<td${i === 0 ? '' : ''}>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
 
@@ -188,6 +210,15 @@ ${payVariants(annual)}
 ${section('근로소득자 중 어디쯤', `국세청 ${RK.STAT.year}년 귀속 연말정산 통계(신고 ${short(RK.STAT.workers)}명 · 중위 ${manwon(RK.STAT.median)} · 평균 ${manwon(RK.STAT.mean)})에 맞춘 추정`, `<div class="tiles"><div class="tile"><small>근로소득자 중</small><span class="num">상위 ${rk.topPct}%</span></div><div class="tile"><small>중위 연봉</small>${n(RK.STAT.median)}</div><div class="tile"><small>평균 연봉</small>${n(RK.STAT.mean)}</div></div>` + list([{ href: '/rank/', title: '연봉 순위표', sub: '상위 1%·10%·30%의 연봉 경계와 계산 방법' }]))}
 ${section('내 나이대와 비교', `통계청 ${AGE.year}년 임금근로일자리 소득 — 월평균 보수(세전) 기준, 연봉 ÷ 12 = ${won(p.gross)}으로 비교`, table(['나이대', '평균 월소득', '나와 차이', '그 나이대에서 내 위치'], AGE.groups.filter((g) => !['10s', '70s'].includes(g.key)).map((g) => { const r = AG.ageRank(p.gross, g.key); const diff = p.gross - g.mean; return { cells: [g.label, num(g.mean), (diff >= 0 ? '+' : '−') + num(Math.abs(diff)), `상위 ${r.topPct}%`] }; })) + list([{ href: '/age/', title: '나이대별 평균 월급표', sub: `20대 ${manwon(AGE.groups[1].mean)} · 30대 ${manwon(AGE.groups[2].mean)} · 40대 ${manwon(AGE.groups[3].mean)} · 성별 평균과 소득 분포` }]))}
 ${section('이웃 연봉', null, chips(nb.map((v) => ({ label: short(v * 10000), value: netPay({ annual: v * 10000, nontax: NT }).net, href: salaryUrl(v), on: v === m }))))}
+${liveSalary(m)}
+${section('이 연봉으로 할 수 있는 것', null, (() => { const hn = p.net / MONTH_HOURS; const g30 = Math.round(p.net * 0.3); return `<div class="tiles"><div class="tile"><small>세후 시급</small>${n(Math.round(hn))}</div><div class="tile"><small>치킨 한 마리는</small><span class="num">${hoursText(22000 / hn)}</span></div><div class="tile"><small>실수령 30% 저축 → 1억까지</small><span class="num">${GO.fmtMonths(GO.monthsToGoal(100000000, g30, 0.03))}</span></div></div>`; })() + list([
+  { href: `/time/${m}/`, title: '내 시간으로 사는 물건', sub: `아메리카노부터 아파트까지, 세후 시급 ${won(Math.round(p.net / MONTH_HOURS))}으로 환산` },
+  { href: `/goal/10000/${nearest([30, 50, 70, 100, 150, 200, 300], Math.round(p.net * 0.3 / 100000)) * 10}/`, title: '1억 모으기 시계', sub: '저축액·금리별 도달 기간, 물가 반영' },
+  { href: `/negotiate/${m}/`, title: '연봉 협상 근거 만들기', sub: '상위 %, 나이대 평균, 물가·최저임금 인상률을 한 장으로' },
+  { href: `/tax-receipt/${m}/`, title: '내 세금 영수증', sub: '1년에 나와 회사가 내는 돈, 어디로 가나' },
+  { href: `/history/${m}/`, title: '2020년부터의 실수령 변화', sub: '같은 연봉이 요율 인상으로 얼마나 줄었나' },
+  { href: '/couple/', title: '둘이 합쳐 얼마까지 빌릴까', sub: '링크 하나로 상대 연봉 받아 합산 한도 계산' },
+]))}
 ${section('연봉이 오르면 손에 오는 돈', '인상액의 상당 부분은 4대보험과 세금으로 빠집니다', table(['인상', '월 실수령', '월 증가', '인상액 대비'], raises))}
 ${section('인상률로 보면', '연봉 협상에서 %로 이야기할 때 — 새 연봉은 만원 단위로 반올림', table(['인상률', '새 연봉', '월 실수령', '월 증가'], [3, 5, 7, 10, 15, 20].map((r) => { const a2 = Math.round(annual * (1 + r / 100) / 10000) * 10000; const q = netPay({ annual: a2, nontax: NT }); return { cells: [`+${r}%`, num(a2), num(q.net), num(q.net - p.net)] }; })))}
 ${section('국민연금 인상 일정에 따른 변화', `연금개혁으로 근로자 부담률이 매년 0.5%p씩 올라 ${Math.max(...Object.keys(PENSION_SCHEDULE).map(Number))}년 6.5%가 됩니다. 다른 요율과 세금이 그대로라고 가정한 값입니다`, pensionSchedule(annual))}
@@ -202,7 +233,7 @@ ${section('이어서 계산하기', null, list([
 ]))}
 ${guideLinks(['net-pay-steps', 'withholding-table', 'dependents'])}
 <p class="note">국세청 근로소득 간이세액표(100% 기준)와 ${YEAR}년 1월 4대보험 요율로 계산했습니다. 회사의 비과세 항목·상여·연말정산에 따라 실제 급여명세서와 차이가 날 수 있습니다. <a href="/method/">계산 기준 보기</a></p>`;
-  write(url, shell({ url, title, desc, body, nav: 'salary' }));
+  write(url, shell({ url, title, desc, body, nav: 'salary', scripts: ['/js/engine.js', '/js/live.js'] }));
 }
 
 function salaryIndex() {
@@ -334,9 +365,10 @@ ${refi.length ? section('낮은 금리로 갈아타면', '같은 원금·기간,
 ${section('매달 더 갚으면', '원리금균등 상환액에 얹어 갚을 때 줄어드는 기간과 이자', table(['추가 상환', '총 기간', '단축', '절약 이자'], extra))}
 ${section('이 대출을 감당하려면', `DSR 40% 기준 — 월 상환액 ${won(s.monthly)}이 연소득의 40%를 넘지 않으려면`, tiles([{ label: '필요 연소득', value: needIncome }, { label: '월 상환액', value: s.monthly }, { label: `연봉 ${short(salaryNear * 10000)} 실수령 대비`, value: Math.round(s.monthly / netPay({ annual: salaryNear * 10000, nontax: NT }).net * 100) }]).replace(/<span class="num">(\d+)<\/span><\/div><\/div>$/, '<span class="num">$1%</span></div></div>') + list([{ href: salaryUrl(salaryNear), title: `연봉 ${manwon(salaryNear * 10000)} 실수령액`, sub: `월 ${won(netPay({ annual: salaryNear * 10000, nontax: NT }).net)}` }]))}
 ${section('금액이 바뀌면', `${y}년 · 연 ${fmtRate(r)}`, chips(neighbors(LOAN_AMOUNTS, a, 3).map((x) => ({ label: short(x * 10000), value: L.annuityPayment(x * 10000, r, months), href: loanUrl(x, y, r), on: x === a }))))}
+${liveLoan(a, y, r)}
 ${guideLinks(['loan-types', 'dsr'])}
 <p class="note">이자는 매달 남은 원금에 연이율의 12분의 1을 곱해 원 단위로 반올림했습니다. 실제 대출은 금리 변동, 거치기간, 중도상환수수료, 은행의 일할 계산 방식에 따라 달라집니다. <a href="/method/">계산 기준 보기</a></p>`;
-  write(url, shell({ url, title, desc, body, nav: 'loan' }));
+  write(url, shell({ url, title, desc, body, nav: 'loan', scripts: ['/js/engine.js', '/js/live.js'] }));
 }
 
 function loanAmountIndex(a) {
@@ -472,6 +504,7 @@ function home() {
   <p>연봉·월급·대출·퇴직금·알바 월급을 금액별로 미리 계산해 표로 묶어 두었습니다. 숫자만 고르면 바로 나옵니다.</p>
 </div>
 <form class="quick" data-quick="salary" data-step="100" data-min="2000" data-max="30000"><label for="q-home">연봉으로 바로 찾기</label><div class="quick-row"><div class="quick-in"><input id="q-home" type="text" inputmode="numeric" placeholder="4200"><span>만원</span></div><button class="btn" type="submit">실수령액 보기</button></div><div class="quick-links"><a href="/monthly/">월급으로 찾기</a><a href="/net/">실수령액으로 연봉 찾기</a><a href="/hourly/">시급으로 찾기</a></div></form>
+<a class="feature" href="/couple/"><span class="feature-mark">둘</span><span class="feature-text"><b>둘이 합쳐 얼마까지 빌릴 수 있을까</b><span>링크 하나 보내면 상대가 연봉만 넣고 끝 — 합산 대출 한도·전세 여력</span></span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5L10.5 8 6 12.5" stroke="#8A948E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></a>
 ${section('급여와 일', null, `<div class="dict">
 <a href="/salary/"><b>연봉 실수령액</b><span>4,200만원 → 월 <span class="num">${num(s42.net)}</span>원</span></a>
 <a href="/monthly/"><b>월급 실수령액</b><span>세전 350만원 → <span class="num">${num(netPay({ monthly: 3500000, nontax: NT }).net)}</span>원</span></a>
@@ -483,6 +516,11 @@ ${section('급여와 일', null, `<div class="dict">
 <a href="/hourly/"><b>알바 월급</b><span>시급 ${num(R0.minWage)}원·주 40시간 → 주휴 <span class="num">${num(R0.minWage * 8)}</span>원</span></a>
 <a href="/rank/"><b>연봉 순위</b><span>연봉 6,000만원은 근로소득자 상위 <span class="num">${RK.rank(60000000).topPct}</span>%</span></a>
 <a href="/age/"><b>나이대별 평균 월급</b><span>30대 <span class="num">${num(AGE.groups[2].mean)}</span>원 · 40대 <span class="num">${num(AGE.groups[3].mean)}</span>원</span></a>
+<a href="/time/"><b>내 시간으로 사는 물건</b><span>연봉 4,200만 세후 시급 <span class="num">${num(Math.round(s42.net / MONTH_HOURS))}</span>원 → 치킨 ${hoursText(22000 / (s42.net / MONTH_HOURS))}</span></a>
+<a href="/negotiate/"><b>연봉 협상 근거</b><span>상위 %·나이대 평균·물가·최저임금으로 <span class="num">한 장</span> 정리</span></a>
+<a href="/tax-receipt/"><b>내 세금 영수증</b><span>연봉 4,200만 → 1년 <span class="num">${num(s42.annualDeductions)}</span>원, 회사 부담까지 더 있음</span></a>
+<a href="/history/"><b>실수령 6년 변화</b><span>2020년 → 2026년, 같은 연봉의 실수령이 얼마나 줄었나</span></a>
+<a href="/goal/"><b>1억 모으기 시계</b><span>월 100만·연 3% → <span class="num">${GO.fmtMonths(GO.monthsToGoal(100000000, 1000000, 0.03))}</span></span></a>
 </div>`)}
 ${section('대출·저축·제도', null, `<div class="dict">
 <a href="/loan/"><b>대출 상환금</b><span>2억·30년·4.5% → 월 <span class="num">${num(L.annuityPayment(200000000, 0.045, 360))}</span>원</span></a>
@@ -1143,6 +1181,246 @@ ${section('퇴직·실업·알바', null, list(GUIDES.filter((g) => ['retire', '
   write('/guide/', shell({ url: '/guide/', title: '돈표 서재 — 실수령액·대출·퇴직금·실업급여 계산 규칙 설명', desc: `연봉 실수령액이 정해지는 순서, 간이세액표 읽는 법, 4대보험 요율, 대출 상환 방식과 DSR, 퇴직소득세, 실업급여, 주휴수당, 전월세전환율을 예시와 함께 설명한 글 ${GUIDES.length}편.`, body, nav: 'guide' }));
 }
 
+/* ---------- 커플 합산 대출 링크 ---------- */
+function couplePage() {
+  const url = '/couple/';
+  const body = `
+${crumb([['/', '홈'], [null, '둘이 합쳐 얼마까지']])}
+<h1 class="title">둘이 합쳐 얼마까지 빌릴 수 있을까</h1>
+<p class="meta">링크 하나로 상대 연봉을 받아 합산 DSR 한도·전세 여력을 계산 · 입력값은 링크 주소에만 담기고 서버로 가지 않습니다</p>
+<div id="cp-start">
+<form class="quick" id="cp-start-form"><label for="cp-a">내 연봉</label><div class="quick-row"><div class="quick-in"><input id="cp-a" type="text" inputmode="numeric" placeholder="4200"><span>만원</span></div><button class="btn" type="submit">링크 만들기</button></div><div class="quick-row" style="margin-top:4px"><div class="quick-in" style="border-bottom-color:var(--line)"><input id="cp-ad" type="text" inputmode="numeric" placeholder="0"><span>만원 · 이미 갚는 월 상환액(선택)</span></div></div></form>
+<div id="cp-link-box" hidden style="margin-top:14px">
+<p class="lead" id="cp-mine"></p>
+<div class="ledger" style="margin-top:12px"><div class="lg-head"><h2>상대에게 보낼 링크</h2><span>연봉만 넣으면 결과</span></div><input id="cp-link" class="copybox" readonly onclick="this.select()"><div class="btn-row"><button class="btn" type="button" id="cp-share">공유하기</button><button class="btn btn-share" type="button" id="cp-copy">링크 복사</button></div></div>
+</div>
+${section('어떻게 되나', null, `<div class="callout">① 내 연봉을 넣고 링크를 만듭니다. ② 링크를 받은 사람이 자기 연봉을 넣습니다. ③ 두 사람 연봉을 합친 DSR 40% 한도, 30년·4.5% 최대 대출, 스트레스 금리 적용 한도, 한도만큼 전세대출 시 월 이자가 나옵니다. 결과 링크를 다시 보내면 둘이 같은 화면을 봅니다.</div>`)}
+</div>
+<div id="cp-invite" hidden>
+<p class="lead">상대가 연봉 <b id="cp-invite-a"></b>을 넣고 링크를 보냈어요. 내 연봉을 넣으면 둘이 합쳐 얼마까지 빌릴 수 있는지 바로 나옵니다.</p>
+<form class="quick" id="cp-invite-form"><label for="cp-b">내 연봉</label><div class="quick-row"><div class="quick-in"><input id="cp-b" type="text" inputmode="numeric" placeholder="3800"><span>만원</span></div><button class="btn" type="submit">합산 한도 보기</button></div><div class="quick-row" style="margin-top:4px"><div class="quick-in" style="border-bottom-color:var(--line)"><input id="cp-bd" type="text" inputmode="numeric" placeholder="0"><span>만원 · 이미 갚는 월 상환액(선택)</span></div></div></form>
+<p class="note">입력한 연봉은 링크 주소에만 담기고 어디에도 저장되지 않습니다.</p>
+</div>
+<div id="cp-result" hidden>
+<div id="cp-result-body"></div>
+<div class="ledger" style="margin-top:16px"><div class="lg-head"><h2>이 결과를 상대에게 보내기</h2><span>둘이 같은 화면</span></div><input id="cp-result-link" class="copybox" readonly onclick="this.select()"><div class="btn-row"><button class="btn" type="button" id="cp-result-share">공유하기</button><button class="btn btn-share" type="button" id="cp-result-copy">링크 복사</button></div></div>
+${section('이어서 계산하기', null, list([{ href: '/dsr/', title: '연봉별 대출 한도표', sub: '혼자일 때 기간·금리별 한도' }, { href: '/loan/', title: '대출 상환액 사전', sub: '한도만큼 빌리면 매달 얼마' }, { href: '/jeonse/', title: '전세 vs 월세', sub: '보증금별 전세대출 이자와 월세' }]))}
+<p style="margin-top:14px"><a href="/couple/" onclick="location.hash='';location.reload();return false;">내 정보로 새 링크 만들기 →</a></p>
+</div>
+<div class="toast" id="cp-toast" hidden>링크를 복사했어요</div>
+<p class="note">DSR 40%는 은행권 기준이며 실제 심사는 LTV·신용대출·스트레스 금리에 따라 다릅니다. 부부 합산 심사는 혼인신고를 한 부부 기준입니다. <a href="/guide/dsr/">DSR 설명 글</a></p>`;
+  write(url, shell({ url, title: '둘이 합쳐 얼마까지 빌릴 수 있을까 — 커플 합산 대출 한도 링크', desc: '내 연봉으로 링크를 만들어 보내면 상대가 연봉만 넣고 두 사람 합산 DSR 40% 대출 한도, 30년 원리금균등 최대 원금, 전세대출 시 월 이자가 나옵니다. 서버 저장 없음.', body, nav: 'loan', scripts: ['/js/engine.js', '/js/couple.js'] }));
+}
+
+/* ---------- 내 시간으로 사는 물건 ---------- */
+const timeUrl = (m) => `/time/${m}/`;
+function timePage(m) {
+  const annual = m * 10000;
+  const p = netPay({ annual, nontax: NT });
+  const hn = p.net / MONTH_HOURS, hg = p.gross / MONTH_HOURS;
+  const url = timeUrl(m);
+  const rows = PRICES.map((it) => ({ cells: [`${it.label}${it.note ? ` <small style="color:var(--faint)">${it.note}</small>` : ''}`, num(it.price), hoursText(it.price / hn), hoursText(it.price / hg)] }));
+  const chicken = PRICES.find((x) => x.key === 'chicken'), phone = PRICES.find((x) => x.key === 'phone'), apt = PRICES.find((x) => x.key === 'apt');
+  const title = `연봉 ${manwon(annual)}의 세후 시급 ${won(Math.round(hn))} — 치킨은 ${hoursText(chicken.price / hn)}, 아이폰은 ${hoursText(phone.price / hn)} 일해야`;
+  const desc = `연봉 ${manwon(annual)}은 세후 시급 ${won(Math.round(hn))}. 아메리카노·치킨·아이폰·여행·자동차·아파트를 사려면 몇 시간, 며칠, 몇 달을 일해야 하는지 내 시간으로 환산했습니다.`;
+  const body = `
+${crumb([['/time/', '내 시간으로 사는 물건'], [null, `연봉 ${manwon(annual)}`]])}
+<h1 class="title">연봉 ${manwon(annual)} — 내 한 시간은 ${won(Math.round(hn))}</h1>
+<p class="meta">세후 시급 = 월 실수령 ${won(p.net)} ÷ ${MONTH_HOURS}시간 · 세전 시급 ${won(Math.round(hg))} · 물건값은 ${PRICES_ASOF} 대략적인 시세</p>
+${lead(`연봉 ${manwon(annual)}이면 세금과 4대보험을 뺀 한 시간 값이 ${won(Math.round(hn))}입니다. 치킨 한 마리는 ${hoursText(chicken.price / hn)}, 아이폰 한 대는 ${hoursText(phone.price / hn)}, 서울 아파트 한 채는 한 푼도 안 쓰고 ${hoursText(apt.price / hn)}을 일해야 합니다.`)}
+${hero({ label: '세후 시급', value: Math.round(hn), sub: `하루 8시간이면 ${won(Math.round(hn * 8))} · 한 달 ${MONTH_HOURS}시간이면 ${won(p.net)}` })}
+<button class="btn btn-share" type="button" data-share-card data-l1="연봉 ${manwon(annual)}의 한 시간" data-l2="${num(Math.round(hn))}" data-l3="세후 시급 · ${YEAR}년" data-l4="치킨 ${hoursText(chicken.price / hn)} · 아이폰 ${hoursText(phone.price / hn)} · 아파트 ${hoursText(apt.price / hn)}">시급 카드 저장</button>
+${section('물건을 시간으로 바꾸면', '세후 시급 기준이 진짜 체감값, 세전은 참고', table(['물건', '가격', '세후 시간', '세전 시간'], rows))}
+${ad()}
+${section('연봉이 바뀌면', '세후 시급', chips(neighbors(SALARIES, m, 3).map((v) => ({ label: short(v * 10000), value: Math.round(netPay({ annual: v * 10000, nontax: NT }).net / MONTH_HOURS), href: timeUrl(v), on: v === m }))))}
+${section('이어서 보기', null, list([{ href: salaryUrl(m), title: `연봉 ${manwon(annual)} 실수령액`, sub: '공제 내역과 부양가족별 표' }, { href: `/goal/10000/${nearest([30, 50, 70, 100, 150, 200, 300], Math.round(p.net * 0.3 / 100000)) * 10}/`, title: '1억 모으기 시계', sub: '실수령의 30%를 저축하면' }]))}
+<p class="note">가격은 크기 감각을 위한 대략값이며 지역·브랜드에 따라 다릅니다. 시간은 월 ${MONTH_HOURS}시간(주 40시간 + 주휴) 기준입니다.</p>`;
+  write(url, shell({ url, title, desc, body, nav: 'salary' }));
+}
+function timeIndex() {
+  const picks = ['coffee', 'chicken', 'phone', 'car', 'apt'].map((k) => PRICES.find((x) => x.key === k));
+  const rows = SALARIES.filter((m) => m % 500 === 0 || m > 10000).map((m) => { const hn = netPay({ annual: m * 10000, nontax: NT }).net / MONTH_HOURS; return { cells: [`<a href="${timeUrl(m)}">연봉 ${manwon(m * 10000)}</a>`, num(Math.round(hn))].concat(picks.map((it) => hoursText(it.price / hn))) }; });
+  const body = `
+${crumb([['/', '홈'], [null, '내 시간으로 사는 물건']])}
+<h1 class="title">내 시간으로 사는 물건</h1>
+<p class="meta">연봉을 세후 시급으로 바꾸고, 물건값을 "몇 시간 일해야 하나"로 환산 · 물건값은 ${PRICES_ASOF} 대략적인 시세</p>
+<form class="quick" data-quick="time" data-step="100" data-min="2000" data-max="30000"><label for="q-time">연봉</label><div class="quick-row"><div class="quick-in"><input id="q-time" type="text" inputmode="numeric" placeholder="4200"><span>만원</span></div><button class="btn" type="submit">내 시간으로 보기</button></div></form>
+${section('연봉별', null, table(['연봉', '세후 시급'].concat(picks.map((it) => it.label.replace(' 한 ', ' '))), rows))}`;
+  write('/time/', shell({ url: '/time/', title: '내 시간으로 사는 물건 — 연봉별 세후 시급으로 환산한 물건값', desc: '연봉별 세후 시급을 구해 아메리카노·치킨·아이폰·자동차·아파트를 사려면 몇 시간을 일해야 하는지 환산했습니다.', body, nav: 'salary' }));
+}
+
+/* ---------- 세금 영수증 ---------- */
+const receiptUrl = (m) => `/tax-receipt/${m}/`;
+function taxReceiptPage(m) {
+  const annual = m * 10000;
+  const p = netPay({ annual, nontax: NT });
+  const url = receiptUrl(m);
+  const emp = { pension: p.pension, health: p.health, care: p.care, employment: Math.floor(p.taxable * (R0.employment + 0.0025) / 10) * 10 };
+  const empTotal = emp.pension + emp.health + emp.care + emp.employment;
+  const mine = p.deductions, both = mine + empTotal;
+  const rows = [
+    { cells: ['국민연금', num(p.pension * 12), num(emp.pension * 12), '국민연금기금 — 내 노후연금 적립'] },
+    { cells: ['건강보험', num(p.health * 12), num(emp.health * 12), '건강보험공단 — 진료비 보장'] },
+    { cells: ['장기요양보험', num(p.care * 12), num(emp.care * 12), '노인 요양 서비스'] },
+    { cells: ['고용보험', num(p.employment * 12), num(emp.employment * 12), '고용보험기금 — 실업급여·육아휴직급여·직업훈련'] },
+    { cells: ['소득세', num(p.tax * 12), '-', '국가 일반회계 — 국방·복지·교육·행정'] },
+    { cells: ['지방소득세', num(p.local * 12), '-', '사는 시·군·구'] },
+    { cls: 'sum', cells: ['합계', num(mine * 12), num(empTotal * 12), `둘을 더하면 연 ${manwon(both * 12)}`] },
+  ];
+  const title = `연봉 ${manwon(annual)} 세금 영수증 — 1년에 나는 ${manwon(mine * 12)}, 회사는 ${manwon(empTotal * 12)}을 낸다`;
+  const desc = `연봉 ${manwon(annual)}이면 1년 동안 내 월급에서 ${won(mine * 12)}이 4대보험과 세금으로 나가고, 회사도 나 때문에 ${won(empTotal * 12)}을 따로 냅니다. 항목별 금액과 그 돈이 어디로 가는지 정리했습니다.`;
+  const body = `
+${crumb([['/tax-receipt/', '세금 영수증'], [null, `연봉 ${manwon(annual)}`]])}
+<h1 class="title">연봉 ${manwon(annual)} — 내 세금 영수증</h1>
+<p class="meta">${YEAR}년 요율 · 본인 1인 · 식대 20만원 포함 · 회사 부담은 국민연금·건강보험·장기요양 같은 비율 + 고용보험 1.15%(150인 미만 기준), 산재보험 제외</p>
+${lead(`연봉 ${manwon(annual)}을 받는 1년 동안 내 월급에서 ${won(mine * 12)}이 빠져나가고, 회사는 나를 고용한 대가로 ${won(empTotal * 12)}을 따로 냅니다. 둘을 합치면 ${won(both * 12)}으로 연봉의 ${pct(both * 12 / annual)}이고, 이 가운데 국민연금 ${won((p.pension + emp.pension) * 12)}은 내 이름으로 쌓이는 돈입니다.`)}
+${hero({ label: '1년에 내 월급에서 나가는 돈', value: mine * 12, sub: `4대보험 ${won(p.insurance * 12)} + 소득세·지방소득세 ${won(p.taxTotal * 12)} · 월 ${won(mine)}`, bars: [p.insurance / mine, p.taxTotal / mine], legendL: `4대보험 ${pct(p.insurance / mine, 0)}`, legendR: `세금 ${pct(p.taxTotal / mine, 0)}` })}
+${section('항목별 · 연간', '나와 회사가 각각 내는 돈과 그 돈의 행선지', table(['항목', '나', '회사', '어디로'], rows))}
+${section('회사가 나에게 쓰는 돈', null, tiles([{ label: '연봉', value: annual }, { label: '회사 부담 보험료', value: empTotal * 12 }, { label: '총 인건비 (퇴직금 적립 별도)', value: annual + empTotal * 12 }]))}
+${ad()}
+<div class="callout"><b>돌아오는 돈</b> — 국민연금은 62~65세부터 연금으로, 건강보험은 아플 때 진료비의 60~90%로, 고용보험은 실직 시 <a href="/unemployment/">구직급여</a>와 육아휴직급여로 돌아옵니다. 소득세는 <a href="/guide/withholding-table/">간이세액표</a>로 미리 낸 뒤 연말정산에서 정산되고, 지방소득세는 사는 지역의 도로·복지·교육에 쓰입니다. 회사 부담분 중 국민연금은 내 연금 계좌에 함께 적립되어, 실제로는 내가 낸 것의 두 배가 쌓입니다.</div>
+${section('연봉이 바뀌면', '1년에 내 월급에서 나가는 돈', chips(neighbors(SALARIES, m, 3).map((v) => ({ label: short(v * 10000), value: netPay({ annual: v * 10000, nontax: NT }).deductions * 12, href: receiptUrl(v), on: v === m }))))}
+${section('이어서 보기', null, list([{ href: salaryUrl(m), title: `연봉 ${manwon(annual)} 실수령액`, sub: '월별 공제 내역' }, { href: '/rates/', title: `${YEAR}년 4대보험 요율표`, sub: '근로자·사업주 부담' }, { href: '/guide/insurance-rates/', title: '4대보험 요율 총정리', sub: '서재' }]))}
+<p class="note">회사 부담 고용보험은 근로자 0.9%에 고용안정·직업능력개발 0.25%(150인 미만)를 더한 값이며, 규모가 크면 최대 0.85%입니다. 산재보험은 업종별 요율이 달라 뺐습니다. 국가 예산의 분야별 배분은 예산 확정 자료를 확인한 뒤 추가할 예정입니다.</p>`;
+  write(url, shell({ url, title, desc, body, nav: 'salary' }));
+}
+function taxReceiptIndex() {
+  const rows = SALARIES.filter((m) => m % 500 === 0 || m > 10000).map((m) => { const p = netPay({ annual: m * 10000, nontax: NT }); const emp = (p.pension + p.health + p.care + Math.floor(p.taxable * (R0.employment + 0.0025) / 10) * 10) * 12; return { cells: [`<a href="${receiptUrl(m)}">연봉 ${manwon(m * 10000)}</a>`, num(p.insurance * 12), num(p.taxTotal * 12), num(emp), pct((p.deductions * 12 + emp) / (m * 10000), 0)] }; });
+  const body = `
+${crumb([['/', '홈'], [null, '세금 영수증']])}
+<h1 class="title">내 세금 영수증 — 1년에 나와 회사가 내는 돈</h1>
+<p class="meta">연봉별 4대보험·세금 연간 합계와 회사 부담분 · 그 돈이 어디로 가는지</p>
+${section('연봉별 · 연간', '원', table(['연봉', '내 4대보험', '내 세금', '회사 부담', '연봉 대비 합계'], rows))}`;
+  write('/tax-receipt/', shell({ url: '/tax-receipt/', title: '내 세금 영수증 — 연봉별 1년 4대보험·세금과 회사 부담분', desc: '연봉별로 1년 동안 내 월급에서 나가는 4대보험과 세금, 회사가 따로 내는 보험료, 그 돈의 행선지를 정리했습니다.', body, nav: 'salary' }));
+}
+
+/* ---------- 1억 모으기 시계 ---------- */
+const GOALS = [5000, 10000, 30000, 50000];
+const SAVE_M = [30, 50, 70, 100, 150, 200, 300];
+const GOAL_RATES = [0, 0.02, 0.03, 0.04, 0.05];
+const goalUrl = (g, m) => `/goal/${g}/${m}/`;
+function goalPage(g, mm) {
+  const target = g * 10000, monthly = mm * 10000;
+  const url = goalUrl(g, mm);
+  const n3 = GO.monthsToGoal(target, monthly, 0.03);
+  const rows = GOAL_RATES.map((r) => { const n = GO.monthsToGoal(target, monthly, r); const ni = GO.monthsToGoal(target, monthly, r, 0.02); return { cls: r === 0.03 ? 'on' : '', cells: [r === 0 ? '이자 없이' : fmtRate(r), GO.fmtMonths(n), num(monthly * n), num(GO.balanceAfter(monthly, n, r) - monthly * n), GO.fmtMonths(ni)] }; });
+  const needNet = monthly / 0.3, needGross = grossForNet(needNet, { nontax: NT });
+  const salNear = nearest(SALARIES, Math.round(needGross * 12 / 10000));
+  const title = `월 ${manwon(monthly)} 저축으로 ${manwon(target)} 모으려면 — ${GO.fmtMonths(n3)} (연 3%)`;
+  const desc = `매달 ${manwon(monthly)}씩 모으면 ${manwon(target)}까지 연 3% 기준 ${GO.fmtMonths(n3)} 걸립니다. 금리별 기간과 이자, 물가 2%를 감안한 실질 도달 기간, 이 저축액이 실수령의 30%가 되는 연봉을 정리했습니다.`;
+  const body = `
+${crumb([['/goal/', '목돈 모으기'], [null, `${manwon(target)} · 월 ${manwon(monthly)}`]])}
+<h1 class="title">월 ${manwon(monthly)}씩 모아 ${manwon(target)}</h1>
+<p class="meta">매달 같은 금액을 세후 이율로 굴리는 가정 · 물가 2%면 목표 금액도 해마다 커지는 것으로 계산</p>
+${lead(`매달 ${manwon(monthly)}을 저축하면 ${manwon(target)}까지 이자 없이 ${GO.fmtMonths(GO.monthsToGoal(target, monthly, 0))}, 연 3%면 ${GO.fmtMonths(n3)} 걸립니다. 물가가 연 2% 오르는 것을 감안하면 같은 값어치의 돈을 모으는 데 ${GO.fmtMonths(GO.monthsToGoal(target, monthly, 0.03, 0.02))}이 필요합니다.`)}
+${hero({ label: `${manwon(target)}까지 (연 3%)`, value: n3, sub: `원금 ${won(monthly * n3)} + 이자 ${won(GO.balanceAfter(monthly, n3, 0.03) - monthly * n3)}`, bars: null }).replace(/<span class="num">[\d,]+<\/span><span class="unit">원<\/span>/, `<span class="num">${GO.fmtMonths(n3)}</span>`)}
+${section('금리에 따라', null, table(['세후 이율', '기간', '원금', '이자', '물가 2% 감안'], rows))}
+${section('이 저축액이 실수령의 30%가 되려면', '월급의 30%를 저축한다는 흔한 목표를 거꾸로 계산', tiles([{ label: '필요한 월 실수령', value: Math.round(needNet) }, { label: '세전 월급', value: needGross }, { label: '연봉', value: needGross * 12 }]) + list([{ href: salaryUrl(salNear), title: `연봉 ${manwon(salNear * 10000)} 실수령액`, sub: '가장 가까운 연봉 페이지' }]))}
+${ad()}
+${section('저축액·목표가 바뀌면', '연 3% 기준 기간', cells(SAVE_M.map((x) => ({ label: `월 ${short(x * 10000)}`, value: 0, href: goalUrl(g, x), on: x === mm })), 4).replace(/<span class="num">0<\/span>/g, () => '') + chips(GOALS.map((x) => ({ label: manwon(x * 10000), value: 0, href: goalUrl(x, mm), on: x === g }))).replace(/<span class="num">0<\/span>/g, ''))}
+<p class="note">적금은 실제로 납입 시점마다 이자가 다르게 붙고 이자소득세 15.4%가 있어 "세후 이율"로 넣어야 맞습니다. 연 3.5% 적금이면 세후 약 3%입니다. <a href="/savings/">적금 세후 이자표</a></p>`;
+  write(url, shell({ url, title, desc, body, nav: 'loan' }));
+}
+function goalIndex() {
+  const rows = SAVE_M.map((mm) => ({ cells: [`월 ${manwon(mm * 10000)}`].concat(GOALS.map((g) => `<a href="${goalUrl(g, mm)}">${GO.fmtMonths(GO.monthsToGoal(g * 10000, mm * 10000, 0.03))}</a>`)) }));
+  const body = `
+${crumb([['/', '홈'], [null, '목돈 모으기']])}
+<h1 class="title">목돈 모으기 시계</h1>
+<p class="meta">월 저축액 × 목표 금액별 도달 기간 · 연 3% 세후 기준 · 칸을 누르면 금리별·물가 감안 기간</p>
+${section('저축액 × 목표', null, table(['월 저축'].concat(GOALS.map((g) => manwon(g * 10000))), rows))}
+<p class="note">1억을 모으는 데 월 100만원이면 7년이 조금 넘게 걸립니다. 각 페이지에서 이 저축액이 실수령의 30%가 되는 연봉도 볼 수 있습니다.</p>`;
+  write('/goal/', shell({ url: '/goal/', title: '1억 모으기 시계 — 월 저축액별 5천만·1억·3억·5억 도달 기간', desc: '매달 30만원부터 300만원까지 저축할 때 5천만원·1억·3억·5억을 모으는 데 걸리는 기간을 금리별로 정리했습니다.', body, nav: 'loan' }));
+}
+
+/* ---------- 연봉 협상 근거 ---------- */
+const negoUrl = (m) => `/negotiate/${m}/`;
+function negotiatePage(m) {
+  const annual = m * 10000;
+  const p = netPay({ annual, nontax: NT });
+  const rk = RK.rank(annual);
+  const url = negoUrl(m);
+  const cpiY = Math.max(...Object.keys(CPI).map(Number)), cpi = CPI[cpiY];
+  const mwUp = R0.minWage / RATES[PREV].minWage - 1;
+  const keep = Math.round(annual * (1 + cpi) / 10000) * 10000;
+  const pensionLoss = netPay({ annual, nontax: NT, year: PREV }).net - p.net;
+  const g30 = AGE.groups[2], g40 = AGE.groups[3];
+  const scen = [3, 5, 7, 10].map((r) => { const a2 = Math.round(annual * (1 + r / 100) / 10000) * 10000; const q = netPay({ annual: a2, nontax: NT }); return { cells: [`+${r}%`, num(a2), num(q.net), num(q.net - p.net)] }; });
+  const text = `현재 연봉 ${manwon(annual)}은 국세청 통계 기준 근로소득자 상위 ${rk.topPct}%이고, 30대 평균 월소득(${manwon(g30.mean)})과 비교하면 월 ${p.gross >= g30.mean ? won(p.gross - g30.mean) + ' 많은' : won(g30.mean - p.gross) + ' 적은'} 수준입니다. ${cpiY}년 물가상승률 ${pct(cpi)}와 ${YEAR}년 최저임금 인상률 ${pct(mwUp)}을 감안하면 실질 가치를 유지하는 연봉은 ${manwon(keep)}이며, 올해 국민연금·건강보험 요율 인상으로 같은 연봉의 실수령이 월 ${won(pensionLoss)} 줄었습니다. 이를 근거로 ${scen[2].cells[1]}원(7% 인상)을 요청드립니다.`;
+  const title = `연봉 ${manwon(annual)} 협상 근거 — 상위 ${rk.topPct}%, 물가 ${pct(cpi)}, 실질 유지선 ${manwon(keep)}`;
+  const desc = `연봉 ${manwon(annual)}의 위치(상위 ${rk.topPct}%), 나이대 평균과의 차이, 물가상승률과 최저임금 인상률로 본 실질 유지선, 인상률별 실수령 변화를 한 장으로 정리하고 협상에 쓸 문장을 만들었습니다.`;
+  const body = `
+${crumb([['/negotiate/', '연봉 협상 근거'], [null, `연봉 ${manwon(annual)}`]])}
+<h1 class="title">연봉 ${manwon(annual)} — 협상 근거 한 장</h1>
+<p class="meta">국세청·통계청 통계와 ${YEAR}년 요율로 만든 숫자 · 회사 내부 기준이나 업계 시세는 따로 확인</p>
+${lead(`연봉 ${manwon(annual)}은 근로소득자 상위 ${rk.topPct}%, 30대 평균 월소득보다 ${p.gross >= g30.mean ? won(p.gross - g30.mean) + ' 많고' : won(g30.mean - p.gross) + ' 적고'} 40대 평균보다 ${p.gross >= g40.mean ? won(p.gross - g40.mean) + ' 많습니다' : won(g40.mean - p.gross) + ' 적습니다'}. 물가 ${pct(cpi)}만큼만 올려도 ${manwon(keep)}이 되어야 작년과 같은 값어치이고, 요율 인상으로 실수령은 이미 월 ${won(pensionLoss)} 줄었습니다.`)}
+${section('근거 네 가지', null, `<div class="tiles"><div class="tile"><small>근로소득자 중</small><span class="num">상위 ${rk.topPct}%</span></div><div class="tile"><small>실질 유지선 (물가 ${pct(cpi)})</small><span class="num">${manwon(keep)}</span></div><div class="tile"><small>요율 인상으로 준 실수령 (월)</small><span class="num">${num(pensionLoss)}</span></div></div>` + table(['비교 대상', '월 금액', '내 세전 월급과 차이'], [
+  { cells: ['30대 평균 월소득 (통계청)', num(g30.mean), (p.gross - g30.mean >= 0 ? '+' : '−') + num(Math.abs(p.gross - g30.mean))] },
+  { cells: ['40대 평균 월소득 (통계청)', num(g40.mean), (p.gross - g40.mean >= 0 ? '+' : '−') + num(Math.abs(p.gross - g40.mean))] },
+  { cells: ['근로소득자 중위 연봉 ÷ 12 (국세청)', num(Math.round(RK.STAT.median / 12)), (p.gross - RK.STAT.median / 12 >= 0 ? '+' : '−') + num(Math.abs(Math.round(p.gross - RK.STAT.median / 12)))] },
+  { cells: [`${YEAR}년 최저임금 인상률`, pct(mwUp), `최저임금 월급 ${num(R0.minWage * MONTH_HOURS)}원`] },
+]))}
+${section('인상률별 실수령', '요청할 숫자를 고를 때', table(['인상률', '새 연봉', '월 실수령', '월 증가'], scen))}
+${section('복사해서 쓰는 문장', '숫자만 사실이고 말투는 바꾸세요', `<textarea class="copybox" id="nego-text" rows="6" readonly>${esc(text)}</textarea><div class="btn-row"><button class="btn btn-share" type="button" data-copy="#nego-text">문장 복사</button></div>`)}
+${ad()}
+<div class="callout"><b>협상에서 통하는 순서</b> — ① 회사에 기여한 결과를 숫자로(매출·절감·프로젝트) ② 시장 위치(위 통계) ③ 물가·요율로 줄어든 실질 소득 ④ 원하는 숫자 하나와 근거. 상위 %와 나이대 평균은 "내가 어디쯤인지"를 보여 주는 보조 자료이고, 결정적 근거는 ①입니다.</div>
+${section('연봉이 바뀌면', null, chips(neighbors(SALARIES, m, 3).map((v) => ({ label: short(v * 10000), value: netPay({ annual: v * 10000, nontax: NT }).net, href: negoUrl(v), on: v === m }))))}
+${section('이어서 보기', null, list([{ href: salaryUrl(m), title: `연봉 ${manwon(annual)} 실수령액`, sub: '인상액별 실수령 표' }, { href: '/rank/', title: '연봉 순위표', sub: '상위 %의 연봉 경계' }, { href: '/age/', title: '나이대별 평균 월급', sub: '통계청 자료' }]))}
+<p class="note">물가상승률은 통계청 소비자물가지수 ${cpiY}년 연간 값, 최저임금 인상률은 고용노동부 고시 기준입니다. 상위 %는 국세청 요약값에 맞춘 추정입니다. <a href="/method/">계산 기준 보기</a></p>`;
+  write(url, shell({ url, title, desc, body, nav: 'salary' }));
+}
+function negotiateIndex() {
+  const cpiY = Math.max(...Object.keys(CPI).map(Number)), cpi = CPI[cpiY];
+  const rows = SALARIES.filter((m) => m % 500 === 0 || m > 10000).map((m) => { const a = m * 10000; return { cells: [`<a href="${negoUrl(m)}">연봉 ${manwon(a)}</a>`, `상위 ${RK.rank(a).topPct}%`, num(Math.round(a * (1 + cpi) / 10000) * 10000), num(Math.round(a * 1.07 / 10000) * 10000)] }; });
+  const body = `
+${crumb([['/', '홈'], [null, '연봉 협상 근거']])}
+<h1 class="title">연봉 협상 근거 만들기</h1>
+<p class="meta">내 연봉의 위치, 물가·최저임금 인상률, 요율 인상으로 줄어든 실수령을 숫자로 정리하고 복사해 쓰는 문장까지</p>
+<form class="quick" data-quick="negotiate" data-step="100" data-min="2000" data-max="30000"><label for="q-nego">현재 연봉</label><div class="quick-row"><div class="quick-in"><input id="q-nego" type="text" inputmode="numeric" placeholder="4200"><span>만원</span></div><button class="btn" type="submit">근거 만들기</button></div></form>
+${section('연봉별', `물가 ${pct(cpi)} 유지선과 7% 인상 시 연봉`, table(['연봉', '상위', `물가 유지선`, '7% 인상'], rows))}`;
+  write('/negotiate/', shell({ url: '/negotiate/', title: '연봉 협상 근거 만들기 — 상위 %·나이대 평균·물가·최저임금으로 한 장 정리', desc: '현재 연봉의 통계적 위치와 물가상승률, 최저임금 인상률, 요율 인상으로 줄어든 실수령을 근거로 정리하고 협상에 쓸 문장을 만들어 줍니다.', body, nav: 'salary' }));
+}
+
+/* ---------- 같은 연봉의 실수령 변화 ---------- */
+const histUrl = (m) => `/history/${m}/`;
+function histRates(y) { return HISTORY[y] || RATES[y]; }
+function historyPage(m) {
+  const annual = m * 10000;
+  const url = histUrl(m);
+  const years = Object.keys(HISTORY).map(Number).concat([PREV, YEAR]).concat(Object.keys(PENSION_SCHEDULE).map(Number).filter((y) => y > YEAR));
+  for (const y of Object.keys(HISTORY)) if (!RATES[y]) RATES[y] = HISTORY[y];
+  const base = netPay({ annual, nontax: NT, year: 2020 });
+  const rows = years.map((y) => { const q = netPay({ annual, nontax: NT, year: y }); return { y, q, cls: y === YEAR ? 'on' : '', cells: [`${y}년${y > YEAR ? ' (예정)' : ''}`, num(q.insurance), num(q.taxTotal), num(q.net), (q.net - base.net >= 0 ? '+' : '−') + num(Math.abs(q.net - base.net))] }; });
+  const cur = rows.find((r) => r.y === YEAR).q, last = rows[rows.length - 1].q;
+  const maxNet = Math.max(...rows.map((r) => r.q.net));
+  const bars = rows.map((r) => `<div class="hbar"><span>${r.y}</span><i style="width:${(r.q.net / maxNet * 100).toFixed(1)}%${r.y > YEAR ? ';opacity:.45' : ''}"></i><b class="num">${num(r.q.net)}</b></div>`).join('');
+  const title = `연봉 ${manwon(annual)} 실수령 변화 2020→${YEAR} — ${won(base.net)}에서 ${won(cur.net)}으로`;
+  const desc = `같은 연봉 ${manwon(annual)}의 월 실수령이 2020년 ${won(base.net)}에서 ${YEAR}년 ${won(cur.net)}으로 ${won(Math.abs(cur.net - base.net))} ${cur.net >= base.net ? '늘었고' : '줄었고'}, 국민연금 인상이 끝나는 2033년에는 ${won(last.net)}이 됩니다. 연도별 4대보험·세금·실수령을 정리했습니다.`;
+  const body = `
+${crumb([['/history/', '실수령 변화'], [null, `연봉 ${manwon(annual)}`]])}
+<h1 class="title">연봉 ${manwon(annual)} — 2020년부터 실수령 변화</h1>
+<p class="meta">연도별 4대보험 요율 적용 · 소득세는 현재 간이세액표를 모든 해에 적용한 근사 · ${YEAR}년 이후는 국민연금 인상 일정만 반영한 예정치</p>
+${lead(`연봉이 ${manwon(annual)}으로 똑같아도 2020년에는 월 ${won(base.net)}을 받았는데 ${YEAR}년에는 ${won(cur.net)}을 받습니다. 6년 동안 건강보험·장기요양 요율이 오르고 올해 국민연금까지 오르면서 월 ${won(Math.abs(cur.net - base.net))}이 ${cur.net >= base.net ? '늘었습니다' : '줄었습니다'}. 국민연금 인상이 끝나는 2033년에는 ${won(last.net)}으로 2020년보다 ${won(base.net - last.net)} 적습니다.`)}
+${hero({ label: `2020년 → ${YEAR}년 월 실수령`, value: cur.net, sub: `2020년 ${won(base.net)} · 차이 ${won(cur.net - base.net)} · 1년이면 ${won((cur.net - base.net) * 12)}`, bars: [cur.net / base.net], legendL: `${YEAR}년은 2020년의 ${pct(cur.net / base.net)}`, legendR: `2033년 ${won(last.net)}` })}
+${section('연도별 실수령', null, `<div class="hbars">${bars}</div>`)}
+${section('연도별 공제 내역', '월 기준 · 원 · 2020년 대비 실수령 차이', table(['연도', '4대보험', '세금', '실수령', '2020 대비'], rows.map((r) => ({ cls: r.cls, cells: r.cells }))))}
+${ad()}
+<div class="callout"><b>무엇이 올랐나</b> — 건강보험료율 6.67%(2020) → ${pct(R0.health * 2, 2)}(${YEAR}), 장기요양 10.25% → ${pct(R0.care, 2)}, 고용보험 근로자 0.8% → 0.9%(2022년 7월), 국민연금 4.5% → ${pct(R0.pension, 2)}(${YEAR})에서 2033년 6.5%까지. 같은 연봉이면 손에 쥐는 돈은 해마다 조금씩 줄어드니, 연봉 협상에서 "동결"은 실질 삭감입니다. <a href="/negotiate/${m}/">협상 근거 보기</a></div>
+${section('연봉이 바뀌면', `${YEAR}년 실수령`, chips(neighbors(SALARIES, m, 3).map((v) => ({ label: short(v * 10000), value: netPay({ annual: v * 10000, nontax: NT }).net, href: histUrl(v), on: v === m }))))}
+<p class="note">과거 요율은 건강보험공단·국민연금공단·고용노동부 고시 기준이고, 소득세는 간이세액표 개정(2020·2023·2024년)을 반영하지 않은 근사입니다. 예정치는 국민연금 인상 일정만 넣고 다른 요율과 세금은 ${YEAR}년 그대로라고 가정했습니다. <a href="/method/">계산 기준 보기</a></p>`;
+  write(url, shell({ url, title, desc, body, nav: 'salary' }));
+}
+function historyIndex() {
+  for (const y of Object.keys(HISTORY)) if (!RATES[y]) RATES[y] = HISTORY[y];
+  const rows = SALARIES.filter((m) => m % 500 === 0 || m > 10000).map((m) => { const a = m * 10000; const b = netPay({ annual: a, nontax: NT, year: 2020 }).net, c = netPay({ annual: a, nontax: NT }).net, l = netPay({ annual: a, nontax: NT, year: 2033 }).net; return { cells: [`<a href="${histUrl(m)}">연봉 ${manwon(a)}</a>`, num(b), num(c), num(l), (c - b >= 0 ? '+' : '−') + num(Math.abs(c - b))] }; });
+  const body = `
+${crumb([['/', '홈'], [null, '실수령 변화']])}
+<h1 class="title">같은 연봉의 실수령 변화 — 2020년부터 2033년까지</h1>
+<p class="meta">4대보험 요율 인상으로 같은 연봉의 손에 쥐는 돈이 어떻게 바뀌었고 바뀔지 · 월 기준</p>
+${section('연봉별', '원', table(['연봉', '2020년', `${YEAR}년`, '2033년 (예정)', `${YEAR} − 2020`], rows))}
+<p class="note">국민연금 근로자 부담률이 2033년 6.5%까지 오르는 일정만 반영한 예정치입니다.</p>`;
+  write('/history/', shell({ url: '/history/', title: '같은 연봉의 실수령 변화 2020→2033 — 요율 인상으로 얼마나 줄었나', desc: '연봉별로 2020년과 2026년, 국민연금 인상이 끝나는 2033년의 월 실수령을 비교했습니다.', body, nav: 'salary' }));
+}
+
 /* ---------- 빌드 ---------- */
 fs.rmSync(OUT, { recursive: true, force: true });
 fs.mkdirSync(OUT, { recursive: true });
@@ -1167,6 +1445,13 @@ leaveIndex(); OT_PAYS.forEach(leavePage);
 carLoanIndex(); CAR_PRICES.forEach((pm) => CAR_MONTHS.forEach((n) => carLoanPage(pm, n)));
 ratesPage();
 guidePages();
+couplePage();
+timeIndex(); SALARIES.forEach(timePage);
+taxReceiptIndex(); SALARIES.forEach(taxReceiptPage);
+goalIndex(); GOALS.forEach((g) => SAVE_M.forEach((mm) => goalPage(g, mm)));
+negotiateIndex(); SALARIES.forEach(negotiatePage);
+historyIndex(); SALARIES.forEach(historyPage);
+fs.writeFileSync(path.join(OUT, 'js', 'engine.js'), makeBundle(NT));
 docs();
 
 const indexable = urls.filter((u) => !['/terms/', '/privacy/'].includes(u));

@@ -124,5 +124,34 @@ ok(L.annuityPayment(12000000, 0, 12) === 1000000, '무이자');
   ok(AG.ageRank(0, 'all').top === 1, '0원 = 상위 100%');
 }
 
+/* 목돈 모으기 */
+{
+  const GO = await import('../engine/goal.mjs');
+  ok(GO.monthsToGoal(100000000, 1000000, 0) === 100, '1억 ÷ 월 100만 = 100개월');
+  const n = GO.monthsToGoal(100000000, 1000000, 0.03);
+  ok(n > 85 && n < 92, '연 3%면 7년 남짓', n);
+  ok(GO.monthsToGoal(100000000, 1000000, 0.03, 0.02) > n, '물가 반영하면 더 오래');
+  ok(GO.fmtMonths(88) === '7년 4개월' && GO.fmtMonths(24) === '2년' && GO.fmtMonths(5) === '5개월', '기간 표기');
+  ok(GO.balanceAfter(1000000, 12, 0) === 12000000, '이자 없는 잔액');
+}
+
+/* 브라우저 엔진 묶음 = 서버 엔진 (같은 소스에서 생성되는지 확인) */
+{
+  const vm = await import('node:vm');
+  const { makeBundle } = await import('./bundle.mjs');
+  const ctx = { window: {} };
+  vm.runInNewContext(makeBundle(200000), ctx);
+  const B = ctx.window.Donpyo;
+  ok(typeof B.netPay === 'function' && typeof B.annuityPayment === 'function' && typeof B.rank === 'function', '번들 함수 존재');
+  let same = true;
+  for (const a of [24000000, 42000000, 60000000, 130000000]) for (const d of [1, 3]) {
+    if (B.netPay({ annual: a, dependents: d, nontax: 200000 }).net !== netPay({ annual: a, dependents: d, nontax: 200000 }).net) same = false;
+  }
+  ok(same, '번들 netPay = 서버 netPay');
+  ok(B.annuityPayment(200000000, 0.045, 360) === L.annuityPayment(200000000, 0.045, 360), '번들 annuityPayment');
+  ok(B.dsrLimit(50000000, 0.045, 360).principal === L.dsrLimit(50000000, 0.045, 360).principal, '번들 dsrLimit');
+  ok(B.manwon(42000000) === '4,200만원', '번들 fmt');
+}
+
 console.log(`test: ${pass} pass, ${fail} fail`);
 if (fail) process.exit(1);

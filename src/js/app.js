@@ -51,6 +51,18 @@
     apply();
   });
 
+  /* 2-1) 복사 버튼 */
+  Array.prototype.forEach.call(document.querySelectorAll('[data-copy]'), function (b) {
+    b.addEventListener('click', function () {
+      var el = document.querySelector(b.getAttribute('data-copy'));
+      if (!el) return;
+      var text = el.value || el.textContent;
+      var done = function () { var t = b.textContent; b.textContent = '복사했어요'; setTimeout(function () { b.textContent = t; }, 1500); };
+      if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, function () { el.select && el.select(); });
+      else { el.select && el.select(); }
+    });
+  });
+
   /* 3) 실수령액 카드 — 1080×1350 이미지를 만들어 공유하거나 저장 */
   var shareBtn = document.querySelector('[data-share-card]');
   if (shareBtn) {

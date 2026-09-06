@@ -9,7 +9,11 @@
 - `engine/retire.mjs` — 퇴직금, 퇴직소득세(근속연수공제·환산급여)
 - `data/rates.mjs` — 연도별 4대보험 요율·최저임금·국민연금 인상 일정 (매년 갱신)
 - `data/ganyi.json` — 근로소득 간이세액표 (소득세법 시행령 별표 2, 2024.2.29 개정) 월급여 천원 구간 × 공제대상가족 1~11명
+- `engine/yearend.mjs` — 연말정산 미리보기(근로소득공제·카드·세액공제·표준세액공제, `/yearend/`에서 브라우저 계산)
 - `tools/build.mjs` — 페이지 생성기 (`node tools/build.mjs`), `tools/test.mjs` — 엔진 검증
+- `tools/bundle.mjs` — engine/*.mjs를 브라우저용 `dist/js/engine.js`로 묶음 (슬라이더·커플 링크·연말정산·임베드 위젯이 사용)
+- `/embed/` — 블로그에 붙이는 iframe 위젯(`/embed/salary/`, `/embed/loan/`, 헤더·푸터·광고 없는 bare 셸)
+- 홈 검색창 — `src/js/app.js`의 `parseSmart`가 "연봉 4200", "2억 30년 4.5%", "시급 12000 주20" 같은 입력을 페이지로 연결 (격자는 빌드가 `window.DONPYO_GRID`로 넣음)
 - `src/` — CSS·JS·favicon (빌드 시 dist/로 복사)
 - `design/` — 디자인 캔버스 작업 파일(.dc.html)
 

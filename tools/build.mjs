@@ -50,7 +50,7 @@ function write(url, html) {
 
 function shell(o) {
   const GA = GA_ID ? `<script async src="https://www.googletagmanager.com/gtag/js?id=${GA_ID}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${GA_ID}');</script>\n` : '';
-  const ADS = ADSENSE ? `<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE}" crossorigin="anonymous"></script>\n` : '';
+  const ADS = ADSENSE && !o.bare ? `<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE}" crossorigin="anonymous"></script>\n` : '';
   const ld = o.ld || { '@context': 'https://schema.org', '@type': 'WebPage', name: o.title, description: o.desc, url: SITE + o.url, inLanguage: 'ko', isPartOf: { '@type': 'WebSite', name: '돈표', url: SITE } };
   const on = (k) => o.nav === k ? ' class="on"' : '';
   return `<!doctype html>
@@ -72,8 +72,8 @@ ${o.noindex ? '<meta name="robots" content="noindex">\n' : ''}<link rel="icon" t
 <meta property="og:type" content="website">
 <meta property="og:url" content="${SITE}${o.url}">
 </head>
-<body>
-<div class="app">
+<body${o.bare ? ' class="bare"' : ''}>
+${o.bare ? o.body : `<div class="app">
 <header class="hdr">
   <a class="brand" href="/">${LOGO}<span class="brand-name">돈표</span></a>
   <nav class="nav"><a href="/salary/"${on('salary')}>연봉</a><a href="/monthly/"${on('monthly')}>월급</a><a href="/loan/"${on('loan')}>대출</a><a href="/retire/"${on('retire')}>퇴직금</a><a href="/unemployment/"${on('unemployment')}>실업급여</a><a href="/hourly/"${on('hourly')}>알바</a></nav>
@@ -81,10 +81,10 @@ ${o.noindex ? '<meta name="robots" content="noindex">\n' : ''}<link rel="icon" t
 </header>
 ${o.body}
 <footer class="foot">
-  <div class="frow"><span>© 돈표 · ${YEAR}년 1월 요율 · 갱신 ${BUILD_ISO}</span><nav><a href="/guide/">서재</a><a href="/method/">계산 기준</a><a href="/about/">소개</a><a href="/terms/">이용약관</a><a href="/privacy/">개인정보</a></nav></div>
+  <div class="frow"><span>© 돈표 · ${YEAR}년 1월 요율 · 갱신 ${BUILD_ISO}</span><nav><a href="/guide/">서재</a><a href="/method/">계산 기준</a><a href="/about/">소개</a><a href="/embed/">위젯</a><a href="/terms/">이용약관</a><a href="/privacy/">개인정보</a></nav></div>
   <p class="fnote">계산 결과는 참고용입니다. 회사의 비과세 항목·상여·연말정산, 은행별 계산 방식에 따라 실제 금액과 다를 수 있습니다.</p>
 </footer>
-</div>
+</div>`}
 <script src="/js/app.js" defer></script>
 ${(o.scripts || []).map((s) => `<script src="${s}" defer></script>`).join('\n')}
 </body>
@@ -217,6 +217,7 @@ ${section('이 연봉으로 할 수 있는 것', null, (() => { const hn = p.net
   { href: `/negotiate/${m}/`, title: '연봉 협상 근거 만들기', sub: '상위 %, 나이대 평균, 물가·최저임금 인상률을 한 장으로' },
   { href: `/tax-receipt/${m}/`, title: '내 세금 영수증', sub: '1년에 나와 회사가 내는 돈, 어디로 가나' },
   { href: `/history/${m}/`, title: '2020년부터의 실수령 변화', sub: '같은 연봉이 요율 인상으로 얼마나 줄었나' },
+  { href: `/yearend/?a=${m}`, title: '연말정산 미리보기', sub: '카드·의료비·연금저축을 넣으면 환급인지 추가 납부인지' },
   { href: '/couple/', title: '둘이 합쳐 얼마까지 빌릴까', sub: '링크 하나로 상대 연봉 받아 합산 한도 계산' },
 ]))}
 ${section('연봉이 오르면 손에 오는 돈', '인상액의 상당 부분은 4대보험과 세금으로 빠집니다', table(['인상', '월 실수령', '월 증가', '인상액 대비'], raises))}
@@ -503,7 +504,9 @@ function home() {
   <h1>연봉 4,200만원이면<br>손에 얼마가 남을까</h1>
   <p>연봉·월급·대출·퇴직금·알바 월급을 금액별로 미리 계산해 표로 묶어 두었습니다. 숫자만 고르면 바로 나옵니다.</p>
 </div>
-<form class="quick" data-quick="salary" data-step="100" data-min="2000" data-max="30000"><label for="q-home">연봉으로 바로 찾기</label><div class="quick-row"><div class="quick-in"><input id="q-home" type="text" inputmode="numeric" placeholder="4200"><span>만원</span></div><button class="btn" type="submit">실수령액 보기</button></div><div class="quick-links"><a href="/monthly/">월급으로 찾기</a><a href="/net/">실수령액으로 연봉 찾기</a><a href="/hourly/">시급으로 찾기</a></div></form>
+<form class="quick quick-smart" data-quick="smart"><label for="q-home">숫자로 바로 찾기 — 연봉·월급·대출·시급·퇴직금 무엇이든</label><div class="quick-row"><div class="quick-in"><input id="q-home" type="text" placeholder="연봉 4200 / 2억 30년 4.5% / 시급 12000 주20" autocomplete="off" autocapitalize="off"></div><button class="btn" type="submit">찾기</button></div><div class="quick-hint" data-hint aria-live="polite">예시를 누르거나 직접 적어 보세요</div><div class="quick-ex"><button type="button">연봉 4200</button><button type="button">월급 350</button><button type="button">실수령 300</button><button type="button">2억 30년 4.5%</button><button type="button">시급 12000 주 20시간</button><button type="button">퇴직금 350 5년</button><button type="button">전세 2억</button><button type="button">적금 50 3년</button></div><div class="quick-links"><a href="/salary/">연봉표</a><a href="/monthly/">월급표</a><a href="/net/">실수령으로 연봉 찾기</a><a href="/loan/">대출표</a></div></form>
+<script>window.DONPYO_GRID=${JSON.stringify({ salary: SALARIES, monthly: MONTHLIES, net: NETS, loanA: LOAN_AMOUNTS, loanY: LOAN_YEARS, loanR: LOAN_RATES.map(rateSlug), retireP: RETIRE_PAYS, retireY: RETIRE_YEARS, hourlyW: HOURLY_WAGES, hourlyH: HOURLY_HOURS, uiP: UI_PAYS, uiY: UI_YEARS, jeonse: JEONSE, savM: SAV_M, savN: SAV_N, free: FREE, ot: OT_PAYS, carP: CAR_PRICES, carN: CAR_MONTHS, goals: GOALS, saveM: SAVE_M })}</script>
+<a class="feature" href="/yearend/"><span class="feature-mark">13</span><span class="feature-text"><b>연말정산, 돌려받을까 더 낼까</b><span>연봉·카드·의료비·연금저축만 넣으면 결정세액과 환급 예상액이 바로</span></span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5L10.5 8 6 12.5" stroke="#8A948E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></a>
 <a class="feature" href="/couple/"><span class="feature-mark">둘</span><span class="feature-text"><b>둘이 합쳐 얼마까지 빌릴 수 있을까</b><span>링크 하나 보내면 상대가 연봉만 넣고 끝 — 합산 대출 한도·전세 여력</span></span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5L10.5 8 6 12.5" stroke="#8A948E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></a>
 ${section('급여와 일', null, `<div class="dict">
 <a href="/salary/"><b>연봉 실수령액</b><span>4,200만원 → 월 <span class="num">${num(s42.net)}</span>원</span></a>
@@ -519,6 +522,7 @@ ${section('급여와 일', null, `<div class="dict">
 <a href="/time/"><b>내 시간으로 사는 물건</b><span>연봉 4,200만 세후 시급 <span class="num">${num(Math.round(s42.net / MONTH_HOURS))}</span>원 → 치킨 ${hoursText(22000 / (s42.net / MONTH_HOURS))}</span></a>
 <a href="/negotiate/"><b>연봉 협상 근거</b><span>상위 %·나이대 평균·물가·최저임금으로 <span class="num">한 장</span> 정리</span></a>
 <a href="/tax-receipt/"><b>내 세금 영수증</b><span>연봉 4,200만 → 1년 <span class="num">${num(s42.annualDeductions)}</span>원, 회사 부담까지 더 있음</span></a>
+<a href="/yearend/"><b>연말정산 미리보기</b><span>카드·의료비·연금저축 넣으면 <span class="num">환급 · 추가 납부</span> 예상액</span></a>
 <a href="/history/"><b>실수령 6년 변화</b><span>2020년 → 2026년, 같은 연봉의 실수령이 얼마나 줄었나</span></a>
 <a href="/goal/"><b>1억 모으기 시계</b><span>월 100만·연 3% → <span class="num">${GO.fmtMonths(GO.monthsToGoal(100000000, 1000000, 0.03))}</span></span></a>
 </div>`)}
@@ -557,6 +561,8 @@ ${table(['항목', `${PREV}년`, `${YEAR}년`, '비고'], [
 <p>공제대상가족 수에는 본인이 들어갑니다. "2인"은 본인 + 배우자(또는 부양가족 1명)입니다. 기본값은 식대 비과세 월 20만원을 포함한 값이며(대부분의 회사가 적용하는 한도), 식대가 없으면 각 페이지에서 "없음"을 고르세요.</p>
 <h2>국민연금 인상 일정</h2>
 <p>2025년 3월 개정된 국민연금법에 따라 보험료율이 9%에서 매년 0.5%p씩 올라 2033년 13%가 됩니다. 근로자 부담은 그 절반입니다. 연봉 페이지의 "인상 일정" 표는 다른 요율과 세금이 올해 그대로라고 가정한 값입니다.</p>
+<h2>연말정산 미리보기</h2>
+<p>총급여(연봉 − 비과세)에서 근로소득공제·기본공제(1인 150만원)·국민연금·건강·고용보험료·신용카드 등 소득공제를 뺀 과세표준에 기본세율(6~45%)을 적용해 산출세액을 구하고, 근로소득세액공제·자녀세액공제(첫째 25만·둘째 30만·셋째부터 40만원)·연금계좌(연 900만원 한도, 총급여 5,500만원 이하 15%·초과 12%)·보장성보험료(100만원 한도 12%)·의료비(총급여 3% 초과분 15%)·교육비(15%)·월세(총급여 5,500만원 이하 17%·8,000만원 이하 15%, 연 1,000만원 한도)를 뺀 값이 결정세액입니다. 항목별 공제가 표준세액공제 13만원보다 적으면 13만원을 씁니다. 미리 낸 세금은 간이세액표 기준 12개월분으로 보고, 둘의 차이를 환급 또는 추가 납부 예상액으로 보여줍니다. 신용카드 공제는 총급여의 25%를 신용카드 사용분부터 차감한 뒤 신용카드 15%·체크카드/현금영수증 30%로 계산하며 한도는 총급여 7,000만원 이하 300만원·1억 2,000만원 이하 250만원·초과 200만원입니다. 주택청약·주택자금·기부금·전통시장/대중교통 추가 한도·경로우대·장애인·한부모 공제는 반영하지 않으므로 실제와 다를 수 있습니다.</p>
 <h2>대출</h2>
 <p>이자 = 매달 남은 원금 × 연이율 ÷ 12, 원 단위 반올림. 원리금균등은 매달 같은 금액, 원금균등은 원금을 균등 분할해 이자가 줄어드는 방식, 만기일시는 이자만 내다 만기에 원금을 갚는 방식입니다. 고정금리·거치 없음·매달 말 상환을 가정했고, 갈아타기 표의 중도상환수수료는 1.2%로 두었습니다. DSR 한도는 연간 원리금 상환액이 연소득의 40%를 넘지 않는 원금이며 기존 대출은 없다고 봅니다.</p>
 <h2>퇴직금</h2>
@@ -1421,6 +1427,99 @@ ${section('연봉별', '원', table(['연봉', '2020년', `${YEAR}년`, '2033년
   write('/history/', shell({ url: '/history/', title: '같은 연봉의 실수령 변화 2020→2033 — 요율 인상으로 얼마나 줄었나', desc: '연봉별로 2020년과 2026년, 국민연금 인상이 끝나는 2033년의 월 실수령을 비교했습니다.', body, nav: 'salary' }));
 }
 
+/* ---------- 연말정산 미리보기 ---------- */
+function yearendPage() {
+  const url = '/yearend/';
+  const inp = (id, label, value, extra = '') => `<label class="ye-f"><span>${label}</span><input id="${id}" type="text" inputmode="numeric" value="${value}"${extra}></label>`;
+  const body = `
+${crumb([['/', '홈'], [null, '연말정산 미리보기']])}
+<h1 class="title">연말정산 미리보기 — 돌려받을까, 더 낼까</h1>
+<p class="meta">연봉과 카드·의료비·연금저축 몇 가지만 넣으면 결정세액을 추정해 1년 동안 미리 낸 세금과 비교합니다 · ${YEAR}년 귀속 규정 · 입력값은 이 기기 밖으로 나가지 않습니다</p>
+<form class="quick ye-form" id="ye-form">
+<div class="ye-grid">
+${inp('ye-annual', '연봉 (세전 · 만원)', 4200)}
+${inp('ye-dep', '부양가족 수 (본인 포함)', 1)}
+${inp('ye-kids', '8~20세 자녀 수', 0)}
+${inp('ye-credit', '신용카드 1년 사용액 (만원)', 1500)}
+${inp('ye-check', '체크카드·현금영수증 (만원)', 500)}
+${inp('ye-med', '의료비 (만원)', 0)}
+${inp('ye-ins', '보장성 보험료 (만원)', 0)}
+${inp('ye-edu', '교육비 (만원)', 0)}
+${inp('ye-rent', '월세 1년 합계 (만원)', 0)}
+${inp('ye-pa', '연금저축·IRP 납입 (만원)', 0)}
+</div>
+<div class="ye-checks"><label><input type="checkbox" id="ye-meal" checked> 식대 비과세 월 20만원 포함</label><label><input type="checkbox" id="ye-renter"> 무주택 세대주 (월세 세액공제 대상)</label></div>
+</form>
+<div class="hero"><div class="hero-label" id="ye-result-label">환급 예상</div><div class="hero-num"><span class="num" id="ye-result">0</span><span class="unit">원</span></div><div class="hero-sub" id="ye-result-sub">계산 중</div></div>
+<div id="ye-tips"></div>
+<div class="ledger"><div class="lg-head"><h2>계산 흐름</h2><span>원 · 1년</span></div><div id="ye-rows"></div></div>
+${section('어떻게 계산하나', '국세청 연말정산 규정을 단순화한 추정입니다', `<div class="doc">
+<p><b>① 근로소득금액</b> — 총급여(연봉 − 비과세 식대)에서 근로소득공제를 뺍니다. 근로소득공제는 총급여 500만원까지 70%, 1,500만원까지 40%, 4,500만원까지 15%, 1억원까지 5%, 그 초과 2%(한도 2,000만원)입니다.</p>
+<p><b>② 과세표준</b> — 기본공제(본인·부양가족 1인당 150만원), 국민연금·건강·고용보험료(근로자 부담 전액), 신용카드 등 소득공제(총급여 25% 초과분 × 신용카드 15%·체크카드/현금영수증 30%, 한도 300만원)를 뺍니다.</p>
+<p><b>③ 산출세액</b> — 과세표준 1,400만원까지 6%, 5,000만원까지 15%, 8,800만원까지 24%, 1억 5,000만원까지 35%, 3억원까지 38%, 5억원까지 40%, 10억원까지 42%, 초과 45%.</p>
+<p><b>④ 결정세액</b> — 산출세액에서 근로소득세액공제(산출세액 130만원까지 55%, 초과분 30%, 총급여별 한도 74만·66만·50만·20만원), 자녀세액공제(첫째 25만·둘째 30만·셋째부터 40만원), 연금계좌 세액공제(연 900만원 한도의 15%, 총급여 5,500만원 초과는 12%), 보험료 12%, 의료비 15%, 교육비 15%, 월세 17%/15%를 뺍니다. 항목별 공제가 13만원에 못 미치면 표준세액공제 13만원을 대신 씁니다.</p>
+<p><b>⑤ 환급·추가 납부</b> — 회사가 매달 간이세액표로 뗀 소득세 12개월분(지방소득세 포함)과 결정세액의 차이입니다. 차이가 플러스면 돌려받고, 마이너스면 2월 급여에서 더 뗍니다.</p>
+</div>`)}
+${section('세액공제율 한눈에', `${YEAR}년 귀속`, table(['항목', '공제율', '한도·조건'], [
+  { cells: ['연금저축 · IRP', '15% (총급여 5,500만원 초과 12%)', '연금저축 600만원, IRP 합산 900만원'] },
+  { cells: ['보장성 보험료', '12%', '납입액 100만원까지'] },
+  { cells: ['의료비', '15%', '총급여 3% 초과분 · 본인·65세 이상·장애인은 한도 없음'] },
+  { cells: ['교육비', '15%', '본인 전액 · 자녀 초중고 300만원·대학 900만원'] },
+  { cells: ['월세', '17% (총급여 5,500만원 초과 8,000만원 이하 15%)', '무주택 세대주 · 연 1,000만원까지'] },
+  { cells: ['자녀', '25만 · 30만 · 40만원', '8세 이상 20세 이하'] },
+  { cells: ['신용카드 등 (소득공제)', '15% · 30%', '총급여 25% 초과분 · 한도 300만원(7천만원 이하)'] },
+]))}
+${section('자주 묻는 것', null, `<div class="doc">
+<p><b>미리 낸 세금이 왜 결정세액보다 많은가요?</b> 간이세액표는 공제를 넉넉히 보지 않고 매달 떼기 때문에, 카드·보험·연금저축 같은 공제를 챙긴 사람은 대개 돌려받습니다. 반대로 부양가족을 실제보다 많이 신고해 두었거나 중도 입사·상여가 많으면 더 낼 수 있습니다.</p>
+<p><b>체크카드가 유리하다는데 왜 공제가 0원인가요?</b> 총급여의 25%까지는 어떤 카드를 써도 공제가 없습니다. 그 문턱을 넘긴 뒤부터 체크카드·현금영수증이 30%, 신용카드가 15%입니다. 문턱 아래에서는 혜택 좋은 신용카드를 쓰고, 넘긴 뒤에 체크카드로 바꾸는 것이 정석입니다.</p>
+<p><b>연금저축을 얼마나 넣으면 되나요?</b> 연 900만원(연금저축 600만원 + IRP 300만원)까지 15%를 세액공제받아 최대 135만원(총급여 5,500만원 초과는 108만원)입니다. 다만 55세 전에 깨면 16.5%를 물어내니 묶어둘 수 있는 돈만 넣으세요.</p>
+<p><b>맞벌이면 의료비·카드는 누구 앞으로?</b> 의료비는 총급여 3% 문턱이 있으니 소득이 적은 쪽으로 몰고, 카드도 문턱을 넘기기 쉬운 쪽에 몰아주는 것이 보통 유리합니다. 부양가족 기본공제는 소득세율이 높은 쪽이 받는 게 낫습니다.</p>
+</div>`)}
+${section('이어서 계산하기', null, list([
+  { href: '/salary/', title: '연봉 실수령액표', sub: '매달 손에 쥐는 돈은 얼마인지' },
+  { href: '/tax-receipt/', title: '내 세금 영수증', sub: '1년에 나와 회사가 내는 돈' },
+  { href: '/rates/', title: `${YEAR}년 4대보험 요율표`, sub: '소득공제에 들어가는 보험료율' },
+]))}
+${guideLinks(['withholding-table', 'dependents', 'net-pay-steps'])}
+<p class="note">${YEAR}년 귀속 연말정산 규정을 단순화한 추정치입니다. 주택청약·주택자금·기부금·전통시장·대중교통 추가 한도·경로우대·장애인·한부모 공제, 중도 입사·퇴사, 상여 원천징수 방식은 반영하지 않았습니다. 정확한 값은 국세청 홈택스 '연말정산 미리보기'에서 확인하세요. <a href="/method/">계산 기준 보기</a></p>`;
+  write(url, shell({ url, title: `연말정산 미리보기 — 환급·추가 납부 예상 계산기 (${YEAR}년 귀속)`, desc: '연봉과 신용카드·의료비·보험료·월세·연금저축 납입액을 넣으면 근로소득공제부터 세액공제까지 계산해 결정세액과 미리 낸 세금을 비교하고 환급 예상액을 보여줍니다.', body, nav: 'salary', scripts: ['/js/engine.js', '/js/yearend.js'] }));
+}
+
+/* ---------- 임베드 위젯 ---------- */
+function embedPages() {
+  const brandRow = (title) => `<div class="em-head"><a class="em-brand" href="https://donpyo.com/?utm_source=embed" target="_top" rel="noopener">${LOGO}<b>돈표</b></a><span>${title} · ${YEAR}년 요율</span></div>`;
+  const salary = `<form class="em" data-embed="salary">
+${brandRow('연봉 실수령액')}
+<div class="em-row"><label><span>연봉 (만원)</span><input type="text" inputmode="numeric" data-k="a" value="4200"></label><label><span>부양가족</span><select data-k="d"><option value="1">1인 (본인)</option><option value="2">2인</option><option value="3">3인</option><option value="4">4인</option></select></label></div>
+<div class="tiles"><div class="tile"><small>월 실수령</small><span class="num" data-out="net"></span></div><div class="tile"><small>4대보험</small><span class="num" data-out="ins"></span></div><div class="tile"><small>세금</small><span class="num" data-out="tax"></span></div></div>
+<div class="em-foot"><span>식대 비과세 20만원 포함 · 간이세액표 100%</span><a data-out="link" href="https://donpyo.com/salary/" target="_top" rel="noopener">자세히 보기 →</a></div>
+</form>`;
+  const loan = `<form class="em" data-embed="loan">
+${brandRow('대출 월 상환액')}
+<div class="em-row"><label><span>금액 (만원)</span><input type="text" inputmode="numeric" data-k="p" value="20000"></label><label><span>기간 (년)</span><input type="text" inputmode="numeric" data-k="y" value="30"></label><label><span>금리 (%)</span><input type="text" inputmode="decimal" data-k="r" value="4.5"></label></div>
+<div class="tiles"><div class="tile"><small>월 상환액</small><span class="num" data-out="pay"></span></div><div class="tile"><small>총 이자</small><span class="num" data-out="interest"></span></div><div class="tile"><small>총 상환</small><span class="num" data-out="total"></span></div></div>
+<div class="em-foot"><span>원리금균등 · 거치 없음</span><a data-out="link" href="https://donpyo.com/loan/" target="_top" rel="noopener">상환표 보기 →</a></div>
+</form>`;
+  write('/embed/salary/', shell({ url: '/embed/salary/', title: '연봉 실수령액 계산기 위젯 — 돈표', desc: '블로그·카페에 붙이는 연봉 실수령액 계산기 위젯.', body: salary, bare: true, noindex: true, scripts: ['/js/engine.js', '/js/embed.js'] }));
+  write('/embed/loan/', shell({ url: '/embed/loan/', title: '대출 월 상환액 계산기 위젯 — 돈표', desc: '블로그·카페에 붙이는 대출 상환액 계산기 위젯.', body: loan, bare: true, noindex: true, scripts: ['/js/engine.js', '/js/embed.js'] }));
+  const snip = (kind, h) => `&lt;iframe src="https://donpyo.com/embed/${kind}/" width="100%" height="${h}" style="border:0;max-width:640px" loading="lazy" title="돈표 ${kind === 'salary' ? '연봉 실수령액' : '대출 상환액'} 계산기"&gt;&lt;/iframe&gt;`;
+  const body = `
+${crumb([['/', '홈'], [null, '위젯']])}
+<h1 class="title">블로그·카페에 붙이는 계산기 위젯</h1>
+<p class="meta">코드 한 줄을 글에 붙여 넣으면 방문자가 그 자리에서 연봉 실수령액·대출 상환액을 계산합니다 · 무료 · 회원가입 없음</p>
+${section('연봉 실수령액 위젯', '연봉과 부양가족을 넣으면 월 실수령·4대보험·세금', `<iframe class="em-preview" src="/embed/salary/" width="100%" height="300" style="border:0" title="연봉 실수령액 계산기 미리보기"></iframe>
+<textarea class="copybox" id="em-code-salary" rows="3" readonly onclick="this.select()">${snip('salary', 300)}</textarea><div class="btn-row"><button class="btn btn-share" type="button" data-copy="#em-code-salary">코드 복사</button></div>`)}
+${section('대출 월 상환액 위젯', '금액·기간·금리를 넣으면 월 상환액·총 이자', `<iframe class="em-preview" src="/embed/loan/" width="100%" height="300" style="border:0" title="대출 상환액 계산기 미리보기"></iframe>
+<textarea class="copybox" id="em-code-loan" rows="3" readonly onclick="this.select()">${snip('loan', 300)}</textarea><div class="btn-row"><button class="btn btn-share" type="button" data-copy="#em-code-loan">코드 복사</button></div>`)}
+${section('붙이는 방법', null, `<div class="doc">
+<p><b>티스토리·워드프레스·자체 사이트</b> — 글 편집기를 HTML 모드로 바꾸고 원하는 자리에 위 코드를 붙여 넣으면 끝입니다. 폭은 글 영역에 맞춰 늘어나고, 높이가 잘리면 <code>height</code> 값을 키우세요.</p>
+<p><b>네이버 블로그·카페, 브런치</b> — iframe을 허용하지 않아 붙일 수 없습니다. 대신 계산 결과 페이지 링크(예: <a href="/salary/4200/">donpyo.com/salary/4200/</a>)를 넣어 주세요.</p>
+<p><b>조건</b> — 위젯 안의 '돈표' 표시와 링크는 지우지 말아 주세요. 광고는 위젯 안에 나오지 않습니다. 계산 기준은 <a href="/method/">계산 기준</a> 페이지와 같고, 요율이 바뀌면 위젯도 함께 갱신됩니다.</p>
+</div>`)}
+<p class="note">위젯은 방문자의 브라우저 안에서만 계산하며 입력값을 서버로 보내지 않습니다. 결과는 참고용입니다.</p>`;
+  write('/embed/', shell({ url: '/embed/', title: '블로그에 붙이는 연봉 실수령액·대출 계산기 위젯 — 돈표', desc: '코드 한 줄로 블로그·카페·홈페이지에 연봉 실수령액 계산기와 대출 월 상환액 계산기를 붙이세요. 무료, 회원가입 없음, 요율 자동 갱신.', body }));
+}
+
 /* ---------- 빌드 ---------- */
 fs.rmSync(OUT, { recursive: true, force: true });
 fs.mkdirSync(OUT, { recursive: true });
@@ -1451,6 +1550,7 @@ taxReceiptIndex(); SALARIES.forEach(taxReceiptPage);
 goalIndex(); GOALS.forEach((g) => SAVE_M.forEach((mm) => goalPage(g, mm)));
 negotiateIndex(); SALARIES.forEach(negotiatePage);
 historyIndex(); SALARIES.forEach(historyPage);
+yearendPage(); embedPages();
 fs.writeFileSync(path.join(OUT, 'js', 'engine.js'), makeBundle(NT));
 docs();
 

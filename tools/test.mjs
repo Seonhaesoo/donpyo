@@ -4,6 +4,7 @@ import * as L from '../engine/loan.mjs';
 import * as R from '../engine/retire.mjs';
 import { netPay, insurance, incomeTax, grossForNet } from '../engine/tax.mjs';
 import { YEAR } from '../data/rates.mjs';
+import * as YE from '../engine/yearend.mjs';
 
 let pass = 0, fail = 0;
 function ok(cond, name, detail = '') { if (cond) pass++; else { fail++; console.log('FAIL', name, detail); } }
@@ -135,6 +136,29 @@ ok(L.annuityPayment(12000000, 0, 12) === 1000000, '무이자');
   ok(GO.balanceAfter(1000000, 12, 0) === 12000000, '이자 없는 잔액');
 }
 
+/* 연말정산 */
+ok(YE.earnedIncomeDeduction(40000000) === 11250000, '근로소득공제 4,000만', YE.earnedIncomeDeduction(40000000));
+ok(YE.earnedIncomeDeduction(200000000) === 16750000, '근로소득공제 2억 (한도 전)', YE.earnedIncomeDeduction(200000000));
+ok(YE.earnedIncomeDeduction(500000000) === 20000000, '근로소득공제 한도 2,000만', YE.earnedIncomeDeduction(500000000));
+ok(YE.cardDeduction(40000000, 20000000, 5000000) === 3000000, '카드공제 한도 300만', YE.cardDeduction(40000000, 20000000, 5000000));
+ok(YE.cardDeduction(40000000, 5000000, 0) === 0, '카드공제 문턱 미달');
+ok(YE.cardDeduction(40000000, 12000000, 2000000) === 900000, '카드공제 신용 200만×15% + 체크 200만×30%', YE.cardDeduction(40000000, 12000000, 2000000));
+ok(YE.cardDeduction(40000000, 8000000, 4000000) === 600000, '카드공제 문턱을 체크카드로 넘김 (200만×30%)', YE.cardDeduction(40000000, 8000000, 4000000));
+ok(YE.childCredit(1) === 250000 && YE.childCredit(2) === 550000 && YE.childCredit(3) === 950000, '자녀세액공제 25·55·95만');
+ok(YE.earnedIncomeTaxCredit(2377500, 40000000) === 684000, '근로소득세액공제 한도 68.4만', YE.earnedIncomeTaxCredit(2377500, 40000000));
+ok(YE.earnedIncomeTaxCredit(1000000, 30000000) === 550000, '근로소득세액공제 55%');
+{
+  const r = YE.yearEnd({ gross: 40000000, dependents: 1, creditCard: 20000000, checkCard: 5000000, prepaid: 0 });
+  ok(r.income === 28750000 && r.card === 3000000 && r.base === 24250000, '연말정산 과세표준', JSON.stringify([r.income, r.card, r.base]));
+  ok(r.calc === 2377500, '산출세액 2,377,500', r.calc);
+  ok(r.usedStandard === true && r.determined === 1563500 && r.local === 156350, '표준세액공제 적용 결정세액', JSON.stringify([r.usedStandard, r.determined, r.local]));
+  const q = YE.yearEnd({ gross: 50000000, dependents: 1, renter: true, rent: 12000000, pensionAccount: 9000000, medical: 3000000, prepaid: 2000000 });
+  ok(q.rent === 1700000 && q.pa === 1350000 && q.med === 225000 && q.usedStandard === false, '월세 17%·연금계좌 15%·의료비 3% 초과 15%', JSON.stringify([q.rent, q.pa, q.med]));
+  ok(q.refund === q.prepaidTotal - q.total, '환급 = 기납부 − 결정세액');
+  const z = YE.yearEnd({ gross: 90000000, dependents: 1, renter: true, rent: 12000000, pensionAccount: 9000000 });
+  ok(z.rent === 0 && z.pa === 1080000, '총급여 8천만 초과 월세 공제 없음 · 연금 12%', JSON.stringify([z.rent, z.pa]));
+}
+
 /* 브라우저 엔진 묶음 = 서버 엔진 (같은 소스에서 생성되는지 확인) */
 {
   const vm = await import('node:vm');
@@ -151,6 +175,8 @@ ok(L.annuityPayment(12000000, 0, 12) === 1000000, '무이자');
   ok(B.annuityPayment(200000000, 0.045, 360) === L.annuityPayment(200000000, 0.045, 360), '번들 annuityPayment');
   ok(B.dsrLimit(50000000, 0.045, 360).principal === L.dsrLimit(50000000, 0.045, 360).principal, '번들 dsrLimit');
   ok(B.manwon(42000000) === '4,200만원', '번들 fmt');
+  ok(B.yearEnd({ gross: 40000000, dependents: 1, creditCard: 20000000, checkCard: 5000000 }).determined === YE.yearEnd({ gross: 40000000, dependents: 1, creditCard: 20000000, checkCard: 5000000 }).determined, '번들 yearEnd = 서버 yearEnd');
+  ok(B.severance(3500000, 5).amount === R.severance(3500000, 5).amount, '번들 severance');
 }
 
 console.log(`test: ${pass} pass, ${fail} fail`);

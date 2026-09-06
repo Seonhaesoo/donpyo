@@ -9,6 +9,9 @@
 - `engine/retire.mjs` — 퇴직금, 퇴직소득세(근속연수공제·환산급여)
 - `data/rates.mjs` — 연도별 4대보험 요율·최저임금·국민연금 인상 일정 (매년 갱신)
 - `data/ganyi.json` — 근로소득 간이세액표 (소득세법 시행령 별표 2, 2024.2.29 개정) 월급여 천원 구간 × 공제대상가족 1~11명
+- `engine/gift.mjs` — 증여세(10년 합산 공제·혼인 출산 공제·누진세율·세대생략 할증·신고세액공제) → `/gift-tax/`
+- `engine/realty.mjs` — 복비(중개보수 상한요율·월세 환산·부가세) → `/bokbi/`, 주택 취득세(사잇값 세율·다주택 중과·교육세·농특세·생애최초 감면) → `/acquisition-tax/`
+- `engine/deposit.mjs` — 예금 이자(단리·월복리·월 이자 지급식) → `/deposit/`
 - `engine/yearend.mjs` — 연말정산 미리보기(근로소득공제·카드·세액공제·표준세액공제, `/yearend/`에서 브라우저 계산)
 - `tools/build.mjs` — 페이지 생성기 (`node tools/build.mjs`), `tools/test.mjs` — 엔진 검증
 - `tools/bundle.mjs` — engine/*.mjs를 브라우저용 `dist/js/engine.js`로 묶음 (슬라이더·커플 링크·연말정산·임베드 위젯이 사용)

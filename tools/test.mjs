@@ -5,6 +5,9 @@ import * as R from '../engine/retire.mjs';
 import { netPay, insurance, incomeTax, grossForNet } from '../engine/tax.mjs';
 import { YEAR } from '../data/rates.mjs';
 import * as YE from '../engine/yearend.mjs';
+import * as GT from '../engine/gift.mjs';
+import * as RE from '../engine/realty.mjs';
+import * as DP from '../engine/deposit.mjs';
 
 let pass = 0, fail = 0;
 function ok(cond, name, detail = '') { if (cond) pass++; else { fail++; console.log('FAIL', name, detail); } }
@@ -157,6 +160,44 @@ ok(YE.earnedIncomeTaxCredit(1000000, 30000000) === 550000, '근로소득세액�
   ok(q.refund === q.prepaidTotal - q.total, '환급 = 기납부 − 결정세액');
   const z = YE.yearEnd({ gross: 90000000, dependents: 1, renter: true, rent: 12000000, pensionAccount: 9000000 });
   ok(z.rent === 0 && z.pa === 1080000, '총급여 8천만 초과 월세 공제 없음 · 연금 12%', JSON.stringify([z.rent, z.pa]));
+}
+
+/* 증여세 */
+ok(GT.giftTax(100000000, 'child').tax === 4850000, '자녀 1억 증여세 485만', GT.giftTax(100000000, 'child').tax);
+ok(GT.giftTax(500000000, 'child').tax === 77600000, '자녀 5억 7,760만', GT.giftTax(500000000, 'child').tax);
+ok(GT.giftTax(1000000000, 'spouse').tax === 67900000, '배우자 10억 6,790만', GT.giftTax(1000000000, 'spouse').tax);
+ok(GT.giftTax(600000000, 'spouse').tax === 0, '배우자 6억 면세');
+ok(GT.giftTax(100000000, 'minor').tax === 7760000, '미성년 1억 776만', GT.giftTax(100000000, 'minor').tax);
+ok(GT.giftTax(100000000, 'grandchild').tax === 6305000, '손자녀 1억 세대생략 할증 630.5만', GT.giftTax(100000000, 'grandchild').tax);
+ok(GT.giftTax(150000000, 'child', { marriage: true }).tax === 0, '혼인·출산 공제 1.5억 면세');
+ok(GT.giftTax(100000000, 'child', { prior: 100000000 }).tax === 14550000, '10년 내 1억 합산 후 1억 추가', GT.giftTax(100000000, 'child', { prior: 100000000 }).tax);
+ok(GT.giftTax(100000000, 'other').tax === 9700000, '타인 1억 970만');
+ok(GT.giftTax(5000000000, 'child').tax === 1954550000, '50억 50% 구간', GT.giftTax(5000000000, 'child').tax);
+ok(GT.giftTax(50400000, 'child').tax === 0, '과세표준 50만 미만 면제');
+ok(GT.freeLimit('child', true) === 150000000 && GT.freeLimit('spouse', true) === 600000000, '무세 한도');
+
+/* 복비·취득세 */
+ok(RE.brokerage(30000000).fee === 180000 && RE.brokerage(45000000).fee === 250000, '매매 5천만 미만 0.6% · 한도 25만');
+ok(RE.brokerage(500000000).fee === 2000000 && RE.brokerage(950000000).fee === 4750000 && RE.brokerage(2000000000).fee === 14000000, '매매 0.4 · 0.5 · 0.7%');
+ok(RE.brokerage(200000000, 'rent').fee === 600000 && RE.brokerage(80000000, 'rent').fee === 300000, '임대차 0.3% · 한도 30만');
+ok(RE.brokerage(500000000).total === 2200000, '부가세 10% 포함');
+ok(RE.rentBase(10000000, 500000) === 60000000 && RE.rentBase(20000000, 200000) === 34000000, '월세 환산 ×100 / 5천만 미만 ×70');
+ok(RE.acquisitionTax(500000000).total === 5500000, '5억 1주택 취득세+교육세 550만', RE.acquisitionTax(500000000).total);
+ok(RE.acquisitionTax(700000000).tax === 11666900 && RE.acquisitionTax(700000000).rate === 0.016667, '7억 사잇값 1.6667%', RE.acquisitionTax(700000000).tax);
+ok(RE.acquisitionTax(750000000).rate === 0.02 && RE.acquisitionTax(900000000).rate === 0.03, '7.5억 2% · 9억 3%');
+ok(RE.acquisitionTax(1000000000, { large: true }).total === 35000000, '10억 85㎡ 초과 3.5%', RE.acquisitionTax(1000000000, { large: true }).total);
+ok(RE.acquisitionTax(500000000, { firstHome: true }).total === 3500000, '생애최초 200만 감면');
+ok(RE.acquisitionTax(800000000, { homes: 2, regulated: true, large: true }).total === 72000000, '조정대상지역 2주택 9.0%');
+ok(RE.acquisitionTax(800000000, { homes: 3, regulated: true }).total === 99200000, '3주택 12.4%');
+ok(RE.acquisitionTax(800000000, { homes: 2 }).rate === RE.homeRate(800000000), '비조정 2주택은 표준세율');
+
+/* 예금 */
+{
+  const d = DP.deposit(100000000, 12, 0.03);
+  ok(d.interest === 3000000 && d.tax === 462000 && d.net === 2538000 && d.monthlyNet === 211500, '1억 1년 3% 세후 253.8만 · 월 21.15만', JSON.stringify(d));
+  ok(DP.deposit(10000000, 6, 0.04).interest === 200000, '1천만 6개월 4% 세전 20만');
+  ok(DP.deposit(100000000, 12, 0.03, { compound: true }).interest === 3041596, '월복리 1억 1년 3%', DP.deposit(100000000, 12, 0.03, { compound: true }).interest);
+  ok(DP.deposit(DP.principalForNet(1000000, 12, 0.03), 12, 0.03).net >= 1000000, '세후 100만 받는 원금 역산');
 }
 
 /* 브라우저 엔진 묶음 = 서버 엔진 (같은 소스에서 생성되는지 확인) */

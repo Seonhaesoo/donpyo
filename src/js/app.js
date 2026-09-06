@@ -35,6 +35,15 @@
     var years = pick(t, /(\d+)\s*년/), months = pick(t, /(\d+)\s*개월/), rate = pick(t, /(\d+(?:\.\d+)?)\s*(?:%|퍼|프로)/), hours = pick(t, /(?:주\s*)?(\d+)\s*시간/) || pick(t, /주\s*(\d+)/);
     if (rate == null) { var r2 = t.match(/금리\s*(\d+(?:\.\d+)?)/) || t.match(/(?:^|\s)(\d{1,2}\.\d+)(?!\s*(?:억|천|만|년|개월|시간|%))/); if (r2) rate = parseFloat(r2[1]); }
     var man = function (v) { return v >= 100000 ? Math.round(v / 10000) : v; };   /* 원 단위로 적은 경우 */
+    if (/증여/.test(t)) {
+      var rel = /배우자|아내|남편|부부/.test(t) ? 'spouse' : /손자|손녀|조부|할아버지|할머니/.test(t) ? 'grandchild' : /미성년/.test(t) ? 'minor' : /부모|아버지|어머니|엄마|아빠/.test(t) ? 'parent' : /형제|자매|친족|삼촌|이모|고모|사위|며느리/.test(t) ? 'relative' : /타인/.test(t) ? 'other' : 'child';
+      if (!first) return { href: '/gift-tax/' + rel + '/', label: '증여세 표' };
+      var ga = nearest(G.gift || [first], man(first));
+      return { href: '/gift-tax/' + rel + '/' + ga + '/', label: fmtMan(ga) + '원 증여세' };
+    }
+    if (/복비|중개|수수료/.test(t)) { if (!first) return { href: '/bokbi/', label: '복비 계산표' }; var bk = nearest(G.bokbi || [first], man(first)); return { href: '/bokbi/' + bk + '/', label: fmtMan(bk) + '원 복비' }; }
+    if (/취득세/.test(t)) { if (!first) return { href: '/acquisition-tax/', label: '취득세 계산표' }; var aq = nearest(G.acq || [first], man(first)); return { href: '/acquisition-tax/' + aq + '/', label: fmtMan(aq) + '원 주택 취득세' }; }
+    if (/예금|예치|목돈|파킹/.test(t) && !/적금/.test(t)) { if (!first) return { href: '/deposit/', label: '예금 이자표' }; var dp = nearest(G.depP || [first], man(first)), dn = nearest(G.depN || [12], months || (years ? years * 12 : 12)); return { href: '/deposit/' + dp + '/' + dn + '/', label: fmtMan(dp) + '원 · ' + dn + '개월 예금 이자' }; }
     if (/시급|알바|아르바이트|주휴/.test(t)) {
       var w = pick(t, /시급\s*(\d+)/) || (A.filter(function (x) { return x.man >= 1000 && x.man < 100000 && !/시간/.test(x.unit); })[0] || {}).man;
       if (!w) return { href: '/hourly/', label: '알바 월급표' };

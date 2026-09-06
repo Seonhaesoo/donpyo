@@ -113,5 +113,16 @@ ok(L.annuityPayment(12000000, 0, 12) === 1000000, '무이자');
   ok(near(L.annuityPayment(30000000, 0.05, 60), 566137, 5), '자동차 할부 3천만·60개월·5%', L.annuityPayment(30000000, 0.05, 60));
 }
 
+/* 나이대 비교 */
+{
+  const AG = await import('../engine/age.mjs');
+  const { AGE_INCOME } = await import('../data/age-income.mjs');
+  for (const k of Object.keys(AGE_INCOME.dist)) { const s = AGE_INCOME.dist[k].reduce((a, b) => a + b, 0); ok(near(s, 100, 0.3), `분포 합계 100 (${k})`, s); }
+  ok(near(AG.medianOf('all'), AGE_INCOME.overall.median, 250000), '구간 보간 중위 ≈ 공식 중위 288만', AG.medianOf('all'));
+  ok(AG.ageRank(4690000, '40s').top < 0.5 && AG.ageRank(2710000, '20s').top < 0.6, '평균 월소득은 중위보다 위');
+  ok(AG.ageRank(10000000, 'all').topPct === 4.3, '1,000만원 = 상위 4.3%', AG.ageRank(10000000, 'all').topPct);
+  ok(AG.ageRank(0, 'all').top === 1, '0원 = 상위 100%');
+}
+
 console.log(`test: ${pass} pass, ${fail} fail`);
 if (fail) process.exit(1);

@@ -4,7 +4,7 @@
 export const PRICES_ASOF = '2026년 9월';
 
 export const PRICES = [
-  { key: 'bus', label: '버스·지하철 한 번', price: 1550, note: '수도권 기본요금' },
+  { key: 'bus', label: '버스·지하철 한 번', price: 1550, note: '수도권 지하철 기본요금 (버스 1,500원)' },
   { key: 'coffee', label: '아메리카노 한 잔', price: 4500, note: '프랜차이즈' },
   { key: 'kimbap', label: '김밥 한 줄', price: 3500 },
   { key: 'lunch', label: '점심 한 끼', price: 10000, note: '직장가 백반' },

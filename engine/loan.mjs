@@ -55,7 +55,7 @@ export function dsrLimit(annualIncome, annual, n, dsr = 0.4) {
 }
 
 /* 갈아타기 — 같은 원금·기간에서 금리만 바뀔 때. feeRate 는 중도상환수수료율(잔여기간 무시한 단순 상한) */
-export function refinance(P, rateOld, rateNew, n, feeRate = 0.012) {
+export function refinance(P, rateOld, rateNew, n, feeRate = 0.006) {
   const oldPay = annuityPayment(P, rateOld, n), newPay = annuityPayment(P, rateNew, n);
   const saving = oldPay - newPay;
   const fee = Math.round(P * feeRate);

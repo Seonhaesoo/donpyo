@@ -131,6 +131,17 @@
     });
   });
 
+  /* 큰 숫자(11자 이상)가 든 타일 묶음은 좁은 화면에서 2열로 — 빌드가 놓친 동적 타일까지 */
+  function wideTiles() {
+    Array.prototype.forEach.call(document.querySelectorAll('.tiles:not(.tiles-wide)'), function (t) {
+      var nums = t.querySelectorAll('.num');
+      for (var i = 0; i < nums.length; i++) { if (nums[i].textContent.trim().length >= 11) { t.classList.add('tiles-wide'); break; } }
+    });
+  }
+  wideTiles();
+  setTimeout(wideTiles, 0);   /* live.js 등 뒤에 실행되는 스크립트가 채운 값까지 */
+  document.addEventListener('input', function () { setTimeout(wideTiles, 0); });
+
   var groups = document.querySelectorAll('[data-variants]');
   Array.prototype.forEach.call(groups, function (g) {
     var state = {};

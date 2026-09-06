@@ -97,5 +97,21 @@ ok(L.annuityPayment(12000000, 0, 12) === 1000000, '무이자');
   ok(rank(30000000).top > rank(60000000).top, '단조');
 }
 
+/* 노동·프리랜서·최저임금 */
+{
+  const LB = await import('../engine/labor.mjs');
+  const { MIN_WAGE_HISTORY, MONTH_HOURS } = await import('../data/rates.mjs');
+  const f = LB.freelance(3000000);
+  ok(f.tax === 90000 && f.local === 9000 && f.net === 2901000, '프리랜서 3.3%', f.net);
+  ok(LB.ordinaryHourly(3500000) === 16746, '통상시급 350만 → 16,746', LB.ordinaryHourly(3500000));
+  ok(LB.overtime(3500000).ext === Math.round(3500000 / 209 * 1.5), '연장 1.5배');
+  ok(LB.leaveDays(0.5) === 6 && LB.leaveDays(1) === 15 && LB.leaveDays(3) === 16 && LB.leaveDays(21) === 25 && LB.leaveDays(30) === 25, '연차 발생 일수');
+  ok(LB.leavePay(3500000, 5) === Math.round(3500000 / 209 * 8) * 5, '연차수당 5일');
+  ok(MIN_WAGE_HISTORY[YEAR] * MONTH_HOURS === 2156880, '2026 최저임금 월급 2,156,880', MIN_WAGE_HISTORY[YEAR] * MONTH_HOURS);
+  const s = LB.freelanceSettlement(36000000, 0.6, 1188000);   /* 월 300만 × 12, 경비율 60% */
+  ok(s.base === 36000000 * 0.4 - 1500000 && s.due < 0, '종소세 정산 예시(환급)', s.due);
+  ok(near(L.annuityPayment(30000000, 0.05, 60), 566137, 5), '자동차 할부 3천만·60개월·5%', L.annuityPayment(30000000, 0.05, 60));
+}
+
 console.log(`test: ${pass} pass, ${fail} fail`);
 if (fail) process.exit(1);

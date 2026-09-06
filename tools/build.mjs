@@ -3,12 +3,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { YEAR, RATES, PENSION_SCHEDULE, MONTH_HOURS, WEEKS_PER_MONTH, CONVERSION_CAP, INTEREST_TAX } from '../data/rates.mjs';
+import { YEAR, RATES, PENSION_SCHEDULE, MONTH_HOURS, WEEKS_PER_MONTH, CONVERSION_CAP, INTEREST_TAX, MIN_WAGE_HISTORY } from '../data/rates.mjs';
 import { netPay, insurance, incomeTax, grossForNet } from '../engine/tax.mjs';
 import * as L from '../engine/loan.mjs';
 import * as R from '../engine/retire.mjs';
 import * as U from '../engine/unemploy.mjs';
 import * as RK from '../engine/rank.mjs';
+import * as LB from '../engine/labor.mjs';
 import { num, won, manwon, short, pct, rate as fmtRate, rateSlug } from '../engine/fmt.mjs';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -179,6 +180,7 @@ ${payVariants(annual)}
 ${section('근로소득자 중 어디쯤', `국세청 ${RK.STAT.year}년 귀속 연말정산 통계(신고 ${short(RK.STAT.workers)}명 · 중위 ${manwon(RK.STAT.median)} · 평균 ${manwon(RK.STAT.mean)})에 맞춘 추정`, `<div class="tiles"><div class="tile"><small>근로소득자 중</small><span class="num">상위 ${rk.topPct}%</span></div><div class="tile"><small>중위 연봉</small>${n(RK.STAT.median)}</div><div class="tile"><small>평균 연봉</small>${n(RK.STAT.mean)}</div></div>` + list([{ href: '/rank/', title: '연봉 순위표', sub: '상위 1%·10%·30%의 연봉 경계와 계산 방법' }]))}
 ${section('이웃 연봉', null, chips(nb.map((v) => ({ label: short(v * 10000), value: netPay({ annual: v * 10000, nontax: NT }).net, href: salaryUrl(v), on: v === m }))))}
 ${section('연봉이 오르면 손에 오는 돈', '인상액의 상당 부분은 4대보험과 세금으로 빠집니다', table(['인상', '월 실수령', '월 증가', '인상액 대비'], raises))}
+${section('인상률로 보면', '연봉 협상에서 %로 이야기할 때 — 새 연봉은 만원 단위로 반올림', table(['인상률', '새 연봉', '월 실수령', '월 증가'], [3, 5, 7, 10, 15, 20].map((r) => { const a2 = Math.round(annual * (1 + r / 100) / 10000) * 10000; const q = netPay({ annual: a2, nontax: NT }); return { cells: [`+${r}%`, num(a2), num(q.net), num(q.net - p.net)] }; })))}
 ${section('국민연금 인상 일정에 따른 변화', `연금개혁으로 근로자 부담률이 매년 0.5%p씩 올라 ${Math.max(...Object.keys(PENSION_SCHEDULE).map(Number))}년 6.5%가 됩니다. 다른 요율과 세금이 그대로라고 가정한 값입니다`, pensionSchedule(annual))}
 ${section(`${PREV}년과 비교`, null, tiles([{ label: `${PREV}년 월 실수령`, value: prev.net }, { label: `${YEAR}년 월 실수령`, value: p.net }, { label: '차이', value: p.net - prev.net }]))}
 ${section('시급·일급으로 보면', `월 ${MONTH_HOURS}시간(주 40시간 + 주휴) 기준`, tiles([{ label: '시급', value: Math.round(hourly) }, { label: '일급 (8시간)', value: Math.round(hourly * 8) }, { label: `최저임금 ${num(R0.minWage)}원 대비`, value: Math.round(hourly / R0.minWage * 100) / 100 }]).replace(/<span class="num">(\d+\.?\d*)<\/span><\/div>$/, '<span class="num">$1배</span></div>'))}
@@ -451,18 +453,26 @@ function home() {
   <p>연봉·월급·대출·퇴직금·알바 월급을 금액별로 미리 계산해 표로 묶어 두었습니다. 숫자만 고르면 바로 나옵니다.</p>
 </div>
 <form class="quick" data-quick="salary" data-step="100" data-min="2000" data-max="30000"><label for="q-home">연봉으로 바로 찾기</label><div class="quick-row"><div class="quick-in"><input id="q-home" type="text" inputmode="numeric" placeholder="4200"><span>만원</span></div><button class="btn" type="submit">실수령액 보기</button></div><div class="quick-links"><a href="/monthly/">월급으로 찾기</a><a href="/net/">실수령액으로 연봉 찾기</a><a href="/hourly/">시급으로 찾기</a></div></form>
-${section('계산 사전', null, `<div class="dict">
+${section('급여와 일', null, `<div class="dict">
 <a href="/salary/"><b>연봉 실수령액</b><span>4,200만원 → 월 <span class="num">${num(s42.net)}</span>원</span></a>
-<a href="/loan/"><b>대출 상환금</b><span>2억·30년·4.5% → 월 <span class="num">${num(L.annuityPayment(200000000, 0.045, 360))}</span>원</span></a>
-<a href="/net/"><b>실수령으로 연봉 찾기</b><span>월 300만원 받으려면 연봉 <span class="num">${num(grossForNet(3000000, { nontax: NT }) * 12)}</span>원</span></a>
-<a href="/retire/"><b>퇴직금 세후</b><span>월급 350만·5년 → <span class="num">${num(R.severanceTax(R.severance(3500000, 5).amount, 5).net)}</span>원</span></a>
-<a href="/hourly/"><b>알바 월급</b><span>시급 ${num(R0.minWage)}원·주 40시간 → 주휴 <span class="num">${num(R0.minWage * 8)}</span>원</span></a>
 <a href="/monthly/"><b>월급 실수령액</b><span>세전 350만원 → <span class="num">${num(netPay({ monthly: 3500000, nontax: NT }).net)}</span>원</span></a>
-<a href="/unemployment/"><b>실업급여</b><span>월급 350만·5년 → 하루 <span class="num">${num(U.dailyBenefit(3500000).daily)}</span>원 × ${U.benefitDays(5)}일</span></a>
+<a href="/net/"><b>실수령으로 연봉 찾기</b><span>월 300만원 받으려면 연봉 <span class="num">${num(grossForNet(3000000, { nontax: NT }) * 12)}</span>원</span></a>
+<a href="/minimum-wage/"><b>${YEAR}년 최저임금</b><span>시급 ${num(R0.minWage)}원 → 월급 <span class="num">${num(R0.minWage * MONTH_HOURS)}</span>원</span></a>
+<a href="/freelance/"><b>프리랜서 3.3%</b><span>월 300만원 → 실수령 <span class="num">${num(LB.freelance(3000000).net)}</span>원</span></a>
+<a href="/overtime/"><b>연장·야간·휴일수당</b><span>월급 350만 → 연장 1시간 <span class="num">${num(LB.overtime(3500000).ext)}</span>원</span></a>
+<a href="/leave/"><b>연차수당</b><span>월급 350만 → 하루 <span class="num">${num(LB.leaveDaily(3500000))}</span>원</span></a>
+<a href="/hourly/"><b>알바 월급</b><span>시급 ${num(R0.minWage)}원·주 40시간 → 주휴 <span class="num">${num(R0.minWage * 8)}</span>원</span></a>
+<a href="/rank/"><b>연봉 순위</b><span>연봉 6,000만원은 근로소득자 상위 <span class="num">${RK.rank(60000000).topPct}</span>%</span></a>
+</div>`)}
+${section('대출·저축·제도', null, `<div class="dict">
+<a href="/loan/"><b>대출 상환금</b><span>2억·30년·4.5% → 월 <span class="num">${num(L.annuityPayment(200000000, 0.045, 360))}</span>원</span></a>
 <a href="/dsr/"><b>대출 한도 (DSR)</b><span>연봉 5,000만 → 최대 <span class="num">${num(L.dsrLimit(50000000, 0.045, 360).principal)}</span>원</span></a>
 <a href="/jeonse/"><b>전세 vs 월세</b><span>전세 2억 대출 4% → 월 이자 <span class="num">${num(Math.round(200000000 * 0.04 / 12))}</span>원</span></a>
 <a href="/savings/"><b>적금 세후 이자</b><span>월 50만·3년·4% → <span class="num">${num(savings(500000, 36, 0.04).net)}</span>원</span></a>
-<a href="/rank/"><b>연봉 순위</b><span>연봉 6,000만원은 근로소득자 상위 <span class="num">${RK.rank(60000000).topPct}</span>%</span></a>
+<a href="/car-loan/"><b>자동차 할부</b><span>3,000만·60개월·5% → 월 <span class="num">${num(L.annuityPayment(30000000, 0.05, 60))}</span>원</span></a>
+<a href="/retire/"><b>퇴직금 세후</b><span>월급 350만·5년 → <span class="num">${num(R.severanceTax(R.severance(3500000, 5).amount, 5).net)}</span>원</span></a>
+<a href="/unemployment/"><b>실업급여</b><span>월급 350만·5년 → 하루 <span class="num">${num(U.dailyBenefit(3500000).daily)}</span>원 × ${U.benefitDays(5)}일</span></a>
+<a href="/rates/"><b>${YEAR}년 4대보험 요율표</b><span>국민연금 <span class="num">${pct(R0.pension, 2)}</span> · 건강보험 <span class="num">${pct(R0.health * 2, 2)}</span></span></a>
 </div>`)}
 ${section('많이 보는 연봉표', null, list(popular))}
 ${section(`${YEAR}년에 달라진 것`, null, `<div class="callout"><b>국민연금 근로자 부담 ${pct(RATES[PREV].pension, 2)} → ${pct(R0.pension, 2)}</b>, 건강보험 ${pct(RATES[PREV].health * 2, 2)} → ${pct(R0.health * 2, 2)}, 최저임금 ${num(RATES[PREV].minWage)}원 → ${num(R0.minWage)}원. 같은 연봉이라도 실수령액이 작년보다 조금 줄었습니다. 각 연봉 페이지에서 ${PREV}년과 비교할 수 있습니다.</div>`)}`;
@@ -504,6 +514,14 @@ ${table(['항목', `${PREV}년`, `${YEAR}년`, '비고'], [
 <p>DSR 40% = 모든 대출의 연간 원리금 상환액 ÷ 연소득 ≤ 40%. 월 상환 여력 = 연소득 × 40% ÷ 12이고, 그 여력으로 갚을 수 있는 원리금균등 원금을 한도로 봅니다. 스트레스 DSR은 실제 금리에 가산금리(수도권 주담대 1.5%p)를 더해 계산합니다.</p>
 <h2>연봉 순위</h2>
 <p>국세청 ${RK.STAT.year}년 귀속 근로소득 연말정산 통계의 공식 요약값(신고 ${num(RK.STAT.workers)}명, 중위 ${won(RK.STAT.median)}, 평균 ${won(RK.STAT.mean)}, 1억원 초과 ${pct(RK.STAT.over100m)})에 맞춘 로그정규 분포로 상위 비율을 추정합니다. 세 값을 모두 재현하는 분포이지만 백분위 원자료 그대로는 아니므로 ±몇 %p의 오차가 있을 수 있습니다. 근로소득 연말정산 대상자 기준이라 자영업자·일용직은 포함되지 않습니다.</p>
+<h2>최저임금</h2>
+<p>월급 = 시급 × 209시간(주 40시간 + 주휴 8시간, 한 달 4.345주). 주 15시간 이상 일하면 주휴수당이 붙고, 1년 이상 계약의 수습 3개월은 90%까지 줄일 수 있습니다. 5인 미만 사업장도 최저임금은 똑같이 적용됩니다.</p>
+<h2>프리랜서 3.3%</h2>
+<p>사업소득 원천징수 = 소득세 3% + 지방소득세 0.3%. 다음 해 5월 종합소득세 신고에서 수입 − 필요경비(업종별 단순경비율 또는 실제 경비) − 인적공제로 과세표준을 구해 정산하며, 미리 낸 3.3%보다 결정세액이 적으면 환급됩니다. 이 사이트의 정산 예시는 필요경비율 60·70·80%, 기본공제 150만원, 표준세액공제 7만원만 반영한 값입니다.</p>
+<h2>연장·야간·휴일수당과 연차</h2>
+<p>통상시급 = 월 통상임금 ÷ 209시간(월급 전체가 통상임금이라고 가정). 연장근로는 통상시급의 1.5배, 야간(22~06시)은 0.5배 가산, 휴일근로는 8시간 이내 1.5배·초과분 2배입니다. 5인 미만 사업장은 가산 의무가 없습니다. 연차수당 = 통상시급 × 8시간 × 미사용 일수. 연차는 1년 미만 개근한 달마다 1일(최대 11일), 1년 이상 80% 출근 시 15일, 3년차부터 2년마다 1일씩 늘어 최대 25일입니다.</p>
+<h2>자동차 할부</h2>
+<p>차값 − 선수금을 원리금균등으로 나눈 월 납입액입니다. 취득세(약 7%)·보험료·등록비와 잔가 유예 할부는 반영하지 않았습니다.</p>
 <h2>출처</h2>
 <ul><li>국세청 근로소득 간이세액표 (소득세법 시행령 별표 2), 국세통계 근로소득 연말정산 신고 현황</li><li>국민연금공단·국민건강보험공단 보험료율 고시</li><li>고용노동부 최저임금 고시, 근로기준법 시행령(주휴·퇴직금), 고용보험법(구직급여)</li><li>주택임대차보호법(전월세전환율), 소득세법(이자소득세)</li></ul>
 </div>`;
@@ -754,6 +772,251 @@ ${ad()}
   write('/rank/', shell({ url: '/rank/', title: `연봉 순위표 — 내 연봉은 근로소득자 상위 몇 %? (국세청 ${RK.STAT.year}년 귀속)`, desc: `국세청 근로소득 통계로 연봉별 상위 비율과 상위 1%·10%·30%의 연봉 경계를 정리했습니다. 중위 ${manwon(RK.STAT.median)}, 평균 ${manwon(RK.STAT.mean)}.`, body, nav: 'salary' }));
 }
 
+/* ---------- 최저임금 ---------- */
+function minWagePage(year) {
+  const w = MIN_WAGE_HISTORY[year];
+  const prev = MIN_WAGE_HISTORY[year - 1];
+  const monthly = w * MONTH_HOURS, daily = w * 8, weekly = w * 48, annual = monthly * 12;
+  const url = year === YEAR ? '/minimum-wage/' : `/minimum-wage/${year}/`;
+  const p = netPay({ monthly, nontax: NT });
+  const isCur = w === R0.minWage;
+  const hist = Object.keys(MIN_WAGE_HISTORY).map(Number).sort((a, b) => b - a).map((y) => ({ cls: y === year ? 'on' : '', cells: [y === YEAR ? `<a href="/minimum-wage/">${y}년</a>` : (y === YEAR - 1 ? `<a href="/minimum-wage/${y}/">${y}년</a>` : `${y}년`), num(MIN_WAGE_HISTORY[y]), num(MIN_WAGE_HISTORY[y] * MONTH_HOURS), MIN_WAGE_HISTORY[y - 1] ? pct(MIN_WAGE_HISTORY[y] / MIN_WAGE_HISTORY[y - 1] - 1) : '-'] }));
+  const hoursRows = [15, 20, 25, 30, 35, 40].map((h) => { const hol = Math.round(w * Math.min(h, 40) / 40 * 8); const wk = w * h + hol; const label = isCur ? `<a href="${hourlyUrl(w, h)}">주 ${h}시간</a>` : `주 ${h}시간`; return { cells: [label, num(hol), num(wk), num(Math.round(wk * WEEKS_PER_MONTH))] }; });
+  const title = `${year}년 최저임금 — 시급 ${num(w)}원, 월급 ${won(monthly)}, 연봉 ${manwon(annual)}`;
+  const desc = `${year}년 최저임금은 시급 ${num(w)}원입니다. 일급 ${won(daily)}, 주급 ${won(weekly)}(주휴 포함), 월급 ${won(monthly)}(209시간), 연봉 ${won(annual)}이고 4대보험과 세금을 뺀 월 실수령은 약 ${won(p.net)}입니다. 주 근무시간별 월급과 연도별 인상 내역을 정리했습니다.`;
+  const body = `
+${crumb([['/', '홈'], [null, `${year}년 최저임금`]])}
+<h1 class="title">${year}년 최저임금 — 시급 ${num(w)}원</h1>
+<p class="meta">${prev ? `${year - 1}년 ${num(prev)}원에서 ${pct(w / prev - 1)} 인상 · ` : ''}월급은 주 40시간 + 주휴 8시간 = 209시간 기준</p>
+${hero({ label: '최저임금 월급 (세전)', value: monthly, sub: `시급 ${num(w)}원 × 209시간 · 연봉 ${won(annual)} · 4대보험·세금 빼면 약 ${won(p.net)}` })}
+${tiles([{ label: '시급', value: w }, { label: '일급 (8시간)', value: daily }, { label: '주급 (40시간 + 주휴)', value: weekly }])}
+${section('실수령액', '월급 ${won(monthly)}에서 4대보험과 소득세를 뺀 금액 — 부양가족·식대는 아래에서', payVariants(annual))}
+${section('주 근무시간별 월급', '주 15시간 이상이면 주휴수당이 붙습니다 · 한 달 4.345주', table(['근무시간', '주휴수당(주)', '주급', '월급'], hoursRows))}
+${ad()}
+${section('연도별 최저임금', null, table(['연도', '시급', '월급(209시간)', '인상률'], hist))}
+<div class="callout"><b>알아둘 것</b> — 최저임금은 5인 미만 사업장·수습·아르바이트에도 똑같이 적용됩니다. 다만 1년 이상 근로계약을 맺은 수습 3개월은 90%(시급 ${num(Math.floor(w * 0.9))}원)까지 줄일 수 있습니다. 다음 해 최저임금은 매년 7~8월 최저임금위원회에서 정해 고시하며, 정해지면 이 페이지를 갱신합니다.</div>
+${section('이어서 계산하기', null, list([
+  { href: '/hourly/', title: '알바 월급표', sub: '시급 × 주 시간별 주휴수당·월급' },
+  { href: salaryUrl(nearest(SALARIES, Math.round(annual / 10000))), title: `연봉 ${manwon(nearest(SALARIES, Math.round(annual / 10000)) * 10000)} 실수령액`, sub: '최저임금 연봉 근처의 실수령' },
+  { href: '/rates/', title: `${YEAR}년 4대보험 요율표`, sub: '국민연금·건강보험·고용보험' },
+]))}
+<p class="note">고용노동부 최저임금 고시 기준. 주휴수당·월 209시간 환산은 근로기준법과 고용노동부 행정해석을 따랐습니다. <a href="/method/">계산 기준 보기</a></p>`;
+  write(url, shell({ url, title, desc, body, nav: 'hourly' }));
+}
+
+/* ---------- 프리랜서 3.3% ---------- */
+const FREE = []; for (let m = 100; m <= 1000; m += 50) FREE.push(m);
+const freeUrl = (m) => `/freelance/${m}/`;
+
+function freelancePage(mm) {
+  const gross = mm * 10000;
+  const f = LB.freelance(gross);
+  const url = freeUrl(mm);
+  const annual = gross * 12, prepaid = f.withheld * 12;
+  const settle = [0.6, 0.7, 0.8].map((e) => { const s = LB.freelanceSettlement(annual, e, prepaid); return { cells: [pct(e, 0), num(s.base), num(s.total), s.due > 0 ? `납부 ${num(s.due)}` : `환급 ${num(-s.due)}`] }; });
+  const emp = netPay({ monthly: gross, nontax: NT });
+  const title = `프리랜서 월 ${manwon(gross)} 3.3% 떼면 실수령 ${won(f.net)} — 원천징수 ${won(f.withheld)}`;
+  const desc = `프리랜서(사업소득) 월 ${manwon(gross)}에서 3.3%(소득세 3% + 지방소득세 0.3%) ${won(f.withheld)}을 떼면 실수령 ${won(f.net)}입니다. 연간 원천징수액과 5월 종합소득세 정산 예시, 같은 금액 직장인 실수령과 비교했습니다.`;
+  const body = `
+${crumb([['/freelance/', '프리랜서 3.3%'], [null, `월 ${manwon(gross)}`]])}
+<h1 class="title">프리랜서 월 ${manwon(gross)} — 3.3% 떼면</h1>
+<p class="meta">사업소득 원천징수 · 소득세 3% + 지방소득세 0.3% · 4대보험 직장가입 없음</p>
+${hero({ label: '실수령액', value: f.net, sub: `${won(gross)}에서 ${won(f.withheld)} 원천징수 · 연 ${won(f.net * 12)}`, bars: [f.net / gross], legendL: `실수령 ${pct(f.net / gross)}`, legendR: `원천징수 3.3%` })}
+${ledger('공제 내역', '월 기준 · 원', [{ label: '소득세', note: '3%', value: f.tax }, { label: '지방소득세', note: '소득세의 10%', value: f.local }], { label: '원천징수 합계', value: f.withheld })}
+${tiles([{ label: '연 수입', value: annual }, { label: '연 원천징수', value: prepaid }, { label: '연 실수령', value: f.net * 12 }])}
+${section('5월 종합소득세 정산 예시', '수입에서 필요경비를 뺀 소득으로 다시 계산해 미리 낸 3.3%와 정산합니다. 필요경비율은 업종별 단순경비율(국세청 고시)이나 실제 경비 — 여기서는 60·70·80% 가정, 본인 기본공제만 반영', table(['필요경비율', '과세표준', '결정세액(지방 포함)', '정산'], settle))}
+<div class="callout"><b>4대보험은 따로</b> — 프리랜서는 직장가입자가 아니라 건강보험·국민연금을 지역가입자로 직접 냅니다(소득·재산 기준). 고용보험은 예술인·노무제공자 등 일부만 적용됩니다. 위 실수령에는 이 비용이 빠져 있습니다.</div>
+${ad()}
+${section('같은 돈을 직장인이 받으면', `세전 월급 ${won(gross)} 근로자의 실수령(식대 20만원 포함 기준)`, tiles([{ label: '직장인 실수령', value: emp.net }, { label: '프리랜서 실수령', value: f.net }, { label: '차이', value: f.net - emp.net }]) + `<p class="sub" style="margin-top:8px;font-size:12.5px;color:var(--muted)">직장인은 4대보험(회사가 절반 부담)과 소득세를 떼고, 프리랜서는 3.3%만 떼지만 보험료를 스스로 내고 퇴직금·실업급여가 없습니다.</p>`)}
+${section('수입이 바뀌면', null, chips(neighbors(FREE, mm, 3).map((x) => ({ label: short(x * 10000), value: LB.freelance(x * 10000).net, href: freeUrl(x), on: x === mm }))))}
+${section('이어서 계산하기', null, list([
+  { href: monthlyUrl(nearest(MONTHLIES, Math.round(gross / 100000))), title: `월급 ${manwon(nearest(MONTHLIES, Math.round(gross / 100000)) * 100000)} 직장인 실수령액`, sub: '4대보험·소득세 공제 내역' },
+  { href: '/rates/', title: `${YEAR}년 4대보험 요율표`, sub: '지역가입자 부담 참고' },
+]))}
+<p class="note">3.3% 원천징수는 사업소득(인적용역)에 적용됩니다. 기타소득으로 신고되는 강연료·원고료 등은 8.8%(필요경비 60% 인정 후 22%)로 다릅니다. 종합소득세 정산 예시는 단순화한 값이며 실제는 업종별 경비율, 다른 소득, 각종 공제에 따라 달라집니다. <a href="/method/">계산 기준 보기</a></p>`;
+  write(url, shell({ url, title, desc, body, nav: 'monthly' }));
+}
+
+function freelanceIndex() {
+  const rows = FREE.map((mm) => { const f = LB.freelance(mm * 10000); return { cells: [`<a href="${freeUrl(mm)}">월 ${manwon(mm * 10000)}</a>`, num(f.withheld), num(f.net), num(f.withheld * 12)] }; });
+  const body = `
+${crumb([['/', '홈'], [null, '프리랜서 3.3%']])}
+<h1 class="title">프리랜서 3.3% 실수령액표</h1>
+<p class="meta">사업소득 원천징수(소득세 3% + 지방소득세 0.3%) 후 실수령 · 월 100만원부터 1,000만원까지</p>
+<form class="quick" data-quick="freelance" data-step="50" data-min="100" data-max="1000"><label for="q-free">월 수입으로 바로 찾기</label><div class="quick-row"><div class="quick-in"><input id="q-free" type="text" inputmode="numeric" placeholder="300"><span>만원</span></div><button class="btn" type="submit">실수령 보기</button></div></form>
+${section('월 수입별', null, table(['월 수입', '원천징수 3.3%', '실수령', '연 원천징수'], rows))}
+<p class="note">3.3%는 미리 내는 세금이고 다음 해 5월 종합소득세 신고로 정산됩니다. 각 페이지에 정산 예시와 직장인 비교가 있습니다.</p>`;
+  write('/freelance/', shell({ url: '/freelance/', title: '프리랜서 3.3% 실수령액표 — 월 수입별 원천징수와 실수령', desc: '프리랜서 사업소득 3.3% 원천징수 후 실수령액을 월 수입별로 정리했습니다. 종합소득세 정산 예시와 직장인 비교 포함.', body, nav: 'monthly' }));
+}
+
+/* ---------- 연장·야간·휴일수당 ---------- */
+const OT_PAYS = []; for (let m = 200; m <= 800; m += 50) OT_PAYS.push(m);
+const otUrl = (m) => `/overtime/${m}/`;
+const leaveUrl = (m) => `/leave/${m}/`;
+
+function overtimePage(pm) {
+  const pay = pm * 10000;
+  const o = LB.overtime(pay);
+  const url = otUrl(pm);
+  const title = `월급 ${manwon(pay)} 야근·연장수당 — 통상시급 ${won(o.hourly)}, 연장 1시간 ${won(o.ext)}`;
+  const desc = `월급 ${manwon(pay)}의 통상시급은 ${won(o.hourly)}(÷209시간)이고 연장근로 1시간은 1.5배 ${won(o.ext)}, 야간은 0.5배 ${won(o.night)} 가산, 휴일근로는 ${won(o.holiday8)}입니다. 월 연장 시간별 추가 수당과 실수령을 정리했습니다.`;
+  const hoursRows = [5, 10, 20, 30, 40, 52].map((h) => { const extra = o.ext * h; const q = netPay({ monthly: pay + extra, nontax: NT }); return { cells: [`${h}시간`, num(extra), num(pay + extra), num(q.net)] }; });
+  const ex = [
+    { cells: ['야간 8시간 (소정근로 안, 22~06시)', num((o.hourly + o.night) * 8), '1.5배'] },
+    { cells: ['연장 + 야간 4시간', num(o.extNight * 4), '2.0배'] },
+    { cells: ['휴일 8시간', num(o.holiday8 * 8), '1.5배'] },
+    { cells: ['휴일 10시간', num(o.holiday8 * 8 + o.holidayOver * 2), '8시간 1.5배 + 초과 2배'] },
+  ];
+  const body = `
+${crumb([['/overtime/', '연장·야간·휴일수당'], [null, `월급 ${manwon(pay)}`]])}
+<h1 class="title">월급 ${manwon(pay)} · 연장·야간·휴일수당</h1>
+<p class="meta">통상시급 = 월급 ÷ 209시간 · 월급 전체가 통상임금이라고 가정 · 5인 이상 사업장 기준</p>
+${hero({ label: '통상시급', value: o.hourly, sub: `연장 1시간 ${won(o.ext)} · 야간 가산 ${won(o.night)} · 휴일 1시간 ${won(o.holiday8)}` })}
+${ledger('시간당 수당', '원', [
+  { label: '연장근로', note: '1.5배 · 주 12시간 한도', value: o.ext },
+  { label: '야간 가산', note: '22시~06시 · 0.5배 추가', value: o.night },
+  { label: '연장 + 야간', note: '2.0배', value: o.extNight },
+  { label: '휴일근로 8시간 이내', note: '1.5배', value: o.holiday8 },
+  { label: '휴일근로 8시간 초과', note: '2.0배', value: o.holidayOver },
+])}
+${section('월 연장근로 시간별', '추가 수당과 그달 실수령(식대 20만원 포함 기준) · 주 12시간 한도라 월 최대 약 52시간', table(['월 연장', '추가 수당', '세전 합계', '실수령'], hoursRows))}
+${section('야간·휴일 예시', null, table(['상황', '수당', '배율'], ex))}
+${ad()}
+<div class="callout"><b>5인 미만 사업장</b>은 연장·야간·휴일 가산수당 의무가 없어 1배(통상시급)만 받습니다. <b>포괄임금제</b>라도 계약에 정한 시간을 넘긴 연장근로는 추가로 청구할 수 있습니다. 상여·고정수당이 있으면 통상임금이 월급보다 커져 수당도 늘어납니다.</div>
+${section('월급이 바뀌면', '연장 1시간 수당', chips(neighbors(OT_PAYS, pm, 3).map((x) => ({ label: short(x * 10000), value: LB.overtime(x * 10000).ext, href: otUrl(x), on: x === pm }))))}
+${section('이어서 계산하기', null, list([
+  { href: leaveUrl(pm), title: `월급 ${manwon(pay)} 연차수당`, sub: `하루 ${won(LB.leaveDaily(pay))}` },
+  { href: monthlyUrl(nearest(MONTHLIES, Math.round(pay / 100000))), title: `월급 ${manwon(pay)} 실수령액`, sub: '연장 없이 받을 때' },
+]))}
+<p class="note">근로기준법 제56조 기준. 통상임금에 들어가는 수당 범위는 2024년 12월 대법원 판결 이후 넓어졌으니 고정 상여가 있으면 통상시급이 더 높을 수 있습니다. <a href="/method/">계산 기준 보기</a></p>`;
+  write(url, shell({ url, title, desc, body, nav: 'monthly' }));
+}
+
+function overtimeIndex() {
+  const rows = OT_PAYS.map((pm) => { const o = LB.overtime(pm * 10000); return { cells: [`<a href="${otUrl(pm)}">${manwon(pm * 10000)}</a>`, num(o.hourly), num(o.ext), num(o.extNight), num(o.ext * 20)] }; });
+  const body = `
+${crumb([['/', '홈'], [null, '연장·야간·휴일수당']])}
+<h1 class="title">월급별 연장·야간·휴일수당표</h1>
+<p class="meta">통상시급(÷209시간)과 1.5배·2배 수당 · 월급을 누르면 월 연장 시간별 실수령</p>
+${section('월급별', '원', table(['월급', '통상시급', '연장 1시간', '연장+야간', '월 20시간 연장'], rows))}`;
+  write('/overtime/', shell({ url: '/overtime/', title: '연장·야간·휴일수당 계산표 — 월급별 통상시급과 1.5배·2배 수당', desc: '월급 200만원부터 800만원까지 통상시급과 연장·야간·휴일근로 수당, 월 연장 시간별 추가 수당을 표로 정리했습니다.', body, nav: 'monthly' }));
+}
+
+/* ---------- 연차수당 ---------- */
+function leavePage(pm) {
+  const pay = pm * 10000;
+  const daily = LB.leaveDaily(pay);
+  const url = leaveUrl(pm);
+  const title = `월급 ${manwon(pay)} 연차수당 — 하루 ${won(daily)}, 15일이면 ${won(daily * 15)}`;
+  const desc = `월급 ${manwon(pay)}의 연차수당은 하루 ${won(daily)}(통상시급 × 8시간)입니다. 미사용 연차 일수별 수당과 근속연수별 연차 발생 일수를 정리했습니다.`;
+  const dayRows = [1, 2, 3, 5, 7, 10, 15, 20, 25].map((d) => ({ cells: [`${d}일`, num(daily * d)] }));
+  const yrRows = [[0.5, '6개월'], [1, '1년'], [2, '2년'], [3, '3년'], [5, '5년'], [7, '7년'], [10, '10년'], [15, '15년'], [21, '21년 이상']].map(([y, l]) => { const d = LB.leaveDays(y); return { cells: [l, `${d}일`, num(daily * d)] }; });
+  const body = `
+${crumb([['/leave/', '연차수당'], [null, `월급 ${manwon(pay)}`]])}
+<h1 class="title">월급 ${manwon(pay)} 연차수당</h1>
+<p class="meta">1일 통상임금 = 월급 ÷ 209시간 × 8시간 · 월급 전체가 통상임금이라고 가정</p>
+${hero({ label: '연차 하루 수당', value: daily, sub: `통상시급 ${won(LB.ordinaryHourly(pay))} × 8시간 · 15일이면 ${won(daily * 15)}` })}
+${section('미사용 연차별 수당', null, table(['미사용 연차', '수당'], dayRows))}
+${section('근속연수별 연차 일수', '1년 미만은 개근한 달마다 1일(최대 11일), 1년 이상은 15일, 3년차부터 2년마다 1일 추가(최대 25일)', table(['근속', '연차', '전부 안 쓰면'], yrRows))}
+${ad()}
+<div class="callout"><b>언제 받나</b> — 연차가 소멸한 다음 달 임금 지급일에 미사용 일수만큼 받습니다. 회사가 연차 사용을 서면으로 촉진했는데 쓰지 않았다면 수당을 안 줄 수 있습니다. 연차수당은 근로소득이라 그달 세금이 조금 늘어납니다.</div>
+${section('월급이 바뀌면', '하루 수당', chips(neighbors(OT_PAYS, pm, 3).map((x) => ({ label: short(x * 10000), value: LB.leaveDaily(x * 10000), href: leaveUrl(x), on: x === pm }))))}
+${section('이어서 계산하기', null, list([
+  { href: otUrl(pm), title: `월급 ${manwon(pay)} 연장·야간수당`, sub: `연장 1시간 ${won(LB.overtime(pay).ext)}` },
+  { href: retireUrl(nearest(RETIRE_PAYS, pm), 5), title: `월급 ${manwon(pay)} 퇴직금`, sub: '5년 근속 세전·세후' },
+]))}
+<p class="note">근로기준법 제60조 기준. 5인 미만 사업장은 연차휴가 규정이 적용되지 않습니다. <a href="/method/">계산 기준 보기</a></p>`;
+  write(url, shell({ url, title, desc, body, nav: 'monthly' }));
+}
+
+function leaveIndex() {
+  const rows = OT_PAYS.map((pm) => { const d = LB.leaveDaily(pm * 10000); return { cells: [`<a href="${leaveUrl(pm)}">${manwon(pm * 10000)}</a>`, num(d), num(d * 5), num(d * 15)] }; });
+  const body = `
+${crumb([['/', '홈'], [null, '연차수당']])}
+<h1 class="title">월급별 연차수당표</h1>
+<p class="meta">하루 수당 = 월급 ÷ 209시간 × 8시간 · 월급을 누르면 일수별·근속별 표</p>
+${section('월급별', '원', table(['월급', '하루', '5일', '15일'], rows))}`;
+  write('/leave/', shell({ url: '/leave/', title: '연차수당 계산표 — 월급별 하루 수당과 미사용 일수별 금액', desc: '월급 200만원부터 800만원까지 연차수당 하루 금액과 미사용 연차 일수별 수당, 근속연수별 연차 발생 일수를 정리했습니다.', body, nav: 'monthly' }));
+}
+
+/* ---------- 자동차 할부 ---------- */
+const CAR_PRICES = [1500, 2000, 2500, 3000, 3500, 4000, 5000, 6000, 8000, 10000];
+const CAR_MONTHS = [12, 24, 36, 48, 60];
+const CAR_RATES = [0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.10];
+const CAR_DOWN = [0, 0.2, 0.3];
+const carUrl = (p, n) => `/car-loan/${p}/${n}/`;
+
+function carLoanPage(pm, n) {
+  const P = pm * 10000;
+  const url = carUrl(pm, n);
+  const s = L.summary(P, 0.05, n);
+  const title = `자동차 ${manwon(P)} ${n}개월 할부 — 월 ${won(s.monthly)} (연 5%), 총 이자 ${won(s.totalInterest)}`;
+  const desc = `차값 ${manwon(P)}을 ${n}개월 할부(연 5%, 선수금 없음)로 사면 매달 ${won(s.monthly)}, 총 이자 ${won(s.totalInterest)}입니다. 금리·선수금별 월 납입액과 기간별 비교를 정리했습니다.`;
+  const rows = CAR_RATES.map((r) => ({ cls: r === 0.05 ? 'on' : '', cells: [fmtRate(r)].concat(CAR_DOWN.map((d) => num(L.annuityPayment(Math.round(P * (1 - d)), r, n)))) }));
+  const body = `
+${crumb([['/car-loan/', '자동차 할부'], [null, manwon(P)]])}
+<h1 class="title">자동차 ${manwon(P)} · ${n}개월 할부</h1>
+<p class="meta">원리금균등 · 선수금 없음 · 연 5% 기준 · 취득세·보험 별도</p>
+${hero({ label: '월 납입액 (연 5%)', value: s.monthly, sub: `${n}회 · 총 이자 ${won(s.totalInterest)} · 총 납입 ${won(s.totalPayment)}`, bars: [P / s.totalPayment, s.totalInterest / s.totalPayment], legendL: `차값 ${pct(P / s.totalPayment)}`, legendR: `이자 ${pct(s.totalInterest / s.totalPayment)}` })}
+${section('금리 × 선수금', '월 납입액(원) · 선수금을 내면 그만큼 뺀 금액으로 계산', table(['금리', '선수금 0', '20%', '30%'], rows))}
+${section('기간이 바뀌면', `${manwon(P)} · 연 5%`, cells(CAR_MONTHS.map((x) => ({ label: `${x}개월`, value: L.annuityPayment(P, 0.05, x), href: carUrl(pm, x), on: x === n })), 3))}
+${ad()}
+${tiles([{ label: '총 이자 (5%)', value: s.totalInterest }, { label: '총 납입', value: s.totalPayment }, { label: '취득세 약 7%', value: Math.round(P * 0.07) }])}
+<div class="callout"><b>할부 vs 오토론</b> — 캐피탈 할부는 승인이 쉽지만 금리가 높고, 은행 오토론은 신용에 따라 금리가 낮습니다. 잔가 유예 할부는 월 납입이 적은 대신 만기에 목돈이 남습니다. 취득세(약 7%)·등록비·보험료는 별도이고 현금 구매 할인이 있으면 할부 이자와 비교해 보세요.</div>
+${section('차값이 바뀌면', `${n}개월 · 연 5%`, chips(neighbors(CAR_PRICES, pm, 3).map((x) => ({ label: short(x * 10000), value: L.annuityPayment(x * 10000, 0.05, n), href: carUrl(x, n), on: x === pm }))))}
+<p class="note">이자는 매달 남은 원금 × 연이율 ÷ 12로 계산했습니다. 실제 할부는 취급수수료, 보증보험료, 선수금 조건에 따라 달라집니다. <a href="/method/">계산 기준 보기</a></p>`;
+  write(url, shell({ url, title, desc, body, nav: 'loan' }));
+}
+
+function carLoanIndex() {
+  const rows = CAR_PRICES.map((pm) => ({ cells: [`${manwon(pm * 10000)}`].concat(CAR_MONTHS.map((n) => `<a href="${carUrl(pm, n)}">${num(L.annuityPayment(pm * 10000, 0.05, n))}</a>`)) }));
+  const body = `
+${crumb([['/', '홈'], [null, '자동차 할부']])}
+<h1 class="title">자동차 할부 월 납입액표</h1>
+<p class="meta">차값 × 기간 · 연 5% · 선수금 없음 · 칸을 누르면 금리·선수금별 표</p>
+${section('차값 × 기간', '월 납입액(원)', table(['차값'].concat(CAR_MONTHS.map((n) => `${n}개월`)), rows))}`;
+  write('/car-loan/', shell({ url: '/car-loan/', title: '자동차 할부 계산표 — 차값·기간·금리·선수금별 월 납입액', desc: '1,500만원부터 1억원까지 자동차 할부 월 납입액과 총 이자를 기간·금리·선수금별로 정리했습니다.', body, nav: 'loan' }));
+}
+
+/* ---------- 요율표 ---------- */
+function ratesPage() {
+  const R1 = RATES[PREV];
+  const rows = [
+    { cells: ['국민연금 (근로자)', pct(R1.pension, 2), pct(R0.pension, 2), `사업주도 같은 비율 · 합계 ${pct(R0.pension * 2, 1)}`] },
+    { cells: ['건강보험 (근로자)', pct(R1.health, 3), pct(R0.health, 3), `보험료율 ${pct(R0.health * 2, 2)}의 절반`] },
+    { cells: ['장기요양', pct(R1.care, 2), pct(R0.care, 2), '건강보험료에 곱함'] },
+    { cells: ['고용보험 (근로자)', pct(R1.employment, 1), pct(R0.employment, 1), '사업주는 0.9% + 고용안정 0.25~0.85%'] },
+    { cells: ['산재보험', '-', '-', '사업주 전액, 업종별 요율'] },
+    { cells: ['국민연금 기준소득 상한', num(R1.pensionMax), num(R0.pensionMax), '하한 ' + num(R0.pensionMin) + '원 · 매년 7월 조정'] },
+    { cells: ['최저임금 (시급)', num(R1.minWage), num(R0.minWage), `월급 ${num(R0.minWage * MONTH_HOURS)}원`] },
+    { cells: ['구직급여 상한 (1일)', num(U.UPPER[PREV]), num(U.UPPER[YEAR]), `하한 ${num(Math.round(R0.minWage * 0.8 * 8))}원`] },
+  ];
+  const sched = Object.keys(PENSION_SCHEDULE).map(Number).sort().map((y) => ({ cls: y === YEAR ? 'on' : '', cells: [`${y}년`, pct(PENSION_SCHEDULE[y], 2), pct(PENSION_SCHEDULE[y] * 2, 1), num(Math.floor(3000000 * PENSION_SCHEDULE[y] / 10) * 10)] }));
+  const ex = netPay({ monthly: 3000000 });
+  const body = `
+${crumb([['/', '홈'], [null, `${YEAR}년 4대보험 요율표`]])}
+<h1 class="title">${YEAR}년 4대보험 요율표</h1>
+<p class="meta">근로자 부담 기준 · ${PREV}년과 비교 · 매년 1월(요율)·7월(국민연금 상하한) 갱신</p>
+${section(`${PREV}년 → ${YEAR}년`, null, table(['항목', `${PREV}년`, `${YEAR}년`, '비고'], rows))}
+${section('국민연금 인상 일정', '2025년 3월 개정 국민연금법 — 보험료율 9% → 13%, 매년 0.5%p', table(['연도', '근로자', '합계', '월급 300만원이면'], sched))}
+${ad()}
+${section('월급 300만원의 공제 예시', `비과세 없음 · 본인 1인 · ${YEAR}년`, ledger('공제 내역', '월 기준 · 원', [
+  { label: '국민연금', note: pct(R0.pension, 2), value: ex.pension },
+  { label: '건강보험', note: pct(R0.health, 3), value: ex.health },
+  { label: '장기요양', note: `건강보험의 ${pct(R0.care, 2)}`, value: ex.care },
+  { label: '고용보험', note: pct(R0.employment, 1), value: ex.employment },
+  { label: '소득세', note: '간이세액표', value: ex.tax },
+  { label: '지방소득세', note: '10%', value: ex.local },
+], { label: '실수령', value: ex.net }))}
+${section('이어서 계산하기', null, list([
+  { href: '/salary/', title: '연봉 실수령액표', sub: '연봉별 월 실수령' },
+  { href: '/monthly/', title: '월급 실수령액표', sub: '세전 월급별 공제' },
+  { href: '/minimum-wage/', title: `${YEAR}년 최저임금`, sub: `시급 ${num(R0.minWage)}원 · 월급 ${num(R0.minWage * MONTH_HOURS)}원` },
+]))}
+<p class="note">국민연금공단·국민건강보험공단·고용노동부 고시 기준. 건강보험 보수월액 상한, 국민연금 기준소득월액 상하한은 매년 바뀝니다. <a href="/method/">계산 기준 보기</a></p>`;
+  write('/rates/', shell({ url: '/rates/', title: `${YEAR}년 4대보험 요율표 — 국민연금·건강보험·고용보험 근로자 부담과 인상 일정`, desc: `${YEAR}년 국민연금 ${pct(R0.pension, 2)}, 건강보험 ${pct(R0.health * 2, 2)}, 장기요양 ${pct(R0.care, 2)}, 고용보험 ${pct(R0.employment, 1)}. ${PREV}년과 비교하고 2033년까지 국민연금 인상 일정을 정리했습니다.`, body, nav: 'salary' }));
+}
+
 /* ---------- 빌드 ---------- */
 fs.rmSync(OUT, { recursive: true, force: true });
 fs.mkdirSync(OUT, { recursive: true });
@@ -771,6 +1034,12 @@ jeonseIndex(); JEONSE.forEach(jeonsePage);
 savingsIndex(); SAV_M.forEach((m) => SAV_N.forEach((nm) => savingsPage(m, nm)));
 dsrIndex(); SALARIES.forEach(dsrPage);
 rankPage();
+minWagePage(YEAR); minWagePage(YEAR - 1);
+freelanceIndex(); FREE.forEach(freelancePage);
+overtimeIndex(); OT_PAYS.forEach(overtimePage);
+leaveIndex(); OT_PAYS.forEach(leavePage);
+carLoanIndex(); CAR_PRICES.forEach((pm) => CAR_MONTHS.forEach((n) => carLoanPage(pm, n)));
+ratesPage();
 docs();
 
 const indexable = urls.filter((u) => !['/terms/', '/privacy/'].includes(u));

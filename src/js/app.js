@@ -50,4 +50,49 @@
     });
     apply();
   });
+
+  /* 3) 실수령액 카드 — 1080×1350 이미지를 만들어 공유하거나 저장 */
+  var shareBtn = document.querySelector('[data-share-card]');
+  if (shareBtn) {
+    shareBtn.addEventListener('click', function () {
+      var d = shareBtn.dataset;
+      var visible = document.querySelector('[data-variant]:not([hidden]) .hero-num .num');
+      var l2 = visible ? visible.textContent : d.l2;
+      var draw = function () {
+        var c = document.createElement('canvas');
+        c.width = 1080; c.height = 1350;
+        var x = c.getContext('2d');
+        x.fillStyle = '#FBF8F1'; x.fillRect(0, 0, 1080, 1350);
+        x.fillStyle = '#1E5C46'; x.fillRect(0, 0, 1080, 14);
+        x.strokeStyle = '#E3DCCB'; x.lineWidth = 2;
+        for (var i = 0; i < 14; i++) { x.beginPath(); x.moveTo(90, 300 + i * 70); x.lineTo(990, 300 + i * 70); x.stroke(); }
+        x.fillStyle = '#1E5C46'; x.font = '700 44px "Gowun Batang", serif'; x.fillText('돈표', 90, 130);
+        x.fillStyle = '#8A948E'; x.font = '500 26px "Noto Sans KR", sans-serif'; x.fillText('돈 계산 사전 · donpyo.com', 90, 178);
+        x.fillStyle = '#17211C'; x.font = '700 64px "Gowun Batang", serif'; x.fillText(d.l1, 90, 420);
+        x.fillStyle = '#5F6B64'; x.font = '500 30px "Noto Sans KR", sans-serif'; x.fillText(d.l3, 90, 480);
+        x.fillStyle = '#1E5C46'; x.font = '600 150px "IBM Plex Mono", monospace'; x.fillText(l2, 90, 690);
+        x.fillStyle = '#17211C'; x.font = '500 40px "Noto Sans KR", sans-serif'; x.fillText('원', 90 + measure(x, l2, '600 150px "IBM Plex Mono", monospace') + 16, 690);
+        x.fillStyle = '#B8862B'; x.font = '700 36px "Noto Sans KR", sans-serif'; x.fillText(d.l4, 90, 800);
+        x.fillStyle = '#8A948E'; x.font = '400 26px "Noto Sans KR", sans-serif'; x.fillText('국세청 간이세액표 · 4대보험 요율 기준 · 참고용', 90, 1230);
+        x.fillStyle = '#1E5C46'; x.fillRect(90, 1270, 900, 3);
+        deliver(c);
+      };
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw); else draw();
+    });
+  }
+  function measure(x, text, font) { var f = x.font; x.font = font; var w = x.measureText(text).width; x.font = f; return w; }
+  function deliver(c) {
+    c.toBlob(function (blob) {
+      if (!blob) return;
+      var file = new File([blob], 'donpyo-card.png', { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({ files: [file], title: '돈표 실수령액 카드' }).catch(function () {});
+        return;
+      }
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = 'donpyo-card.png';
+      document.body.appendChild(a); a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    }, 'image/png');
+  }
 })();

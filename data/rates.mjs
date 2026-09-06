@@ -18,9 +18,16 @@ export const RATES = {
     care: 0.1314,               /* 장기요양 13.14% — check */
     employment: 0.009,
     minWage: 10320,             /* 2026년 최저임금 시급 (2025.7 확정) */
-    check: ['care', 'pensionMax(2026.7 이후 상한 갱신)'],
+    baseRate: 0.025,            /* 한국은행 기준금리 — 전월세전환율 법정 상한 = 기준금리 + 2%p */
+    check: ['care', 'pensionMax(2026.7 이후 상한 갱신)', 'baseRate'],
   },
 };
+RATES[2025].baseRate = 0.025;
+
+/* 전월세전환율 법정 상한 (주택임대차보호법: 기준금리 + 2%p 와 10% 중 낮은 값) */
+export const CONVERSION_CAP = Math.min(0.1, RATES[YEAR].baseRate + 0.02);
+/* 이자소득세 14% + 지방소득세 1.4% */
+export const INTEREST_TAX = 0.154;
 
 /* 국민연금 근로자 부담률 인상 일정 (2025.3 국민연금법 개정: 총 9% → 13%, 매년 0.5%p) */
 export const PENSION_SCHEDULE = { 2025: 0.045, 2026: 0.0475, 2027: 0.05, 2028: 0.0525, 2029: 0.055, 2030: 0.0575, 2031: 0.06, 2032: 0.0625, 2033: 0.065 };

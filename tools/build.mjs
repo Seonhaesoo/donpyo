@@ -3,10 +3,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { YEAR, RATES, PENSION_SCHEDULE, MONTH_HOURS, WEEKS_PER_MONTH, PERCENTILE } from '../data/rates.mjs';
+import { YEAR, RATES, PENSION_SCHEDULE, MONTH_HOURS, WEEKS_PER_MONTH, CONVERSION_CAP, INTEREST_TAX } from '../data/rates.mjs';
 import { netPay, insurance, incomeTax, grossForNet } from '../engine/tax.mjs';
 import * as L from '../engine/loan.mjs';
 import * as R from '../engine/retire.mjs';
+import * as U from '../engine/unemploy.mjs';
+import * as RK from '../engine/rank.mjs';
 import { num, won, manwon, short, pct, rate as fmtRate, rateSlug } from '../engine/fmt.mjs';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -66,7 +68,7 @@ ${o.noindex ? '<meta name="robots" content="noindex">\n' : ''}<link rel="icon" t
 <div class="app">
 <header class="hdr">
   <a class="brand" href="/">${LOGO}<span class="brand-name">돈표</span></a>
-  <nav class="nav"><a href="/salary/"${on('salary')}>연봉</a><a href="/monthly/"${on('monthly')}>월급</a><a href="/loan/"${on('loan')}>대출</a><a href="/retire/"${on('retire')}>퇴직금</a><a href="/hourly/"${on('hourly')}>알바</a></nav>
+  <nav class="nav"><a href="/salary/"${on('salary')}>연봉</a><a href="/monthly/"${on('monthly')}>월급</a><a href="/loan/"${on('loan')}>대출</a><a href="/retire/"${on('retire')}>퇴직금</a><a href="/unemployment/"${on('unemployment')}>실업급여</a><a href="/hourly/"${on('hourly')}>알바</a></nav>
   <span class="year-pill">${YEAR} 요율</span>
 </header>
 ${o.body}
@@ -86,7 +88,7 @@ const hero = (o) => `<div class="hero"><div class="hero-label">${o.label}</div><
 const ledger = (title, unit, rows, total) => `<div class="ledger"><div class="lg-head"><h2>${title}</h2><span>${unit}</span></div>${rows.map((r) => `<div class="lg-row"><div class="lbl"><span>${r.label}</span>${r.note ? `<small>${r.note}</small>` : ''}</div>${n(r.value)}</div>`).join('')}${total ? `<div class="lg-total"><span>${total.label}</span>${n(total.value)}</div>` : ''}</div>`;
 const tiles = (items) => `<div class="tiles">${items.map((t) => `<div class="tile"><small>${t.label}</small>${n(t.value)}</div>`).join('')}</div>`;
 const chips = (items) => `<div class="chips">${items.map((c) => c.on ? `<span class="chip on"><small>${c.label}</small>${n(c.value)}</span>` : `<a class="chip" href="${c.href}"><small>${c.label}</small>${n(c.value)}</a>`).join('')}</div>`;
-const cells = (items, cols = 3) => `<div class="grid${cols === 2 ? ' grid-2' : ''}">${items.map((c) => c.on ? `<span class="cell on"><small>${c.label}</small>${n(c.value)}</span>` : `<a class="cell" href="${c.href}"><small>${c.label}</small>${n(c.value)}</a>`).join('')}</div>`;
+const cells = (items, cols = 3) => `<div class="grid${cols === 2 ? ' grid-2' : cols === 4 ? ' grid-4' : ''}">${items.map((c) => c.on ? `<span class="cell on"><small>${c.label}</small>${n(c.value)}</span>` : `<a class="cell" href="${c.href}"><small>${c.label}</small>${n(c.value)}</a>`).join('')}</div>`;
 const list = (items) => `<div class="list">${items.map((i) => `<a href="${i.href}"><span class="t"><b>${i.title}</b>${i.sub ? `<small>${i.sub}</small>` : ''}</span>${i.value != null ? n(i.value) : CHEV}</a>`).join('')}</div>`;
 const section = (title, sub, inner) => `<section class="section"><h2>${title}</h2>${sub ? `<p class="sub">${sub}</p>` : ''}${inner}</section>`;
 const ad = () => `<div class="adslot" aria-hidden="true"></div>`;
@@ -163,6 +165,7 @@ function salaryPage(m) {
   const title = `연봉 ${manwon(annual)} 실수령액 — 월 ${won(p.net)} (${YEAR}년)`;
   const desc = `${YEAR}년 연봉 ${manwon(annual)} 실수령액은 월 ${won(p.net)}입니다. 세전 월급 ${won(p.gross)}에서 국민연금·건강보험·장기요양·고용보험·소득세를 뺀 금액이며, 부양가족·비과세 식대별 표와 연봉 인상 시 변화, 대출 한도까지 정리했습니다.`;
   const nb = neighbors(SALARIES, m, 3);
+  const rk = RK.rank(annual);
   const raises = [100, 300, 500, 1000].map((r) => { const q = netPay({ annual: annual + r * 10000, nontax: NT }); const diff = q.net - p.net; return { cells: [`+${manwon(r * 10000)}`, num(q.net), num(diff), pct(diff * 12 / (r * 10000))] }; });
   const hourly = p.gross / MONTH_HOURS;
   const dsr = L.dsrLimit(annual, 0.045, 360);
@@ -172,6 +175,8 @@ ${crumb([['/salary/', '연봉 실수령액'], [null, `${Math.floor(m / 1000)}천
 <h1 class="title">연봉 ${manwon(annual)} 실수령액</h1>
 <p class="meta">${YEAR}년 1월 요율 · 국세청 간이세액표 · 부양가족 본인 1인 · 식대 비과세 20만원 포함 기준 — 아래에서 바꿔 보세요</p>
 ${payVariants(annual)}
+<button class="btn btn-share" type="button" data-share-card data-l1="연봉 ${manwon(annual)}" data-l2="${num(p.net)}" data-l3="월 실수령액 · ${YEAR}년 · 식대 20만원 포함" data-l4="근로소득자 중 상위 ${rk.topPct}%">실수령액 카드 저장</button>
+${section('근로소득자 중 어디쯤', `국세청 ${RK.STAT.year}년 귀속 연말정산 통계(신고 ${short(RK.STAT.workers)}명 · 중위 ${manwon(RK.STAT.median)} · 평균 ${manwon(RK.STAT.mean)})에 맞춘 추정`, `<div class="tiles"><div class="tile"><small>근로소득자 중</small><span class="num">상위 ${rk.topPct}%</span></div><div class="tile"><small>중위 연봉</small>${n(RK.STAT.median)}</div><div class="tile"><small>평균 연봉</small>${n(RK.STAT.mean)}</div></div>` + list([{ href: '/rank/', title: '연봉 순위표', sub: '상위 1%·10%·30%의 연봉 경계와 계산 방법' }]))}
 ${section('이웃 연봉', null, chips(nb.map((v) => ({ label: short(v * 10000), value: netPay({ annual: v * 10000, nontax: NT }).net, href: salaryUrl(v), on: v === m }))))}
 ${section('연봉이 오르면 손에 오는 돈', '인상액의 상당 부분은 4대보험과 세금으로 빠집니다', table(['인상', '월 실수령', '월 증가', '인상액 대비'], raises))}
 ${section('국민연금 인상 일정에 따른 변화', `연금개혁으로 근로자 부담률이 매년 0.5%p씩 올라 ${Math.max(...Object.keys(PENSION_SCHEDULE).map(Number))}년 6.5%가 됩니다. 다른 요율과 세금이 그대로라고 가정한 값입니다`, pensionSchedule(annual))}
@@ -453,6 +458,11 @@ ${section('계산 사전', null, `<div class="dict">
 <a href="/retire/"><b>퇴직금 세후</b><span>월급 350만·5년 → <span class="num">${num(R.severanceTax(R.severance(3500000, 5).amount, 5).net)}</span>원</span></a>
 <a href="/hourly/"><b>알바 월급</b><span>시급 ${num(R0.minWage)}원·주 40시간 → 주휴 <span class="num">${num(R0.minWage * 8)}</span>원</span></a>
 <a href="/monthly/"><b>월급 실수령액</b><span>세전 350만원 → <span class="num">${num(netPay({ monthly: 3500000, nontax: NT }).net)}</span>원</span></a>
+<a href="/unemployment/"><b>실업급여</b><span>월급 350만·5년 → 하루 <span class="num">${num(U.dailyBenefit(3500000).daily)}</span>원 × ${U.benefitDays(5)}일</span></a>
+<a href="/dsr/"><b>대출 한도 (DSR)</b><span>연봉 5,000만 → 최대 <span class="num">${num(L.dsrLimit(50000000, 0.045, 360).principal)}</span>원</span></a>
+<a href="/jeonse/"><b>전세 vs 월세</b><span>전세 2억 대출 4% → 월 이자 <span class="num">${num(Math.round(200000000 * 0.04 / 12))}</span>원</span></a>
+<a href="/savings/"><b>적금 세후 이자</b><span>월 50만·3년·4% → <span class="num">${num(savings(500000, 36, 0.04).net)}</span>원</span></a>
+<a href="/rank/"><b>연봉 순위</b><span>연봉 6,000만원은 근로소득자 상위 <span class="num">${RK.rank(60000000).topPct}</span>%</span></a>
 </div>`)}
 ${section('많이 보는 연봉표', null, list(popular))}
 ${section(`${YEAR}년에 달라진 것`, null, `<div class="callout"><b>국민연금 근로자 부담 ${pct(RATES[PREV].pension, 2)} → ${pct(R0.pension, 2)}</b>, 건강보험 ${pct(RATES[PREV].health * 2, 2)} → ${pct(R0.health * 2, 2)}, 최저임금 ${num(RATES[PREV].minWage)}원 → ${num(R0.minWage)}원. 같은 연봉이라도 실수령액이 작년보다 조금 줄었습니다. 각 연봉 페이지에서 ${PREV}년과 비교할 수 있습니다.</div>`)}`;
@@ -484,8 +494,18 @@ ${table(['항목', `${PREV}년`, `${YEAR}년`, '비고'], [
 <p>퇴직금 = 1일 평균임금 × 30 × 재직일수 ÷ 365. 평균임금은 퇴직 전 3개월 급여 ÷ 그 기간 일수인데, 상여·수당 없이 월급이 일정하다고 가정했습니다. 퇴직소득세는 (퇴직금 − 근속연수공제) ÷ 근속연수 × 12 = 환산급여 → 환산급여공제 → 과세표준 × 기본세율 ÷ 12 × 근속연수 순서로 계산하며 근속연수는 1년 미만을 올림합니다.</p>
 <h2>알바</h2>
 <p>주휴수당은 1주 소정근로시간이 15시간 이상이고 개근했을 때 발생하며, 주 40시간 기준 8시간(그 미만이면 비례)의 시급을 더 받습니다. 한 달은 365 ÷ 7 ÷ 12 = 4.345주로 환산했습니다. 월 60시간 이상이면 4대보험 가입 대상으로 보고 근로자 부담분을 뺐습니다.</p>
+<h2>실업급여</h2>
+<p>구직급여일액 = 퇴직 전 3개월 평균임금(1일) × 60%. ${YEAR}년 상한액 ${won(U.UPPER[YEAR])}, 하한액은 최저시급 × 80% × 8시간 = ${won(Math.round(R0.minWage * 0.8 * 8))}. 소정급여일수는 피보험기간(1년 미만·1~3년·3~5년·5~10년·10년 이상)과 퇴직 당시 나이(50세 기준)로 120~270일. 한 달 수령액은 30일 기준 근사값입니다.</p>
+<h2>전세 vs 월세</h2>
+<p>전세대출 월 이자 = 대출금 × 연이율 ÷ 12(만기일시, 이자만 납부). 월세 전환액 = 줄이는 보증금 × 전환율 ÷ 12이며 법정 전환율 상한은 기준금리(${fmtRate(R0.baseRate)}) + 2%p = ${fmtRate(CONVERSION_CAP)}입니다(갱신 계약에 적용, 신규 계약은 시장 전환율).</p>
+<h2>적금·예금</h2>
+<p>적금 이자는 단리로 매달 납입금이 남은 개월 수만큼 이자를 받는 방식: 월납입 × 연이율 ÷ 12 × n(n+1) ÷ 2. 예금은 원금 × 연이율 × 개월 ÷ 12. 이자소득세 14%와 지방소득세 1.4%(합계 ${pct(INTEREST_TAX)})를 뺀 세후 금액을 씁니다. 실질 이득은 만기 수령액을 연 2% 물가상승률로 오늘 가치로 되돌린 뒤 원금을 뺀 값입니다.</p>
+<h2>대출 한도 (DSR)</h2>
+<p>DSR 40% = 모든 대출의 연간 원리금 상환액 ÷ 연소득 ≤ 40%. 월 상환 여력 = 연소득 × 40% ÷ 12이고, 그 여력으로 갚을 수 있는 원리금균등 원금을 한도로 봅니다. 스트레스 DSR은 실제 금리에 가산금리(수도권 주담대 1.5%p)를 더해 계산합니다.</p>
+<h2>연봉 순위</h2>
+<p>국세청 ${RK.STAT.year}년 귀속 근로소득 연말정산 통계의 공식 요약값(신고 ${num(RK.STAT.workers)}명, 중위 ${won(RK.STAT.median)}, 평균 ${won(RK.STAT.mean)}, 1억원 초과 ${pct(RK.STAT.over100m)})에 맞춘 로그정규 분포로 상위 비율을 추정합니다. 세 값을 모두 재현하는 분포이지만 백분위 원자료 그대로는 아니므로 ±몇 %p의 오차가 있을 수 있습니다. 근로소득 연말정산 대상자 기준이라 자영업자·일용직은 포함되지 않습니다.</p>
 <h2>출처</h2>
-<ul><li>국세청 근로소득 간이세액표 (소득세법 시행령 별표 2)</li><li>국민연금공단·국민건강보험공단 보험료율 고시</li><li>고용노동부 최저임금 고시, 근로기준법 시행령(주휴·퇴직금)</li></ul>
+<ul><li>국세청 근로소득 간이세액표 (소득세법 시행령 별표 2), 국세통계 근로소득 연말정산 신고 현황</li><li>국민연금공단·국민건강보험공단 보험료율 고시</li><li>고용노동부 최저임금 고시, 근로기준법 시행령(주휴·퇴직금), 고용보험법(구직급여)</li><li>주택임대차보호법(전월세전환율), 소득세법(이자소득세)</li></ul>
 </div>`;
   write('/method/', shell({ url: '/method/', title: '계산 기준과 요율 — 돈표', desc: '돈표의 실수령액·대출·퇴직금·알바 월급 계산 방식과 연도별 4대보험 요율, 출처를 정리했습니다.', body: method }));
 
@@ -522,6 +542,218 @@ ${crumb([['/', '홈'], [null, '개인정보처리방침']])}
   fs.writeFileSync(path.join(OUT, '404.html'), shell({ url: '/404.html', title: '페이지를 찾을 수 없어요 — 돈표', desc: '없는 페이지', noindex: true, body: `<h1 class="title" style="margin-top:40px">그런 페이지가 없어요</h1><p class="meta">주소가 바뀌었거나 아직 계산해 두지 않은 금액입니다.</p>${section('바로 가기', null, list([{ href: '/salary/', title: '연봉 실수령액표' }, { href: '/loan/', title: '대출 상환액 사전' }, { href: '/retire/', title: '퇴직금 세후표' }, { href: '/hourly/', title: '알바 월급표' }]))}` }));
 }
 
+/* ---------- 실업급여 ---------- */
+const UI_PAYS = []; for (let m = 200; m <= 600; m += 50) UI_PAYS.push(m);
+const UI_YEARS = [0, 1, 3, 5, 10];   /* 0 = 1년 미만 */
+const uiLabel = (y) => y === 0 ? '1년 미만' : y === 10 ? '10년 이상' : `${y}년 이상`;
+const uiUrl = (p, y) => `/unemployment/${p}/${y}/`;
+const uiDays = (y, senior) => U.benefitDays(y === 0 ? 0.5 : y, senior);
+
+function unemploymentPage(pm, y) {
+  const pay = pm * 10000;
+  const d = U.dailyBenefit(pay);
+  const days = uiDays(y, false), daysS = uiDays(y, true);
+  const url = uiUrl(pm, y);
+  const monthly = d.daily * 30;
+  const title = `월급 ${manwon(pay)} 실업급여 얼마? — 하루 ${won(d.daily)}, ${days}일 총 ${won(d.daily * days)} (피보험 ${uiLabel(y)}, ${YEAR}년)`;
+  const desc = `월급 ${manwon(pay)}으로 고용보험 ${uiLabel(y)} 가입 뒤 비자발적으로 퇴직하면 ${YEAR}년 구직급여는 하루 ${won(d.daily)}, 한 달 약 ${won(monthly)}입니다. 50세 미만은 ${days}일(총 ${won(d.daily * days)}), 50세 이상은 ${daysS}일(총 ${won(d.daily * daysS)}).`;
+  const capNote = d.capped === 'upper' ? `평균임금의 60%인 ${won(d.raw)}이 상한액 ${won(d.upper)}을 넘어 상한액을 받습니다` : d.capped === 'lower' ? `평균임금의 60%인 ${won(d.raw)}이 하한액 ${won(d.lower)}에 못 미쳐 하한액을 받습니다` : `평균임금의 60%인 ${won(d.raw)}을 그대로 받습니다`;
+  const yearRows = UI_YEARS.map((yy) => ({ cls: yy === y ? 'on' : '', cells: [`<a href="${uiUrl(pm, yy)}">${uiLabel(yy)}</a>`, `${uiDays(yy)}일`, num(d.daily * uiDays(yy)), `${uiDays(yy, true)}일`, num(d.daily * uiDays(yy, true))] }));
+  const payRows = neighbors(UI_PAYS, pm, 3).map((pp) => { const dd = U.dailyBenefit(pp * 10000); return { cls: pp === pm ? 'on' : '', cells: [`<a href="${uiUrl(pp, y)}">${manwon(pp * 10000)}</a>`, num(dd.daily), num(dd.daily * 30), num(dd.daily * days)] }; });
+  const body = `
+${crumb([['/unemployment/', '실업급여'], [null, `월급 ${manwon(pay)}`]])}
+<h1 class="title">월급 ${manwon(pay)} · 피보험 ${uiLabel(y)} 실업급여</h1>
+<p class="meta">${YEAR}년 구직급여 · 상한 ${won(d.upper)} · 하한 ${won(d.lower)} · 비자발적 퇴직 기준</p>
+${hero({ label: '한 달 수령액 (30일)', value: monthly, sub: `하루 ${won(d.daily)} × 30일 · 50세 미만 ${days}일이면 총 ${won(d.daily * days)}`, bars: [d.daily / d.upper], legendL: `상한액 대비 ${pct(d.daily / d.upper, 0)}`, legendR: `상한 ${won(d.upper)}` })}
+${ledger('구직급여일액 계산', '원', [
+  { label: '1일 평균임금', note: `퇴직 전 3개월 급여 ${won(pay * 3)} ÷ 91.25일`, value: d.avgDaily },
+  { label: '× 60%', value: d.raw },
+  { label: '하한액', note: `최저시급 ${num(R0.minWage)}원 × 80% × 8시간`, value: d.lower },
+  { label: '상한액', note: `${YEAR}년`, value: d.upper },
+], { label: '적용 구직급여일액', value: d.daily })}
+<div class="callout">${capNote}. ${YEAR}년은 상한액과 하한액 차이가 하루 ${won(d.upper - d.lower)}뿐이라 월급이 아주 적지 않은 한 대부분 상한액 근처를 받습니다.</div>
+${section('지급일수와 총액', '피보험기간(고용보험 가입 기간)과 퇴직 당시 나이로 정해집니다', table(['피보험기간', '50세 미만', '총액', '50세 이상·장애인', '총액'], yearRows))}
+${section('월급이 바뀌면', `피보험 ${uiLabel(y)} · 50세 미만 ${days}일`, table(['월급', '하루', '한 달', '총액'], payRows))}
+${ad()}
+${section('받을 수 있는 조건', null, `<div class="callout"><b>① 비자발적 퇴직</b> — 권고사직·계약만료·폐업 등. 자발적 퇴사는 원칙적으로 제외되지만 임금체불·직장 내 괴롭힘 같은 정당한 사유는 인정됩니다.<br><b>② 피보험단위기간 180일 이상</b> — 퇴직 전 18개월 안에 유급 근무일이 180일 이상.<br><b>③ 재취업 활동</b> — 워크넷 구직 등록과 정기 실업인정.<br><b>④ 퇴직 후 12개월 안에 신청</b> — 늦게 신청하면 받을 수 있는 일수가 줄어듭니다.</div>`)}
+${section('이어서 계산하기', null, list([
+  { href: retireUrl(nearest(RETIRE_PAYS, pm), y === 0 ? 1 : y), title: `월급 ${manwon(pay)} 퇴직금`, sub: `${y === 0 ? 1 : y}년 근속 세전·세후` },
+  { href: salaryUrl(nearest(SALARIES, pm * 12)), title: `연봉 ${manwon(nearest(SALARIES, pm * 12) * 10000)} 실수령액`, sub: '다니던 회사 기준 월 실수령' },
+]))}
+<p class="note">구직급여일액은 평균임금의 60%이며 ${YEAR}년 상한액 ${won(d.upper)}·하한액 ${won(d.lower)}을 적용했습니다. 한 달 수령액은 30일 기준 근사값이고 실제로는 실업인정일마다 그 기간의 일수만큼 지급됩니다. 연장급여·조기재취업수당은 포함하지 않았습니다. <a href="/method/">계산 기준 보기</a></p>`;
+  write(url, shell({ url, title, desc, body, nav: 'unemployment' }));
+}
+
+function unemploymentIndex() {
+  const rows = UI_PAYS.map((pm) => { const d = U.dailyBenefit(pm * 10000); return { cells: [`${manwon(pm * 10000)}`, num(d.daily)].concat(UI_YEARS.map((y) => `<a href="${uiUrl(pm, y)}">${num(d.daily * uiDays(y))}</a>`)) }; });
+  const up = U.dailyBenefit(9000000).upper, lo = U.dailyBenefit(1000000).lower;
+  const body = `
+${crumb([['/', '홈'], [null, '실업급여']])}
+<h1 class="title">${YEAR}년 실업급여 계산표</h1>
+<p class="meta">월급 × 피보험기간별 구직급여 총액(50세 미만) · 상한 ${won(up)} · 하한 ${won(lo)}</p>
+${section('월급 × 피보험기간', '총 수령액(원) · 칸을 누르면 하루·한 달 금액과 50세 이상 일수', table(['월급', '하루'].concat(UI_YEARS.map(uiLabel)), rows))}
+<p class="note">${YEAR}년은 상한액 ${won(up)}과 하한액 ${won(lo)} 차이가 작아 월급 차이가 거의 반영되지 않습니다. 피보험기간이 길수록, 50세 이상이면 더 오래 받습니다.</p>`;
+  write('/unemployment/', shell({ url: '/unemployment/', title: `${YEAR}년 실업급여 계산표 — 월급·가입기간별 하루·한 달·총액`, desc: `${YEAR}년 구직급여 상한액·하한액을 반영해 월급과 고용보험 가입기간별로 하루 수령액, 한 달 수령액, 총액을 표로 정리했습니다.`, body, nav: 'unemployment' }));
+}
+
+/* ---------- 전세 vs 월세 ---------- */
+const JEONSE = [5000, 7000, 10000, 15000, 20000, 25000, 30000, 40000, 50000, 70000, 100000];
+const J_RATES = [0.03, 0.035, 0.04, 0.045, 0.05];
+const J_SHARE = [1, 0.8, 0.6];
+const CONV = [0.035, 0.04, 0.045, 0.05, 0.06];
+const jeonseUrl = (d) => `/jeonse/${d}/`;
+
+function jeonsePage(dm) {
+  const D = dm * 10000;
+  const url = jeonseUrl(dm);
+  const mi = (r, s = 1) => Math.round(D * s * r / 12);
+  const rent = (c, dep = 0) => Math.round((D - dep) * c / 12);
+  const title = `전세 ${manwon(D)} 대출 이자 vs 월세 — 월 ${won(mi(0.04))} (연 4%) · 월세 전환 ${won(rent(CONVERSION_CAP))}`;
+  const desc = `전세 보증금 ${manwon(D)}을 전세대출로 채우면 연 4%에서 월 이자 ${won(mi(0.04))}, 80%만 빌리면 ${won(mi(0.04, 0.8))}입니다. 같은 보증금을 월세로 돌리면 전환율 ${fmtRate(CONVERSION_CAP)} 기준 월 ${won(rent(CONVERSION_CAP))}. 금리별·전환율별 표와 반전세 환산을 정리했습니다.`;
+  const rateRows = J_RATES.map((r) => ({ cls: r === 0.04 ? 'on' : '', cells: [fmtRate(r)].concat(J_SHARE.map((s) => num(mi(r, s)))) }));
+  const convRows = CONV.map((c) => ({ cls: Math.abs(c - CONVERSION_CAP) < 1e-9 ? 'on' : '', cells: [fmtRate(c) + (Math.abs(c - CONVERSION_CAP) < 1e-9 ? ' (법정 상한)' : ''), num(rent(c)), num(rent(c, D / 2)), num(rent(c, D * 0.8))] }));
+  const cuts = [10000000, 30000000, 50000000, 100000000].filter((x) => x <= D / 2).map((x) => ({ cells: [`보증금 −${manwon(x)}`, num(D - x), `+${num(Math.round(x * CONVERSION_CAP / 12))}`] }));
+  const verdict = J_RATES.map((r) => ({ cells: [fmtRate(r), num(mi(r)), num(mi(r, 0.8))] }));
+  const body = `
+${crumb([['/jeonse/', '전세 vs 월세'], [null, manwon(D)]])}
+<h1 class="title">전세 ${manwon(D)} — 대출 이자와 월세 비교</h1>
+<p class="meta">전세대출 이자(만기일시, 이자만 납부) vs 월세 전환 · 전월세전환율 법정 상한 ${fmtRate(CONVERSION_CAP)} (기준금리 ${fmtRate(R0.baseRate)} + 2%p)</p>
+${hero({ label: '전세대출 월 이자 (보증금 전액 · 연 4%)', value: mi(0.04), sub: `80%만 빌리면 ${won(mi(0.04, 0.8))} · 60%면 ${won(mi(0.04, 0.6))} · 1년 이자 ${won(mi(0.04) * 12)}` })}
+${section('금리 × 대출 비율', '월 이자(원) · 전세대출은 보통 보증금의 80%까지', table(['금리', '전액', '80%', '60%'], rateRows))}
+${section('월세로 돌리면', '보증금 일부를 월세로 바꿀 때 — 줄이는 보증금 × 전환율 ÷ 12', table(['전환율', '전액 월세', '보증금 절반', '보증금 20%만'], convRows))}
+${cuts.length ? section('반전세 환산', `전환율 ${fmtRate(CONVERSION_CAP)} 기준 — 보증금을 줄인 만큼 월세가 붙습니다`, table(['조건', '남는 보증금', '월세'], cuts)) : ''}
+${ad()}
+${section('어느 쪽이 유리한가', '집주인이 부르는 월세가 이 표의 이자보다 낮으면 월세, 높으면 전세대출이 유리합니다 (보증료·세액공제 제외)', table(['대출 금리', '전액 대출 시 월 이자', '80% 대출 시'], verdict))}
+${section('보증금이 바뀌면', '연 4% · 전액 대출 월 이자', chips(neighbors(JEONSE, dm, 3).map((x) => ({ label: short(x * 10000), value: Math.round(x * 10000 * 0.04 / 12), href: jeonseUrl(x), on: x === dm }))))}
+<p class="note">전세대출 보증료(연 0.1~0.3%), 월세 세액공제(총급여 5,500만원 이하 17%·8,000만원 이하 15%, 연 1,000만원 한도), 전세보증보험료는 반영하지 않았습니다. 전월세전환율 상한은 계약 갱신 때 적용되며 신규 계약은 시장 전환율을 따릅니다. <a href="/method/">계산 기준 보기</a></p>`;
+  write(url, shell({ url, title, desc, body, nav: 'loan' }));
+}
+
+function jeonseIndex() {
+  const rows = JEONSE.map((dm) => ({ cells: [`<a href="${jeonseUrl(dm)}">${manwon(dm * 10000)}</a>`, num(Math.round(dm * 10000 * 0.035 / 12)), num(Math.round(dm * 10000 * 0.04 / 12)), num(Math.round(dm * 10000 * 0.045 / 12)), num(Math.round(dm * 10000 * CONVERSION_CAP / 12))] }));
+  const body = `
+${crumb([['/', '홈'], [null, '전세 vs 월세']])}
+<h1 class="title">전세 보증금별 대출 이자와 월세 환산</h1>
+<p class="meta">보증금 전액을 전세대출로 채울 때 월 이자와, 같은 보증금을 월세로 돌릴 때(전환율 ${fmtRate(CONVERSION_CAP)}) 금액</p>
+${section('보증금별 비교', '월 금액(원) · 보증금을 누르면 금리·비율별 표와 반전세 환산', table(['보증금', '이자 3.5%', '이자 4.0%', '이자 4.5%', `월세 전환 ${fmtRate(CONVERSION_CAP)}`], rows))}`;
+  write('/jeonse/', shell({ url: '/jeonse/', title: '전세 vs 월세 계산표 — 보증금별 전세대출 이자와 월세 전환액', desc: '전세 보증금 5천만원부터 10억원까지 전세대출 월 이자와 월세 전환액을 비교했습니다.', body, nav: 'loan' }));
+}
+
+/* ---------- 적금 ---------- */
+const SAV_M = [10, 20, 30, 50, 70, 100, 150, 200];
+const SAV_N = [12, 24, 36, 60];
+const SAV_R = [0.025, 0.03, 0.035, 0.04, 0.045, 0.05];
+const savUrl = (m, n) => `/savings/${m}/${n}/`;
+
+function savings(monthly, months, r) {
+  const principal = monthly * months;
+  const interest = Math.round(monthly * r / 12 * months * (months + 1) / 2);
+  const tax = Math.floor(interest * INTEREST_TAX / 10) * 10;
+  const net = interest - tax;
+  const total = principal + net;
+  const real = Math.round(total / Math.pow(1.02, months / 12) - principal);
+  return { principal, interest, tax, net, total, real };
+}
+function depositInterest(P, months, r) { const interest = Math.round(P * r * months / 12); const tax = Math.floor(interest * INTEREST_TAX / 10) * 10; return { interest, tax, net: interest - tax }; }
+
+function savingsPage(mm, nMonths) {
+  const monthly = mm * 10000;
+  const s4 = savings(monthly, nMonths, 0.04);
+  const url = savUrl(mm, nMonths);
+  const yrs = nMonths / 12;
+  const title = `월 ${manwon(monthly)} ${yrs}년 적금 이자 — 세후 ${won(s4.net)} (연 4%) · 만기 ${won(s4.total)}`;
+  const desc = `매달 ${manwon(monthly)}씩 ${yrs}년 적금(연 4%, 단리)이면 세전 이자 ${won(s4.interest)}, 이자소득세 15.4%를 뺀 세후 ${won(s4.net)}, 만기 수령 ${won(s4.total)}입니다. 금리별 표와 물가를 감안한 실질 이득, 같은 돈 예금 비교를 정리했습니다.`;
+  const rows = SAV_R.map((r) => { const s = savings(monthly, nMonths, r); return { cls: r === 0.04 ? 'on' : '', cells: [fmtRate(r), num(s.interest), num(s.tax), num(s.net), num(s.total)] }; });
+  const dep = SAV_R.map((r) => { const d = depositInterest(s4.principal, nMonths, r); return { cells: [fmtRate(r), num(d.net), num(savings(monthly, nMonths, r).net)] }; });
+  const body = `
+${crumb([['/savings/', '적금'], [null, `월 ${manwon(monthly)}`]])}
+<h1 class="title">월 ${manwon(monthly)} · ${yrs}년 적금 이자</h1>
+<p class="meta">원금 ${won(s4.principal)} · 단리 · 이자소득세 ${pct(INTEREST_TAX)} · 매달 같은 날 납입 가정</p>
+${hero({ label: '세후 이자 (연 4%)', value: s4.net, sub: `세전 ${won(s4.interest)} − 세금 ${won(s4.tax)} · 만기 수령 ${won(s4.total)}`, bars: [s4.principal / s4.total, s4.net / s4.total], legendL: `원금 ${pct(s4.principal / s4.total)}`, legendR: `이자 ${pct(s4.net / s4.total)}` })}
+${section('금리별', `월 ${manwon(monthly)} × ${nMonths}개월`, table(['금리', '세전 이자', '세금', '세후 이자', '만기 수령'], rows))}
+${section('물가를 감안하면', '만기 수령액을 연 2% 물가상승률로 나눈 오늘 가치에서 원금을 뺀 실질 이득 (연 4% 기준)', tiles([{ label: '세후 이자', value: s4.net }, { label: '실질 이득', value: s4.real }, { label: '만기 수령 (오늘 가치)', value: s4.principal + s4.real }]))}
+${ad()}
+${section('같은 돈을 예금에 넣으면', `${won(s4.principal)}을 한 번에 ${nMonths}개월 예치할 때의 세후 이자 — 적금은 뒤에 넣는 돈일수록 붙는 기간이 짧아 예금의 절반 정도`, table(['금리', '예금 세후 이자', '적금 세후 이자'], dep))}
+${section('금액·기간이 바뀌면', '연 4% 세후 이자', cells(SAV_N.map((x) => ({ label: `${x / 12}년`, value: savings(monthly, x, 0.04).net, href: savUrl(mm, x), on: x === nMonths })), 4) + chips(SAV_M.map((x) => ({ label: `월 ${short(x * 10000)}`, value: savings(x * 10000, nMonths, 0.04).net, href: savUrl(x, nMonths), on: x === mm }))))}
+<p class="note">비과세종합저축(만 65세 이상 등)이나 ISA 안에서 넣으면 이자소득세가 없거나 줄어듭니다. 우대금리 조건, 중도해지 이율, 월복리 상품은 반영하지 않았습니다. <a href="/method/">계산 기준 보기</a></p>`;
+  write(url, shell({ url, title, desc, body, nav: 'loan' }));
+}
+
+function savingsIndex() {
+  const rows = SAV_M.map((mm) => ({ cells: [`월 ${manwon(mm * 10000)}`].concat(SAV_N.map((nm) => `<a href="${savUrl(mm, nm)}">${num(savings(mm * 10000, nm, 0.04).net)}</a>`)) }));
+  const body = `
+${crumb([['/', '홈'], [null, '적금']])}
+<h1 class="title">적금 이자 계산표</h1>
+<p class="meta">월 납입액 × 기간별 세후 이자(연 4% 단리) · 칸을 누르면 금리별 표와 예금 비교</p>
+${section('월 납입 × 기간', '세후 이자(원)', table(['월 납입'].concat(SAV_N.map((nm) => `${nm / 12}년`)), rows))}
+<p class="note">이자소득세 ${pct(INTEREST_TAX)}를 뺀 금액입니다. 적금은 납입한 돈이 만기까지 남은 기간만큼만 이자를 받아, 같은 금리의 예금보다 이자가 절반 정도입니다.</p>`;
+  write('/savings/', shell({ url: '/savings/', title: '적금 이자 계산표 — 월 납입액·기간·금리별 세후 이자', desc: '월 10만원부터 200만원까지, 1년부터 5년까지 적금 세후 이자와 만기 수령액, 예금과의 비교를 표로 정리했습니다.', body, nav: 'loan' }));
+}
+
+/* ---------- 대출 한도 (DSR) ---------- */
+const DSR_RATES = [0.03, 0.035, 0.04, 0.045, 0.05, 0.055, 0.06];
+const DSR_TERMS = [10, 20, 30, 40];
+const dsrUrl = (m) => `/dsr/${m}/`;
+
+function dsrPage(m) {
+  const annual = m * 10000;
+  const cap = Math.floor(annual * 0.4 / 12);
+  const base = L.dsrLimit(annual, 0.045, 360);
+  const url = dsrUrl(m);
+  const title = `연봉 ${manwon(annual)} 대출 한도 — DSR 40%면 최대 ${manwon(base.principal)} (30년·4.5%)`;
+  const desc = `연봉 ${manwon(annual)}의 DSR 40% 한도는 월 상환 여력 ${won(cap)}, 30년·연 4.5% 원리금균등이면 약 ${manwon(base.principal)}입니다. 금리·기간별 한도, 스트레스 금리 가산, 부부 합산, 기존 대출이 있을 때를 정리했습니다.`;
+  const rows = DSR_TERMS.map((y) => ({ cls: y === 30 ? 'on' : '', cells: [`${y}년`].concat(DSR_RATES.map((r) => num(L.loanForPayment(cap, r, y * 12)))) }));
+  const stressed = L.loanForPayment(cap, 0.06, 360);
+  const spouse = [2000, 3000, 4000, 5000, 6000, 8000].map((s) => { const t = nearest(SALARIES, m + s); return { label: `+배우자 ${short(s * 10000)}`, value: L.dsrLimit(t * 10000, 0.045, 360).principal, href: dsrUrl(t) }; });
+  const existing = [300000, 500000, 1000000].filter((x) => x < cap).map((x) => ({ cells: [`월 ${manwon(x)} 상환 중`, num(cap - x), num(L.loanForPayment(cap - x, 0.045, 360))] }));
+  const p = netPay({ annual, nontax: NT });
+  const loanNear = nearest(LOAN_AMOUNTS, Math.round(base.principal / 10000));
+  const body = `
+${crumb([['/dsr/', '대출 한도'], [null, `연봉 ${manwon(annual)}`]])}
+<h1 class="title">연봉 ${manwon(annual)} 대출 한도 (DSR 40%)</h1>
+<p class="meta">연간 원리금 상환액이 연봉의 40%를 넘지 않는 원금 · 다른 대출이 없다고 가정</p>
+${hero({ label: '최대 대출 (30년 · 연 4.5% · 원리금균등)', value: base.principal, sub: `월 상환 여력 ${won(cap)} = 연봉 × 40% ÷ 12 · 월 실수령 ${won(p.net)}의 ${pct(cap / p.net, 0)}` })}
+${section('기간 × 금리', '원리금균등 최대 원금(원)', table(['기간'].concat(DSR_RATES.map(fmtRate)), rows))}
+${section('스트레스 금리를 얹으면', '수도권 주택담보대출은 실제 금리에 1.5%p를 더해 DSR을 계산합니다(2025년 7월 3단계). 4.5% 대출이면 6%로 계산해 한도가 줄어듭니다', tiles([{ label: '4.5% 기준 한도', value: base.principal }, { label: '6.0%로 계산한 한도', value: stressed }, { label: '줄어드는 금액', value: base.principal - stressed }]))}
+${ad()}
+${section('부부 합산이면', '두 사람 연봉을 더한 소득으로 계산 (30년 · 4.5%)', chips(spouse))}
+${existing.length ? section('이미 갚는 대출이 있으면', '기존 원리금을 뺀 여력으로 계산', table(['기존 대출', '남는 월 여력', '추가 한도 (30년·4.5%)'], existing)) : ''}
+${section('이어서 계산하기', null, list([
+  { href: loanUrl(loanNear, 30, 0.045), title: `대출 ${manwon(loanNear * 10000)} 30년 4.5% 상환표`, sub: '한도만큼 빌리면 매달 얼마' },
+  { href: salaryUrl(m), title: `연봉 ${manwon(annual)} 실수령액`, sub: `월 ${won(p.net)}` },
+]))}
+<p class="note">DSR 40%는 은행권 기준이며 2금융권은 50%입니다. 신용대출·카드론·자동차 할부의 원리금도 DSR에 들어가고, 스트레스 DSR 가산금리는 지역·시기에 따라 다릅니다. 실제 한도는 은행 심사와 LTV, 담보 가치에 따라 더 낮을 수 있습니다. <a href="/method/">계산 기준 보기</a></p>`;
+  write(url, shell({ url, title, desc, body, nav: 'loan' }));
+}
+
+function dsrIndex() {
+  const rows = SALARIES.map((m) => { const a = m * 10000; return { cells: [`<a href="${dsrUrl(m)}">연봉 ${manwon(a)}</a>`, num(Math.floor(a * 0.4 / 12)), num(L.dsrLimit(a, 0.035, 360).principal), num(L.dsrLimit(a, 0.045, 360).principal), num(L.dsrLimit(a, 0.055, 360).principal)] }; });
+  const body = `
+${crumb([['/', '홈'], [null, '대출 한도']])}
+<h1 class="title">연봉별 대출 한도표 (DSR 40%)</h1>
+<p class="meta">30년 원리금균등 기준 최대 원금 · 다른 대출이 없을 때 · 연봉을 누르면 기간·금리별 표와 부부 합산</p>
+${section('연봉 × 금리', '원', table(['연봉', '월 상환 여력', '3.5%', '4.5%', '5.5%'], rows))}`;
+  write('/dsr/', shell({ url: '/dsr/', title: '연봉별 대출 한도표 — DSR 40% 기준 최대 대출 원금', desc: '연봉 2,000만원부터 3억원까지 DSR 40% 기준 월 상환 여력과 30년 원리금균등 최대 대출 원금을 금리별로 정리했습니다.', body, nav: 'loan' }));
+}
+
+/* ---------- 연봉 순위 ---------- */
+function rankPage() {
+  const tops = [0.001, 0.01, 0.03, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9];
+  const rows = tops.map((t) => ({ cells: [`상위 ${t * 100 < 1 ? (t * 100).toFixed(1) : Math.round(t * 100)}%`, num(RK.incomeAt(t)), num(Math.round(t * RK.STAT.workers))] }));
+  const rows2 = SALARIES.filter((m) => m % 500 === 0 || m > 10000).map((m) => { const r = RK.rank(m * 10000); return { cells: [`<a href="${salaryUrl(m)}">연봉 ${manwon(m * 10000)}</a>`, `상위 ${r.topPct}%`, num(r.people)] }; });
+  const body = `
+${crumb([['/', '홈'], [null, '연봉 순위']])}
+<h1 class="title">연봉 순위표 — 내 연봉은 상위 몇 %</h1>
+<p class="meta">국세청 ${RK.STAT.year}년 귀속 근로소득 연말정산 통계 기준 · 신고 ${num(RK.STAT.workers)}명 · 중위 ${manwon(RK.STAT.median)} · 평균 ${manwon(RK.STAT.mean)}</p>
+${hero({ label: '근로소득자 중위 연봉', value: RK.STAT.median, sub: `절반은 이보다 적게, 절반은 이보다 많이 받습니다 · 평균은 ${manwon(RK.STAT.mean)}, 1억원 초과는 ${pct(RK.STAT.over100m)}` })}
+${section('상위 몇 %의 연봉 경계', '이 연봉 이상이면 해당 상위 비율에 듭니다', table(['상위', '연봉 경계', '해당 인원'], rows))}
+${section('연봉별 상위 비율', '연봉 페이지에서 실수령액과 함께 볼 수 있습니다', table(['연봉', '상위', '이보다 많이 받는 사람'], rows2))}
+${ad()}
+<div class="callout"><b>어떻게 계산했나</b> — 국세청이 공개한 세 요약값(중위 ${manwon(RK.STAT.median)}, 평균 ${manwon(RK.STAT.mean)}, 1억원 초과 ${pct(RK.STAT.over100m)})을 모두 재현하는 로그정규 분포로 그 사이를 채웠습니다. 백분위 원자료 그대로는 아니라 몇 %p 오차가 있을 수 있고, 연말정산을 한 근로소득자만 대상이라 자영업자·일용직·무직은 들어 있지 않습니다. 연령·성별·지역 구분 없는 전체 기준입니다.</div>
+<p class="note">국세청 국세통계(근로소득 연말정산 신고 현황) · <a href="/method/">계산 기준 보기</a></p>`;
+  write('/rank/', shell({ url: '/rank/', title: `연봉 순위표 — 내 연봉은 근로소득자 상위 몇 %? (국세청 ${RK.STAT.year}년 귀속)`, desc: `국세청 근로소득 통계로 연봉별 상위 비율과 상위 1%·10%·30%의 연봉 경계를 정리했습니다. 중위 ${manwon(RK.STAT.median)}, 평균 ${manwon(RK.STAT.mean)}.`, body, nav: 'salary' }));
+}
+
 /* ---------- 빌드 ---------- */
 fs.rmSync(OUT, { recursive: true, force: true });
 fs.mkdirSync(OUT, { recursive: true });
@@ -534,6 +766,11 @@ netIndex(); NETS.forEach(netPage);
 loanIndex(); LOAN_AMOUNTS.forEach((a) => { loanAmountIndex(a); LOAN_YEARS.forEach((y) => LOAN_RATES.forEach((r) => loanPage(a, y, r))); });
 retireIndex(); RETIRE_PAYS.forEach((p) => RETIRE_YEARS.forEach((y) => retirePage(p, y)));
 hourlyIndex(); HOURLY_WAGES.forEach((w) => HOURLY_HOURS.forEach((h) => hourlyPage(w, h)));
+unemploymentIndex(); UI_PAYS.forEach((p) => UI_YEARS.forEach((y) => unemploymentPage(p, y)));
+jeonseIndex(); JEONSE.forEach(jeonsePage);
+savingsIndex(); SAV_M.forEach((m) => SAV_N.forEach((nm) => savingsPage(m, nm)));
+dsrIndex(); SALARIES.forEach(dsrPage);
+rankPage();
 docs();
 
 const indexable = urls.filter((u) => !['/terms/', '/privacy/'].includes(u));

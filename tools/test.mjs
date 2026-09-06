@@ -78,5 +78,24 @@ ok(L.annuityPayment(12000000, 0, 12) === 1000000, '무이자');
   ok(netPay({ monthly: 3500000, nontax: 200000 }).net > n.net, '비과세 식대면 실수령 증가');
 }
 
+/* 실업급여 */
+{
+  const { dailyBenefit, benefitDays } = await import('../engine/unemploy.mjs');
+  const a = dailyBenefit(3500000);
+  ok(a.upper === 68100 && a.lower === 66048, '2026 상·하한액', `${a.upper}/${a.lower}`);
+  ok(a.daily === 68100 && a.capped === 'upper', '월 350만 → 상한액', a.daily);
+  ok(dailyBenefit(2000000).daily === 66048, '월 200만 → 하한액');
+  ok(benefitDays(0.5) === 120 && benefitDays(3) === 180 && benefitDays(10) === 240 && benefitDays(10, true) === 270, '소정급여일수');
+}
+
+/* 연봉 순위 */
+{
+  const { rank, incomeAt, STAT } = await import('../engine/rank.mjs');
+  ok(near(rank(STAT.median).top, 0.5, 0.002), '중위 = 상위 50%', rank(STAT.median).top);
+  ok(near(rank(100000000).top, STAT.over100m, 0.004), '1억 초과 ≈ 6.7%', rank(100000000).top);
+  ok(near(incomeAt(0.5), STAT.median, 20000), '상위 50% 경계 = 중위', incomeAt(0.5));
+  ok(rank(30000000).top > rank(60000000).top, '단조');
+}
+
 console.log(`test: ${pass} pass, ${fail} fail`);
 if (fail) process.exit(1);

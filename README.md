@@ -11,6 +11,11 @@
 - `data/ganyi.json` — 근로소득 간이세액표 (소득세법 시행령 별표 2, 2024.2.29 개정) 월급여 천원 구간 × 공제대상가족 1~11명
 - `engine/gift.mjs` — 증여세(10년 합산 공제·혼인 출산 공제·누진세율·세대생략 할증·신고세액공제) → `/gift-tax/`
 - `engine/realty.mjs` — 복비(중개보수 상한요율·월세 환산·부가세) → `/bokbi/`, 주택 취득세(사잇값 세율·다주택 중과·교육세·농특세·생애최초 감면) → `/acquisition-tax/`
+- `engine/inherit.mjs` — 상속세(일괄공제·배우자상속공제 법정지분·금융재산공제·신고세액공제) → `/inheritance-tax/{가족구성}/{금액}/`
+- `engine/income.mjs` — 종합소득세(기본세율·기본공제·표준세액공제·3.3% 정산) → `/income-tax/`
+- `engine/property.mjs` — 주택 재산세(공정시장가액비율·1주택 특례세율·도시지역분·교육세·7/9월 분납) → `/property-tax/`
+- `engine/cartax.mjs` — 자동차세(cc당 세액·차령 경감·연납 공제율 연도표·전기차 정액) → `/car-tax/`
+- `engine/ltv.mjs` — LTV 한도(규제지역 40%·비규제 70%·생애최초·6억/4억/2억 한도, `LTV_ASOF` 표기) → `/ltv/`
 - `engine/deposit.mjs` — 예금 이자(단리·월복리·월 이자 지급식) → `/deposit/`
 - `engine/yearend.mjs` — 연말정산 미리보기(근로소득공제·카드·세액공제·표준세액공제, `/yearend/`에서 브라우저 계산)
 - `tools/build.mjs` — 페이지 생성기 (`node tools/build.mjs`), `tools/test.mjs` — 엔진 검증

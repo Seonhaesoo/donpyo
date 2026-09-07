@@ -19,6 +19,11 @@ import * as GO from '../engine/goal.mjs';
 import * as GT from '../engine/gift.mjs';
 import * as RE from '../engine/realty.mjs';
 import * as DP from '../engine/deposit.mjs';
+import * as IH from '../engine/inherit.mjs';
+import * as IC from '../engine/income.mjs';
+import * as PT from '../engine/property.mjs';
+import * as CT from '../engine/cartax.mjs';
+import * as LV from '../engine/ltv.mjs';
 import { makeBundle } from './bundle.mjs';
 import { num, won, manwon, short, pct, rate as fmtRate, rateSlug } from '../engine/fmt.mjs';
 
@@ -510,8 +515,8 @@ function home() {
   <h1>연봉 4,200만원이면<br>손에 얼마가 남을까</h1>
   <p>연봉·월급·대출·퇴직금·알바 월급을 금액별로 미리 계산해 표로 묶어 두었습니다. 숫자만 고르면 바로 나옵니다.</p>
 </div>
-<form class="quick quick-smart" data-quick="smart"><label for="q-home">숫자로 바로 찾기 — 연봉·월급·대출·시급·퇴직금 무엇이든</label><div class="quick-row"><div class="quick-in"><input id="q-home" type="text" placeholder="연봉 4200 / 2억 30년 4.5% / 시급 12000 주20" autocomplete="off" autocapitalize="off"></div><button class="btn" type="submit">찾기</button></div><div class="quick-hint" data-hint aria-live="polite">예시를 누르거나 직접 적어 보세요</div><div class="quick-ex"><button type="button">연봉 4200</button><button type="button">월급 350</button><button type="button">실수령 300</button><button type="button">2억 30년 4.5%</button><button type="button">시급 12000 주 20시간</button><button type="button">퇴직금 350 5년</button><button type="button">전세 2억</button><button type="button">적금 50 3년</button><button type="button">증여 1억</button><button type="button">복비 5억</button><button type="button">예금 1억 1년</button></div><div class="quick-links"><a href="/salary/">연봉표</a><a href="/monthly/">월급표</a><a href="/net/">실수령으로 연봉 찾기</a><a href="/loan/">대출표</a></div></form>
-<script>window.DONPYO_GRID=${JSON.stringify({ salary: SALARIES, monthly: MONTHLIES, net: NETS, loanA: LOAN_AMOUNTS, loanY: LOAN_YEARS, loanR: LOAN_RATES.map(rateSlug), retireP: RETIRE_PAYS, retireY: RETIRE_YEARS, hourlyW: HOURLY_WAGES, hourlyH: HOURLY_HOURS, uiP: UI_PAYS, uiY: UI_YEARS, jeonse: JEONSE, savM: SAV_M, savN: SAV_N, free: FREE, ot: OT_PAYS, carP: CAR_PRICES, carN: CAR_MONTHS, goals: GOALS, saveM: SAVE_M, gift: GIFT_AMOUNTS, bokbi: BOKBI, acq: ACQ, depP: DEP_P, depN: DEP_N })}</script>
+<form class="quick quick-smart" data-quick="smart"><label for="q-home">숫자로 바로 찾기 — 연봉·월급·대출·시급·퇴직금 무엇이든</label><div class="quick-row"><div class="quick-in"><input id="q-home" type="text" placeholder="연봉 4200 / 2억 30년 4.5% / 시급 12000 주20" autocomplete="off" autocapitalize="off"></div><button class="btn" type="submit">찾기</button></div><div class="quick-hint" data-hint aria-live="polite">예시를 누르거나 직접 적어 보세요</div><div class="quick-ex"><button type="button">연봉 4200</button><button type="button">월급 350</button><button type="button">실수령 300</button><button type="button">2억 30년 4.5%</button><button type="button">시급 12000 주 20시간</button><button type="button">퇴직금 350 5년</button><button type="button">전세 2억</button><button type="button">적금 50 3년</button><button type="button">증여 1억</button><button type="button">복비 5억</button><button type="button">예금 1억 1년</button><button type="button">상속 10억</button><button type="button">재산세 5억</button><button type="button">자동차세 1598cc</button></div><div class="quick-links"><a href="/salary/">연봉표</a><a href="/monthly/">월급표</a><a href="/net/">실수령으로 연봉 찾기</a><a href="/loan/">대출표</a></div></form>
+<script>window.DONPYO_GRID=${JSON.stringify({ salary: SALARIES, monthly: MONTHLIES, net: NETS, loanA: LOAN_AMOUNTS, loanY: LOAN_YEARS, loanR: LOAN_RATES.map(rateSlug), retireP: RETIRE_PAYS, retireY: RETIRE_YEARS, hourlyW: HOURLY_WAGES, hourlyH: HOURLY_HOURS, uiP: UI_PAYS, uiY: UI_YEARS, jeonse: JEONSE, savM: SAV_M, savN: SAV_N, free: FREE, ot: OT_PAYS, carP: CAR_PRICES, carN: CAR_MONTHS, goals: GOALS, saveM: SAVE_M, gift: GIFT_AMOUNTS, bokbi: BOKBI, acq: ACQ, depP: DEP_P, depN: DEP_N, inh: INH_AMOUNTS, inc: INC, prop: PROP, cars: CARS, ltv: LTV_P })}</script>
 <a class="feature" href="/yearend/"><span class="feature-mark">13</span><span class="feature-text"><b>연말정산, 돌려받을까 더 낼까</b><span>연봉·카드·의료비·연금저축만 넣으면 결정세액과 환급 예상액이 바로</span></span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5L10.5 8 6 12.5" stroke="#8A948E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></a>
 <a class="feature" href="/couple/"><span class="feature-mark">둘</span><span class="feature-text"><b>둘이 합쳐 얼마까지 빌릴 수 있을까</b><span>링크 하나 보내면 상대가 연봉만 넣고 끝 — 합산 대출 한도·전세 여력</span></span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5L10.5 8 6 12.5" stroke="#8A948E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></a>
 ${section('급여와 일', null, `<div class="dict">
@@ -546,6 +551,11 @@ ${section('세금·부동산', null, `<div class="dict">
 <a href="/gift-tax/"><b>증여세</b><span>자녀에게 1억 → <span class="num">${num(GT.giftTax(100000000, 'child').tax)}</span>원 · 배우자는 6억까지 0원</span></a>
 <a href="/bokbi/"><b>부동산 복비</b><span>5억 매매 → 최대 <span class="num">${num(RE.brokerage(500000000).fee)}</span>원 · 전세 2억 <span class="num">${num(RE.brokerage(200000000, 'rent').fee)}</span>원</span></a>
 <a href="/acquisition-tax/"><b>주택 취득세</b><span>5억 1주택 → <span class="num">${num(RE.acquisitionTax(500000000).total)}</span>원 · 생애최초는 200만원 감면</span></a>
+<a href="/inheritance-tax/"><b>상속세</b><span>10억 → 배우자·자녀 있으면 <span class="num">0</span>원 · 자녀만이면 <span class="num">${num(IH.inheritTax(1000000000, { spouse: false, children: 1 }).tax)}</span>원</span></a>
+<a href="/income-tax/"><b>종합소득세</b><span>소득금액 5,000만 → <span class="num">${num(IC.incomeTax(50000000).total)}</span>원 · 3.3% 정산은 얼마</span></a>
+<a href="/property-tax/"><b>주택 재산세</b><span>공시가 5억 1주택 → 연 <span class="num">${num(PT.propertyTax(500000000).total)}</span>원 (7월·9월 반씩)</span></a>
+<a href="/car-tax/"><b>자동차세</b><span>1,598cc → 연 <span class="num">${num(CT.carTax(1598).total)}</span>원 · 1월 연납 ${pct(CT.ANNUAL_DISCOUNT[YEAR] || 0, 0)} 할인</span></a>
+<a href="/ltv/"><b>LTV 대출 한도</b><span>10억 집 규제지역 → <span class="num">${num(LV.ltvLimit(1000000000).limit)}</span>원 · 비규제 <span class="num">${num(LV.ltvLimit(1000000000, 'metro').limit)}</span>원</span></a>
 <a href="/deposit/"><b>예금 이자</b><span>1억 1년 3% → 세후 <span class="num">${num(DP.deposit(100000000, 12, 0.03).net)}</span>원 · 매달 받으면 <span class="num">${num(DP.deposit(100000000, 12, 0.03).monthlyNet)}</span>원</span></a>
 </div>`)}
 ${section('많이 보는 연봉표', null, list(popular))}
@@ -595,6 +605,16 @@ ${table(['항목', `${PREV}년`, `${YEAR}년`, '비고'], [
 <p>지방세법 제11조의 주택 유상취득 세율입니다. 1주택(비조정대상지역 2주택 포함)은 6억원 이하 1%, 6억원 초과 9억원 이하는 (취득가액 × 2/3억 − 3)%로 소수점 넷째 자리까지 계산한 사잇값, 9억원 초과 3%. 조정대상지역 2주택·비조정 3주택은 8%, 조정대상지역 3주택 이상·비조정 4주택 이상은 12%(2020년 8월 12일 이후 기준, 완화 개정안은 확정되면 갱신). 지방교육세는 표준세율의 10분의 1(1~3% 구간에서 0.1~0.3%), 중과 구간은 0.4%. 농어촌특별세는 전용면적 85㎡ 초과일 때만 0.2%(중과 8%는 0.6%, 12%는 1.0%). 생애최초 주택 감면은 취득가액 12억원 이하일 때 취득세에서 최대 200만원을 뺍니다(지방세특례제한법 제36조의3). 취득일부터 60일 안에 신고·납부하며, 등기 비용(국민주택채권·법무사·수수료)은 별도입니다.</p>
 <h2>예금</h2>
 <p>정기예금 이자 = 원금 × 연이율 × 개월 ÷ 12(단리). 월복리 상품은 원금 × ((1 + 연이율 ÷ 12)<sup>개월</sup> − 1). 이자소득세 14% + 지방소득세 1.4% = 15.4%를 10원 단위 절사로 뺍니다. 월 이자 지급식은 매달 원금 × 연이율 ÷ 12에서 같은 세금을 뺀 금액을 받습니다. 예금자보호 한도는 2025년 9월 1일부터 금융회사별 원금과 이자를 합쳐 1억원입니다.</p>
+<h2>상속세</h2>
+<p>상속세 = (상속재산 − 공제) × 세율 − 누진공제에서 신고세액공제 3%를 뺀 값입니다. 공제는 일괄공제 5억원(기초공제 2억 + 자녀 1인당 5,000만원 등 인적공제가 더 크면 그 금액)과 배우자상속공제(배우자가 실제 상속받은 금액, 최소 5억원, 최대 30억원, 법정상속분이 한도)를 더한 값이고, 여기서는 배우자가 법정상속분(배우자 1.5 : 자녀 1)만큼 받는다고 가정했습니다. 금융재산상속공제(순금융재산 2,000만원 이하 전액, 초과분 20%, 최대 2억원)는 예시로만 보여줍니다. 세율은 증여세와 같은 10~50%이며 과세표준 50만원 미만은 과세하지 않습니다. 사전증여(10년, 상속인 외 5년)·채무·장례비·동거주택상속공제·세대생략 할증·자녀가 미성년인 경우는 반영하지 않았습니다. 상속세 및 증여세법 제18~22조·제26조·제69조.</p>
+<h2>종합소득세</h2>
+<p>과세표준 = 종합소득금액(수입 − 필요경비) − 기본공제 150만원(본인). 산출세액은 기본세율(1,400만원 이하 6%, 5,000만원 이하 15%, 8,800만원 이하 24%, 1억 5,000만원 이하 35%, 3억원 이하 38%, 5억원 이하 40%, 10억원 이하 42%, 초과 45%)로 계산하고 표준세액공제 7만원을 뺍니다. 지방소득세는 소득세의 10%. 프리랜서 정산은 수입의 3%(소득세)와 0.3%(지방소득세)를 기납부로 보고 차이를 환급·추가 납부로 표시합니다. 다른 소득공제·세액공제, 근로소득 합산, 성실신고확인 대상 여부는 반영하지 않았습니다.</p>
+<h2>주택 재산세</h2>
+<p>과세표준 = 공시가격 × 공정시장가액비율(주택 60%, 1세대 1주택은 3억 이하 43%·6억 이하 44%·6억 초과 45% 특례). 세율은 과세표준 6,000만원 이하 0.1%, 1억 5,000만원 이하 0.15%, 3억원 이하 0.25%, 초과 0.4%의 누진세율이고, 1세대 1주택 공시가격 9억원 이하는 구간마다 0.05%p 낮은 특례세율을 씁니다. 여기에 도시지역분(과세표준 × 0.14%)과 지방교육세(재산세의 20%)를 더했습니다. 7월과 9월에 절반씩 내며 본세 20만원 이하면 7월에 한 번에 냅니다. 세부담상한(전년 대비 105~130%)·지역자원시설세·종합부동산세는 반영하지 않았습니다. 지방세법 제110~112조.</p>
+<h2>자동차세</h2>
+<p>비영업용 승용차 연세액 = 배기량 × cc당 세액(1,000cc 이하 80원, 1,600cc 이하 140원, 초과 200원), 전기·수소차는 10만원 정액. 지방교육세 30%를 더합니다. 차령 3년차부터 해마다 5%씩 최대 50%까지 경감하고, 6월과 12월에 절반씩 냅니다. 1월 연납 공제율은 행정안전부 고시(2024·2025년 5%, ${YEAR}년 ${pct(CT.ANNUAL_DISCOUNT[YEAR] || 0, 0)})이며 2~12월분(11/12)에 적용합니다. 지방세법 제127조·제128조·제130조.</p>
+<h2>LTV 대출 한도</h2>
+<p>LTV 한도 = 집값(시세) × 담보인정비율. ${LV.LTV_ASOF} 기준으로 규제지역(서울 전역과 경기 과천·광명·성남 분당·수정·중원·수원 영통·장안·팔달·안양 동안·용인 수지·의왕·하남)은 40%(생애최초 70%), 수도권 비규제지역은 70%(생애최초 80%), 지방은 70%(생애최초 80%)이고, 수도권·규제지역 주택담보대출은 6억원(규제지역 15억 초과 4억원, 25억 초과 2억원)을 넘지 못합니다. 실제 대출은 LTV·DSR·은행 심사 가운데 가장 작은 값이며 방공제(소액임차보증금)와 기존 대출에 따라 줄어듭니다. 규제는 자주 바뀌므로 대출 전 은행에 확인하세요.</p>
 <h2>대출 한도 (DSR)</h2>
 <p>DSR 40% = 모든 대출의 연간 원리금 상환액 ÷ 연소득 ≤ 40%. 월 상환 여력 = 연소득 × 40% ÷ 12이고, 그 여력으로 갚을 수 있는 원리금균등 원금을 한도로 봅니다. 스트레스 DSR은 실제 금리에 가산금리(수도권 주담대 1.5%p)를 더해 계산합니다.</p>
 <h2>연봉 순위</h2>
@@ -1811,6 +1831,320 @@ ${DEP_NOTE}`;
   write('/deposit/', shell({ url: '/deposit/', title: `예금 이자 계산표 — 원금·기간·금리별 세후 이자와 월 이자 (${YEAR}년)`, desc: '100만원부터 5억원까지, 6개월부터 3년까지 정기예금 세후 이자와 만기 수령액, 월 이자 지급식, 복리, 적금과의 비교를 계산했습니다.', body, nav: 'loan' }));
 }
 
+/* ---------- 상속세 ---------- */
+const INH_AMOUNTS = [30000, 50000, 70000, 100000, 120000, 150000, 200000, 250000, 300000, 400000, 500000, 700000, 1000000];
+const INH_CASES = ['spouse1', 'spouse2', 'spouse3', 'child1', 'child2'];
+const inhUrl = (c, m) => m ? `/inheritance-tax/${c}/${m}/` : `/inheritance-tax/${c}/`;
+const INH_NOTE = `<p class="note">상속세 및 증여세법 기준의 추정입니다. 자녀는 성년, 배우자는 법정상속분만큼 실제 상속받는다고 가정했고 사전증여(10년)·채무·장례비·동거주택상속공제·세대생략 할증은 반영하지 않았습니다. 상속재산은 시가(아파트는 유사 매매사례가액)로 평가합니다. 금액이 크면 세무사 상담을 권합니다. <a href="/method/">계산 기준 보기</a></p>`;
+
+function inhPage(c, m) {
+  const E = m * 10000, C = IH.CASES[c], url = inhUrl(c, m);
+  const r = IH.inheritTax(E, C);
+  const f = IH.inheritTax(E, { ...C, financial: Math.round(E * 0.3) });
+  const title = `상속재산 ${manwon(E)} 상속세 — ${C.label} ${r.tax ? won(r.tax) : '0원'} (${YEAR}년)`;
+  const desc = `${C.label}이 ${manwon(E)}을 상속받으면 ${r.lumpType === 'lump' ? '일괄공제 5억원' : `기초·자녀공제 ${manwon(r.lump)}`}${C.spouse ? `과 배우자상속공제 ${manwon(r.spouseDed)}` : ''}를 뺀 과세표준 ${manwon(r.base)}에 ${r.rate ? pct(r.rate, 0) : '—'} 세율, 신고세액공제 3%를 반영한 상속세는 ${won(r.tax)}입니다. 가족 구성별·금액별 표와 절세 방법.`;
+  const rows = [['상속재산 (시가)', num(E)], [r.lumpType === 'lump' ? '일괄공제' : '기초공제 + 자녀공제', neg(r.lump), r.lumpType === 'lump' ? `기초 2억 + 자녀 ${C.children}명 × 5천만 = ${manwon(r.personal)}보다 큰 5억` : `자녀 ${C.children}명이라 일괄공제 5억보다 큼`]];
+  if (C.spouse) rows.push(['배우자상속공제', neg(r.spouseDed), `법정상속분 ${pct(r.share, 1)} · 최소 5억 · 최대 30억`]);
+  rows.push(['과세표준', num(r.base)], ['산출세액', num(r.calc), r.rate ? `${pct(r.rate, 0)}${r.progressiveDeduct ? ` − 누진공제 ${manwon(r.progressiveDeduct)}` : ''}` : '과세표준 없음'], ['신고세액공제 3%', neg(r.credit), '6개월 안 자진 신고'], ['납부할 상속세', num(r.tax)], ['상속인들 손에', num(r.net)]);
+  const body = `
+${crumb([['/inheritance-tax/', '상속세'], [inhUrl(c), C.label], [null, manwon(E)]])}
+<h1 class="title">상속재산 ${manwon(E)} · ${C.label} — 상속세는</h1>
+<p class="meta">${C.spouse ? '배우자가 법정상속분만큼 받고' : '배우자 없이'} 자녀 ${C.children}명이 상속 · 사전증여·채무 없음 가정 · 신고세액공제 3% 반영</p>
+${lead(r.base === 0 ? `${manwon(E)}은 ${r.lumpType === 'lump' ? '일괄공제 5억원' : `기초·자녀공제 ${manwon(r.lump)}`}${C.spouse ? `과 배우자상속공제 ${manwon(r.spouseDed)}` : ''} 안에 들어 과세표준이 없고 상속세도 없습니다. ${C.spouse ? `배우자가 법정상속분보다 적게 받아 배우자공제가 최소 5억원만 인정되더라도 ${manwon(r.lump + IH.SPOUSE_MIN)}까지는 세금이 없습니다.` : '세금이 없어도 6개월 안에 신고해 두면 나중에 부동산을 팔 때 취득가액을 시가로 인정받아 양도세가 줄어듭니다.'}` : `${manwon(E)}에서 ${r.lumpType === 'lump' ? '일괄공제 5억원' : `기초·자녀공제 ${manwon(r.lump)}`}${C.spouse ? `과 배우자상속공제 ${manwon(r.spouseDed)}` : ''}을 빼면 과세표준 ${manwon(r.base)}, 여기에 ${pct(r.rate, 0)} 세율${r.progressiveDeduct ? `(누진공제 ${manwon(r.progressiveDeduct)})` : ''}을 적용한 ${won(r.calc)}에서 신고세액공제 3%를 빼면 ${won(r.tax)}입니다. 상속재산의 ${pct(r.effective, 1)}입니다.`)}
+${hero({ label: '납부할 상속세', value: r.tax, sub: r.tax ? `상속재산의 ${pct(r.effective, 1)} · 상속인들 손에 ${won(r.net)}` : `공제 ${manwon(r.deductions)} 안이라 세금 없음` })}
+${led('계산 흐름', '원', rows)}
+${section('예금·주식이 있으면', '순금융재산이 상속재산의 30%일 때 — 2,000만원 초과분의 20%(최대 2억원)를 더 공제', tiles([{ label: '금융재산상속공제', value: f.fin }, { label: '과세표준', value: f.base }, { label: '상속세', value: f.tax }]))}
+${section('같은 재산, 다른 가족 구성', `${manwon(E)}을 누가 상속받느냐에 따라`, table(['가족 구성', '공제 합계', '과세표준', '상속세'], INH_CASES.map((k) => { const x = IH.inheritTax(E, IH.CASES[k]); return { cls: k === c ? 'on' : '', cells: [k === c ? IH.CASES[k].label : `<a href="${inhUrl(k, m)}">${IH.CASES[k].label}</a>`, num(x.deductions), num(x.base), num(x.tax)] }; })))}
+${section('재산이 바뀌면', `${C.label} 기준 상속세`, chips(neighbors(INH_AMOUNTS, m, 3).map((x) => ({ label: short(x * 10000), value: IH.inheritTax(x * 10000, C).tax, href: inhUrl(c, x), on: x === m }))))}
+${ad()}
+${section('세금을 줄이는 방법', null, `<div class="doc">
+<p><b>배우자가 실제로 얼마를 받느냐가 가장 큽니다.</b> 배우자상속공제는 배우자가 실제 상속받은 금액(법정상속분·30억원 한도)만큼 인정되니, 배우자가 법정상속분까지 받으면 공제가 최대가 됩니다. 다만 그 재산은 배우자 사망 때 다시 상속되므로 2차 상속까지 놓고 배분을 정하는 것이 보통입니다. 분할 협의는 신고기한 안에 마쳐야 합니다.</p>
+<p><b>10년 전부터 나눠 주기.</b> 사망 전 10년(상속인 외에는 5년) 안의 증여는 상속재산에 다시 합산됩니다. 그보다 앞서 <a href="/gift-tax/">증여</a>하면 증여 공제(자녀 5,000만원·배우자 6억원)를 따로 쓰고 낮은 세율 구간을 여러 번 씁니다.</p>
+<p><b>같이 살던 집은 6억원 더.</b> 10년 이상 한집에서 산 무주택 자녀가 그 집을 상속받으면 동거주택상속공제로 집값의 100%(6억원 한도)를 더 공제합니다.</p>
+<p><b>신고하면 3%, 못 내면 나눠서.</b> 6개월 안에 신고하면 산출세액의 3%를 깎아 주고, 세액이 2,000만원을 넘으면 10년에 걸친 연부연납(연 이자 있음), 부동산이 많으면 물납도 가능합니다.</p>
+</div>`)}
+${section('신고와 납부', null, `<div class="doc"><p>사망일이 속한 달의 말일부터 <b>6개월 안</b>(피상속인이 국외 거주면 9개월)에 상속인이 함께 신고·납부합니다. 세액이 1,000만원을 넘으면 2개월 뒤까지 분납, 2,000만원을 넘으면 연부연납을 신청할 수 있습니다. 상속받은 부동산은 별도로 <a href="/acquisition-tax/">취득세</a>(상속 2.8%, 무주택 상속 1주택 0.8%)를 6개월 안에 냅니다.</p></div>`)}
+${section('이어서 계산하기', null, list([{ href: '/gift-tax/', title: '증여세', sub: '살아 있을 때 나눠 주면' }, { href: '/acquisition-tax/', title: '주택 취득세', sub: '상속받은 집의 취득세' }, { href: '/deposit/', title: '예금 이자', sub: '상속받은 목돈을 예금에 넣으면' }]))}
+${INH_NOTE}`;
+  write(url, shell({ url, title, desc, body }));
+}
+
+function inhCaseIndex(c) {
+  const C = IH.CASES[c], url = inhUrl(c), free = IH.freeEstate(c);
+  const rows = INH_AMOUNTS.map((m) => { const r = IH.inheritTax(m * 10000, C); return { cells: [`<a href="${inhUrl(c, m)}">${manwon(m * 10000)}</a>`, num(r.deductions), num(r.base), num(r.tax), r.tax ? pct(r.effective, 1) : '0%'] }; });
+  const body = `
+${crumb([['/inheritance-tax/', '상속세'], [null, C.label]])}
+<h1 class="title">${C.label} — 상속재산별 상속세</h1>
+<p class="meta">${C.spouse ? '배우자가 법정상속분만큼 받는다고 가정' : '배우자 없이 자녀만 상속'} · 일괄공제 5억 ${C.spouse ? '+ 배우자상속공제 5억~30억' : ''} · 신고세액공제 3% 반영</p>
+${lead(C.spouse ? `${C.label}이면 배우자가 법정상속분(${pct(IH.spouseShare(C.children), 1)})을 받는다고 볼 때 ${manwon(free)}까지 상속세가 없습니다. 배우자가 그보다 적게 받아 배우자공제를 최소 5억원만 인정받는 경우에도 ${manwon(IH.LUMP + IH.SPOUSE_MIN)}까지는 세금이 없고, 그 위로는 10억원마다 세율이 20~30%로 올라갑니다.` : `${C.label}이면 일괄공제 ${manwon(free)}까지 상속세가 없고, 그 위로는 과세표준 1억원까지 10%, 5억원까지 20%, 10억원까지 30%, 30억원까지 40%, 초과 50%입니다. 배우자가 없어 공제가 절반이므로 같은 재산이라도 세금이 배우자가 있을 때의 두 배 이상입니다.`)}
+${section('상속재산별', '원 · 금액을 누르면 계산 흐름과 절세 방법', table(['상속재산', '공제 합계', '과세표준', '상속세', '실효세율'], rows))}
+${section('다른 가족 구성', '10억원을 상속할 때의 상속세', chips(INH_CASES.filter((k) => k !== c).map((k) => ({ label: IH.CASES[k].label, value: IH.inheritTax(1000000000, IH.CASES[k]).tax, href: inhUrl(k) }))))}
+${INH_NOTE}`;
+  write(url, shell({ url, title: `${C.label} 상속세 계산표 — 3억원부터 100억원까지 (${YEAR}년)`, desc: `${C.label}이 상속받을 때 재산 금액별 상속세. 일괄공제 5억${C.spouse ? '과 배우자상속공제' : ''}, 10~50% 세율, 신고세액공제 3%를 반영했습니다.`, body }));
+}
+
+function inhIndex() {
+  const rows = INH_AMOUNTS.map((m) => ({ cells: [`<a href="${inhUrl('spouse1', m)}">${manwon(m * 10000)}</a>`].concat(INH_CASES.map((k) => `<a href="${inhUrl(k, m)}">${num(IH.inheritTax(m * 10000, IH.CASES[k]).tax)}</a>`)) }));
+  const body = `
+${crumb([['/', '홈'], [null, '상속세']])}
+<h1 class="title">상속세 계산표 — 배우자·자녀 구성과 재산 금액별</h1>
+<p class="meta">${YEAR}년 상속세 및 증여세법 · 일괄공제 5억 + 배우자상속공제(5억~30억) · 10~50% 누진세율 · 신고세액공제 3%</p>
+${lead(`상속세는 재산에서 공제를 뺀 과세표준에 매깁니다. 자녀만 있으면 일괄공제 5억원, 배우자가 있으면 배우자상속공제가 최소 5억원 더 붙어 10억원까지는 세금이 없고, 배우자가 법정상속분대로 받으면 12억 5,000만원(자녀 1명)까지도 없습니다. 자녀만 있을 때 10억원을 물려주면 ${won(IH.inheritTax(1000000000, IH.CASES.child1).tax)}, 20억원이면 ${won(IH.inheritTax(2000000000, IH.CASES.child1).tax)}입니다.`)}
+${section('재산 × 가족 구성', '상속세(원) · 칸을 누르면 계산 흐름', table(['상속재산'].concat(INH_CASES.map((k) => IH.CASES[k].label.replace(' (배우자 없음)', '<br><small>배우자 없음</small>'))), rows))}
+${section('가족 구성별로 보기', '세금 없이 물려줄 수 있는 재산 (배우자 법정상속분 가정)', list(INH_CASES.map((k) => ({ href: inhUrl(k), title: IH.CASES[k].label, sub: IH.CASES[k].spouse ? '일괄공제 5억 + 배우자공제' : '일괄공제 5억', value: IH.freeEstate(k) }))))}
+${ad()}
+${section('공제 한눈에', null, table(['공제', '금액', '조건'], [
+  { cells: ['일괄공제', '5억원', '기초공제 2억 + 인적공제(자녀 5천만·65세 이상 5천만·미성년 1천만×잔여연수·장애인)보다 크면 선택'] },
+  { cells: ['배우자상속공제', '5억~30억원', '배우자가 실제 상속받은 금액, 법정상속분이 한도 · 배우자 단독 상속은 일괄공제 없음'] },
+  { cells: ['금융재산상속공제', '최대 2억원', '순금융재산 2천만원 이하 전액, 초과분 20%'] },
+  { cells: ['동거주택상속공제', '최대 6억원', '10년 이상 동거한 무주택 자녀가 그 집을 상속'] },
+  { cells: ['신고세액공제', '산출세액의 3%', '6개월 안 자진 신고'] },
+]))}
+${section('세율', '과세표준 = 상속재산 − 공제', table(['과세표준', '세율', '누진공제'], GT.GIFT_BRACKETS.map(([lim, r, d], i) => ({ cells: [i === 0 ? '1억원 이하' : lim === Infinity ? '30억원 초과' : `${manwon(GT.GIFT_BRACKETS[i - 1][0])} 초과 ${manwon(lim)} 이하`, pct(r, 0), d ? manwon(d) : '—'] }))))}
+${section('자주 묻는 것', null, `<div class="doc">
+<p><b>정말 10억원까지 세금이 없나요?</b> 배우자와 자녀가 있으면 일괄공제 5억 + 배우자공제 최소 5억 = 10억원까지는 어떤 경우에도 없습니다. 자녀만 있으면 5억원까지입니다. 아파트 한 채가 10억원을 넘는 집이 많아진 지금은 미리 계산해 둘 필요가 있습니다.</p>
+<p><b>상속재산은 어떻게 평가하나요?</b> 시가가 원칙입니다. 아파트는 사망일 전후 6개월 안의 유사한 매매사례가액, 없으면 공시가격·감정가액이고, 예금은 잔액, 주식은 사망일 전후 2개월 평균 종가입니다. 사망 전 1~2년 안에 인출한 현금이 크면(1년 2억·2년 5억 이상) 사용처를 밝혀야 합니다.</p>
+<p><b>증여와 상속, 어느 쪽이 유리한가요?</b> 공제는 상속이 훨씬 크지만(10억 vs 자녀 5천만), 재산이 공제를 크게 넘으면 10년 단위로 미리 증여해 세율 구간을 나누는 쪽이 유리할 수 있습니다. 사망 전 10년 안의 증여는 합산되니 일찍 시작해야 효과가 있습니다.</p>
+<p><b>상속받은 집도 취득세를 내나요?</b> 네, 상속 취득세 2.8%(무주택자가 1주택을 상속하면 0.8%)와 지방교육세·농특세를 6개월 안에 냅니다. <a href="/acquisition-tax/">취득세 계산표</a></p>
+</div>`)}
+${INH_NOTE}`;
+  write('/inheritance-tax/', shell({ url: '/inheritance-tax/', title: `상속세 계산표 — 배우자·자녀 구성별 10억·20억·30억 상속세 (${YEAR}년)`, desc: '상속재산 3억원부터 100억원까지, 배우자·자녀 구성별로 상속세를 미리 계산했습니다. 일괄공제 5억, 배우자상속공제 5억~30억, 10~50% 세율, 신고세액공제 3% 반영.', body }));
+}
+
+/* ---------- 종합소득세 ---------- */
+const INC = [1000, 1500, 2000, 2500, 3000, 3500, 4000, 5000, 6000, 7000, 8000, 10000, 12000, 15000, 20000, 30000, 50000];
+const incUrl = (m) => `/income-tax/${m}/`;
+const INC_NOTE = `<p class="note">기본공제(본인 150만원)와 표준세액공제 7만원만 반영한 추정입니다. 부양가족·연금보험료·노란우산공제 등 소득공제, 자녀·연금계좌 세액공제, 근로소득과의 합산, 성실신고확인 대상 여부에 따라 실제 세액은 달라집니다. <a href="/method/">계산 기준 보기</a></p>`;
+
+function incPage(m) {
+  const I = m * 10000, t = IC.incomeTax(I), url = incUrl(m);
+  const title = `종합소득금액 ${manwon(I)} 종합소득세 — ${won(t.total)} (소득세 + 지방소득세, ${YEAR}년)`;
+  const desc = `소득금액 ${manwon(I)}(수입 − 필요경비)이면 기본공제 150만원을 뺀 과세표준 ${manwon(t.base)}에 ${pct(t.rate, 0)} 세율로 소득세 ${won(t.tax)}, 지방소득세 ${won(t.local)}, 합계 ${won(t.total)}입니다. 프리랜서 3.3% 정산과 경비율별 수입 환산, 공제를 더할 때의 변화.`;
+  const exp = [0.4, 0.5, 0.6, 0.7, 0.8].map((e) => { const rev = Math.round(I / (1 - e)); const s = IC.settle(rev, e); return { cells: [`${pct(e, 0)} (수입 ${manwon(rev)})`, num(s.prepaid), num(s.total), (s.refund >= 0 ? '환급 ' : '추가 납부 ') + num(Math.abs(s.refund))] }; });
+  const more = [
+    { label: '부양가족 1명 추가 (소득공제 150만원)', o: { deductions: 1500000 } },
+    { label: '노란우산공제 연 300만원 납입', o: { deductions: 3000000 } },
+    { label: '국민연금 지역가입 연 200만원 납입', o: { deductions: 2000000 } },
+    { label: `연금저축 600만원 (세액공제 ${I <= 45000000 ? '15%' : '12%'})`, o: { credits: Math.round(6000000 * (I <= 45000000 ? 0.15 : 0.12)) } },
+  ].map((x) => { const q = IC.incomeTax(I, x.o); return { cells: [x.label, num(q.total), '−' + num(t.total - q.total)] }; });
+  const body = `
+${crumb([['/income-tax/', '종합소득세'], [null, `소득 ${manwon(I)}`]])}
+<h1 class="title">종합소득금액 ${manwon(I)} — 종합소득세는</h1>
+<p class="meta">소득금액 = 수입 − 필요경비 · 기본공제 본인 150만원 · 표준세액공제 7만원 · ${YEAR}년 5월 신고분 기준</p>
+${lead(`1년 소득금액이 ${manwon(I)}이면 기본공제 150만원을 뺀 과세표준 ${manwon(t.base)}에 ${pct(t.rate, 0)} 세율${t.progressiveDeduct ? `(누진공제 ${manwon(t.progressiveDeduct)})` : ''}을 적용해 소득세 ${won(t.tax)}, 여기에 지방소득세 10%를 더해 ${won(t.total)}을 냅니다. 소득의 ${pct(t.effective, 1)}입니다. 프리랜서로 3.3%를 미리 뗐다면 아래 표에서 환급인지 추가 납부인지 확인하세요.`)}
+${hero({ label: '종합소득세 + 지방소득세', value: t.total, sub: `소득세 ${won(t.tax)} + 지방소득세 ${won(t.local)} · 소득금액의 ${pct(t.effective, 1)}` })}
+${led('계산 흐름', '원 · 1년', [['종합소득금액', num(I), '수입 − 필요경비'], ['기본공제 (본인)', neg(IC.BASIC_DEDUCTION)], ['과세표준', num(t.base)], ['산출세액', num(t.calc), `${pct(t.rate, 0)}${t.progressiveDeduct ? ` − 누진공제 ${manwon(t.progressiveDeduct)}` : ''}`], ['표준세액공제', neg(t.credit)], ['소득세', num(t.tax)], ['지방소득세 10%', '+' + num(t.local)], ['합계', num(t.total)]])}
+${section('프리랜서라면 — 3.3% 정산', `이 소득금액이 되는 수입을 경비율별로 역산 · 기납부 = 수입의 3.3%`, table(['경비율 (수입)', '미리 낸 3.3%', '내야 할 세금', '정산'], exp))}
+${section('공제를 더 넣으면', '자주 쓰는 공제 하나를 추가할 때의 세금 (소득세 + 지방소득세)', table(['추가 공제', '세금', '절감'], more))}
+${section('소득이 바뀌면', '소득세 + 지방소득세', chips(neighbors(INC, m, 3).map((x) => ({ label: short(x * 10000), value: IC.incomeTax(x * 10000).total, href: incUrl(x), on: x === m }))))}
+${ad()}
+${section('알아두면 좋은 것', null, `<div class="doc">
+<p><b>신고는 5월 1일부터 31일까지.</b> 홈택스에서 직접 하거나 세무대리인에게 맡기고, 성실신고확인 대상(도소매 15억·제조 7.5억·서비스 5억 이상)은 6월 30일까지입니다. 세액이 1,000만원을 넘으면 절반을 8월 말까지 나눠 낼 수 있습니다.</p>
+<p><b>필요경비는 어떻게 정하나요?</b> 장부를 쓰면 실제 경비, 안 쓰면 업종별 단순경비율(수입이 작을 때)·기준경비율을 적용합니다. 같은 수입이라도 경비율이 10%p 다르면 위 표처럼 세금이 크게 달라지니 업종 코드의 경비율을 먼저 확인하세요.</p>
+<p><b>지방소득세는 따로.</b> 소득세의 10%를 위택스에 별도 신고하는데 홈택스에서 종소세 신고를 마치면 바로 이어서 할 수 있습니다.</p>
+<p><b>건강보험료가 따라옵니다.</b> 지역가입자는 이 소득금액을 기준으로 11월부터 건강보험료가 다시 계산됩니다. 소득이 늘면 세금보다 보험료 인상이 더 크게 느껴지는 경우가 많습니다.</p>
+</div>`)}
+${section('이어서 계산하기', null, list([{ href: freeUrl(nearest(FREE, Math.round(I / 12 / 10000))), title: `월 ${manwon(nearest(FREE, Math.round(I / 12 / 10000)) * 10000)} 프리랜서 실수령`, sub: '3.3% 떼면 매달 얼마' }, { href: '/yearend/', title: '연말정산 미리보기', sub: '근로소득이 있다면' }, { href: '/rates/', title: `${YEAR}년 4대보험 요율표`, sub: '지역가입자 보험료의 기준' }]))}
+${INC_NOTE}`;
+  write(url, shell({ url, title, desc, body }));
+}
+
+function incIndex() {
+  const rows = INC.map((m) => { const t = IC.incomeTax(m * 10000); return { cells: [`<a href="${incUrl(m)}">${manwon(m * 10000)}</a>`, num(t.base), pct(t.rate, 0), num(t.tax), num(t.local), num(t.total)] }; });
+  const body = `
+${crumb([['/', '홈'], [null, '종합소득세']])}
+<h1 class="title">종합소득세 계산표 — 소득금액별 세금과 3.3% 정산</h1>
+<p class="meta">${YEAR}년 5월 신고 · 기본세율 6~45% · 기본공제 150만원 · 표준세액공제 7만원 · 지방소득세 10% 포함</p>
+${lead(`종합소득세는 1년 소득금액(수입 − 필요경비)에서 공제를 뺀 과세표준에 6~45% 누진세율로 매깁니다. 소득금액 3,000만원이면 ${won(IC.incomeTax(30000000).total)}, 5,000만원이면 ${won(IC.incomeTax(50000000).total)}, 1억원이면 ${won(IC.incomeTax(100000000).total)}입니다(지방소득세 포함). 프리랜서는 미리 낸 3.3%와 이 금액의 차이를 5월에 정산합니다.`)}
+${section('소득금액별', '원 · 금액을 누르면 3.3% 정산표와 공제 효과', table(['소득금액', '과세표준', '세율', '소득세', '지방소득세', '합계'], rows))}
+${ad()}
+${section('세율표', '과세표준 기준 · 지방소득세 별도', table(['과세표준', '세율', '누진공제'], R.BRACKETS.map(([lim, r, d], i) => ({ cells: [i === 0 ? `${manwon(lim)} 이하` : lim === Infinity ? `${manwon(R.BRACKETS[i - 1][0])} 초과` : `${manwon(R.BRACKETS[i - 1][0])} 초과 ${manwon(lim)} 이하`, pct(r, 0), d ? manwon(d) : '—'] }))))}
+${section('자주 묻는 것', null, `<div class="doc">
+<p><b>수입과 소득금액은 다른가요?</b> 다릅니다. 수입(매출)에서 필요경비를 뺀 것이 소득금액이고, 세금은 소득금액 기준입니다. 경비율 60%라면 수입 1억원의 소득금액은 4,000만원입니다.</p>
+<p><b>프리랜서는 왜 5월에 세금을 더 내기도 하나요?</b> 3.3%는 소득세 3%를 미리 떼는 것일 뿐이고, 실제 세율은 과세표준에 따라 6~45%입니다. 경비가 적게 인정되면 추가 납부, 많이 인정되면 환급입니다.</p>
+<p><b>직장인인데 부업 소득이 있으면?</b> 근로소득과 사업소득을 합쳐 5월에 종합소득세를 신고합니다. 연말정산은 근로소득만 정산한 것이라 합산하면 세율 구간이 올라갈 수 있습니다.</p>
+</div>`)}
+${INC_NOTE}`;
+  write('/income-tax/', shell({ url: '/income-tax/', title: `종합소득세 계산표 — 소득금액별 세금과 프리랜서 3.3% 정산 (${YEAR}년)`, desc: '소득금액 1,000만원부터 5억원까지 종합소득세와 지방소득세, 프리랜서 3.3% 기납부와의 정산, 경비율별 수입 환산, 공제 추가 효과를 정리했습니다.', body }));
+}
+
+/* ---------- 주택 재산세 ---------- */
+const PROP = [10000, 15000, 20000, 25000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000, 120000, 150000, 200000, 300000];
+const propUrl = (m) => `/property-tax/${m}/`;
+const PROP_NOTE = `<p class="note">지방세법의 주택분 재산세 기준입니다. 1세대 1주택 공정시장가액비율 특례(43~45%)와 특례세율은 해마다 시행령·법 개정으로 정해지므로 올해 적용 여부를 고지서로 확인하세요. 세부담상한(전년 대비 105~130%), 지역자원시설세, 종합부동산세(1주택 공시가 12억 초과)는 반영하지 않았습니다. <a href="/method/">계산 기준 보기</a></p>`;
+
+function propPage(m) {
+  const P = m * 10000, a = PT.propertyTax(P), b2 = PT.propertyTax(P, { oneHome: false }), url = propUrl(m);
+  const title = `공시가격 ${manwon(P)} 주택 재산세 — 1주택 연 ${won(a.total)} · 다주택 ${won(b2.total)} (${YEAR}년)`;
+  const desc = `공시가격 ${manwon(P)} 주택의 재산세는 1세대 1주택이면 과세표준 ${manwon(a.base)}(${pct(a.ratio, 0)})에 ${a.special ? '특례세율' : '표준세율'}을 적용한 ${won(a.tax)}에 도시지역분 ${won(a.urban)}, 지방교육세 ${won(a.educ)}를 더해 연 ${won(a.total)}, 7월·9월에 ${won(a.july)}·${won(a.september)}씩 냅니다. 다주택이면 ${won(b2.total)}.`;
+  const body = `
+${crumb([['/property-tax/', '재산세'], [null, `공시가 ${manwon(P)}`]])}
+<h1 class="title">공시가격 ${manwon(P)} 주택 재산세</h1>
+<p class="meta">주택분 · 도시지역분·지방교육세 포함 · 과세기준일 6월 1일 · 7월·9월 절반씩 납부</p>
+${lead(`공시가격 ${manwon(P)}인 집을 1세대 1주택으로 갖고 있으면 과세표준은 공시가격의 ${pct(a.ratio, 0)}인 ${manwon(a.base)}이고, ${a.special ? '9억원 이하 특례세율' : '표준세율'}로 재산세 ${won(a.tax)}에 도시지역분 ${won(a.urban)}, 지방교육세 ${won(a.educ)}가 붙어 1년에 ${won(a.total)}입니다. 7월에 ${won(a.july)}, 9월에 ${won(a.september)}이 고지됩니다. 2주택 이상이면 비율 60%와 표준세율이 적용되어 ${won(b2.total)}으로 ${b2.total > a.total ? `${pct(b2.total / a.total - 1, 0)} 더` : '같게'} 냅니다.`)}
+${hero({ label: '1세대 1주택 연간 재산세 (도시지역분·교육세 포함)', value: a.total, sub: `7월 ${won(a.july)} + 9월 ${won(a.september)} · 공시가격의 ${pct(a.effective, 3)}` })}
+${led('계산 흐름 (1주택)', '원', [['공시가격', num(P)], [`공정시장가액비율 ${pct(a.ratio, 0)}`, '', '1세대 1주택 특례 (일반 60%)'], ['과세표준', num(a.base)], [`재산세 (${a.special ? '특례세율' : '표준세율'})`, num(a.tax), a.special ? '9억 이하 1주택 · 구간별 0.05%p 인하' : '0.1~0.4% 누진'], ['도시지역분 0.14%', '+' + num(a.urban), '과세표준 기준'], ['지방교육세 20%', '+' + num(a.educ), '재산세 기준'], ['합계', num(a.total)]])}
+${section('1주택 vs 다주택', `공시가격 ${manwon(P)}`, table(['구분', '1세대 1주택', '2주택 이상'], [
+  { cells: ['공정시장가액비율', pct(a.ratio, 0), pct(b2.ratio, 0)] }, { cells: ['과세표준', num(a.base), num(b2.base)] }, { cells: ['재산세', num(a.tax), num(b2.tax)] }, { cells: ['도시지역분', num(a.urban), num(b2.urban)] }, { cells: ['지방교육세', num(a.educ), num(b2.educ)] }, { cls: 'on', cells: ['합계', num(a.total), num(b2.total)] },
+]))}
+${section('언제 얼마나 내나', '주택분은 7월(1기)과 9월(2기)에 절반씩 · 본세 20만원 이하면 7월에 한 번에', tiles([{ label: '7월', value: a.july }, { label: '9월', value: a.september }, { label: '연 합계', value: a.total }]))}
+${section('공시가격이 바뀌면', '1주택 연간 합계', chips(neighbors(PROP, m, 3).map((x) => ({ label: short(x * 10000), value: PT.propertyTax(x * 10000).total, href: propUrl(x), on: x === m }))))}
+${ad()}
+${section('알아두면 좋은 것', null, `<div class="doc">
+<p><b>공시가격은 시세보다 낮습니다.</b> 아파트 공시가격은 대체로 시세의 69% 안팎(현실화율)입니다. 매년 3월 열람·4월 확정되며 '부동산공시가격알리미'에서 확인합니다. 시세 ${manwon(Math.round(P / 0.69 / 10000000) * 10000000)} 안팎의 집이 이 페이지에 해당합니다.</p>
+<p><b>6월 1일에 누가 갖고 있느냐.</b> 과세기준일이 6월 1일이라 5월 31일에 잔금을 치르면 매수인이, 6월 2일에 치르면 매도인이 그해 재산세를 냅니다. 계약 때 잔금일을 이 기준으로 조정하기도 합니다.</p>
+<p><b>많이 오른 해도 상한이 있습니다.</b> 공시가격이 급등해도 전년 세액의 105%(3억 이하)·110%(6억 이하)·130%(6억 초과)를 넘지 않게 세부담상한이 적용됩니다.</p>
+<p><b>12억원을 넘으면 종부세도.</b> 1세대 1주택자는 공시가격 12억원(다주택 합산 9억원) 초과분에 종합부동산세가 12월에 따로 나옵니다.</p>
+</div>`)}
+${section('이어서 계산하기', null, list([{ href: '/acquisition-tax/', title: '주택 취득세', sub: '살 때 한 번 내는 세금' }, { href: '/ltv/', title: 'LTV 대출 한도', sub: '이 집을 담보로 얼마까지' }, { href: '/bokbi/', title: '부동산 복비', sub: '사고팔 때 중개보수' }]))}
+${PROP_NOTE}`;
+  write(url, shell({ url, title, desc, body, nav: 'loan' }));
+}
+
+function propIndex() {
+  const rows = PROP.map((m) => { const a = PT.propertyTax(m * 10000), b2 = PT.propertyTax(m * 10000, { oneHome: false }); return { cells: [`<a href="${propUrl(m)}">${manwon(m * 10000)}</a>`, num(a.base), num(a.total), `${num(a.july)} / ${num(a.september)}`, num(b2.total)] }; });
+  const body = `
+${crumb([['/', '홈'], [null, '재산세']])}
+<h1 class="title">주택 재산세 계산표 — 공시가격별 1주택·다주택</h1>
+<p class="meta">${YEAR}년 · 재산세 + 도시지역분 0.14% + 지방교육세 20% · 1세대 1주택 특례(공정시장가액비율 43~45%, 9억 이하 특례세율) 반영</p>
+${lead(`재산세는 공시가격에 공정시장가액비율을 곱한 과세표준에 0.1~0.4% 누진세율로 매기고 도시지역분과 지방교육세가 붙습니다. 1세대 1주택은 비율과 세율 모두 낮아 공시가 5억원이면 연 ${won(PT.propertyTax(500000000).total)}, 같은 집을 다주택자가 가지면 ${won(PT.propertyTax(500000000, { oneHome: false }).total)}입니다. 7월과 9월에 절반씩 고지됩니다.`)}
+${section('공시가격별 연간 재산세', '원 · 금액을 누르면 계산 흐름과 1주택·다주택 비교', table(['공시가격', '과세표준 (1주택)', '1주택 합계', '7월 / 9월', '다주택 합계'], rows))}
+${ad()}
+${section('세율표', '주택분 · 과세표준 기준', table(['과세표준', '표준세율', '1주택 특례세율 (공시가 9억 이하)'], [
+  { cells: ['6,000만원 이하', '0.1%', '0.05%'] }, { cells: ['6,000만원 초과 1억 5,000만원 이하', '6만원 + 초과분 0.15%', '3만원 + 초과분 0.1%'] }, { cells: ['1억 5,000만원 초과 3억원 이하', '19만 5,000원 + 초과분 0.25%', '12만원 + 초과분 0.2%'] }, { cells: ['3억원 초과', '57만원 + 초과분 0.4%', '42만원 + 초과분 0.35%'] },
+]))}
+${section('자주 묻는 것', null, `<div class="doc">
+<p><b>왜 두 번 나오나요?</b> 주택분 재산세는 7월과 9월에 절반씩 나눠 고지합니다(본세 20만원 이하는 7월 한 번). 건물과 토지를 따로 매기던 방식의 흔적입니다.</p>
+<p><b>1주택 특례는 계속되나요?</b> 공정시장가액비율 43~45%와 특례세율은 법·시행령으로 해마다 정합니다. 최근 몇 년은 연장되어 왔지만 올해 고지서로 확인하는 것이 안전합니다.</p>
+<p><b>재산세와 종부세는 다른가요?</b> 재산세는 지방세로 모든 주택에, 종합부동산세는 국세로 공시가격 12억원(1주택) 초과분에만 12월에 따로 부과됩니다.</p>
+</div>`)}
+${PROP_NOTE}`;
+  write('/property-tax/', shell({ url: '/property-tax/', title: `주택 재산세 계산표 — 공시가격별 1주택·다주택 연간 세금 (${YEAR}년)`, desc: '공시가격 1억원부터 30억원까지 주택 재산세를 1세대 1주택 특례와 다주택 표준세율로 계산했습니다. 도시지역분·지방교육세 포함, 7월·9월 납부액.', body, nav: 'loan' }));
+}
+
+/* ---------- 자동차세 ---------- */
+const CARS = [998, 1000, 1197, 1248, 1368, 1498, 1591, 1598, 1600, 1798, 1969, 1991, 1998, 1999, 2000, 2199, 2359, 2497, 2500, 2999, 3000, 3342, 3470, 3778, 4000, 5000];
+const CAR_EX = { 998: '모닝·레이·캐스퍼 (경차)', 1598: '아반떼·K3·투싼 1.6 등', 1999: '쏘나타·K5·스포티지 2.0 등', 2497: '그랜저·K8 2.5 등', 3470: '그랜저·K8 3.5, G80 3.5 등', 3778: '팰리세이드 3.8 등' };
+const carTaxUrl = (cc) => `/car-tax/${cc}/`;
+const CAR_NOTE = `<p class="note">비영업용 승용차 기준입니다. 승합·화물·영업용은 정액 세율이고, 연납 공제율은 행정안전부가 해마다 고시합니다(${YEAR}년 ${pct(CT.ANNUAL_DISCOUNT[YEAR] || 0, 0)}). 중고차는 최초 등록일 기준 차령으로 경감합니다. <a href="/method/">계산 기준 보기</a></p>`;
+const carAgeRows = (cc) => [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((age) => { const t = CT.carTax(cc, { age, year: YEAR }); return { cls: age === 1 ? 'on' : '', cells: [age >= 12 ? '12년차 이상' : `${age}년차`, pct(t.discount, 0), num(t.tax), num(t.educ), num(t.total), num(t.prepaid)] }; });
+
+function carTaxPage(cc) {
+  const t = CT.carTax(cc, { year: YEAR }), t5 = CT.carTax(cc, { age: 5, year: YEAR }), t12 = CT.carTax(cc, { age: 12, year: YEAR }), url = carTaxUrl(cc);
+  const title = `${num(cc)}cc 자동차세 — 연 ${won(t.total)} (교육세 포함) · 1월 연납 ${won(t.prepaid)} · 연식별 표 (${YEAR}년)`;
+  const desc = `배기량 ${num(cc)}cc 승용차의 자동차세는 cc당 ${t.unit}원으로 ${won(t.tax)}, 지방교육세 30%를 더하면 연 ${won(t.total)}입니다(1~2년차). 5년차면 ${won(t5.total)}, 12년차 이상은 절반. 6월·12월 ${won(t.half)}씩, 1월 연납은 ${won(t.prepaid)}.`;
+  const body = `
+${crumb([['/car-tax/', '자동차세'], [null, `${num(cc)}cc`]])}
+<h1 class="title">${num(cc)}cc 자동차세${CAR_EX[cc] ? ` — ${CAR_EX[cc]}` : ''}</h1>
+<p class="meta">비영업용 승용차 · cc당 ${t.unit}원 · 지방교육세 30% 포함 · 6월·12월 절반씩 또는 1월 연납</p>
+${lead(`배기량 ${num(cc)}cc는 cc당 ${t.unit}원 구간이라 자동차세 ${won(t.tax)}에 지방교육세 ${won(t.educ)}를 더해 1년에 ${won(t.total)}입니다. 6월과 12월에 ${won(t.half)}씩 나오고, 1월에 한 번에 내면 ${pct(t.rate, 0)}(2~12월분)를 깎아 ${won(t.prepaid)}만 냅니다. 등록 3년차부터 해마다 5%씩 줄어 5년차에는 ${won(t5.total)}, 12년차부터는 절반인 ${won(t12.total)}입니다.`)}
+${hero({ label: '연간 자동차세 (1~2년차 · 교육세 포함)', value: t.total, sub: `자동차세 ${won(t.tax)} + 지방교육세 ${won(t.educ)} · 6월·12월 각 ${won(t.half)}` })}
+${led('계산 흐름', '원 · 1년', [[`배기량 × cc당 세액`, num(t.gross), `${num(cc)}cc × ${t.unit}원`], ['차령 경감', neg(t.gross - t.tax), '1~2년차 없음 · 3년차부터 5%씩'], ['자동차세', num(t.tax)], ['지방교육세 30%', '+' + num(t.educ)], ['합계', num(t.total)], [`1월 연납 시 (${pct(t.rate, 0)} × 11/12 공제)`, num(t.prepaid), `−${won(t.prepay)}`]])}
+${section('연식별 자동차세', `${num(cc)}cc · 최초 등록 후 몇 년째인지 기준`, table(['차령', '경감', '자동차세', '교육세', '합계', '연납 시'], carAgeRows(cc)))}
+${section('언제 내나', null, tiles([{ label: '6월 (1기분)', value: t.half }, { label: '12월 (2기분)', value: t.total - t.half }, { label: '1월 연납', value: t.prepaid }]))}
+${section('배기량이 바뀌면', '1~2년차 연간 합계', chips(neighbors(CARS, cc, 3).map((x) => ({ label: `${num(x)}cc`, value: CT.carTax(x, { year: YEAR }).total, href: carTaxUrl(x), on: x === cc }))))}
+${ad()}
+${section('알아두면 좋은 것', null, `<div class="doc">
+<p><b>연납 할인은 줄어드는 중.</b> 1월 연납 공제율이 2023년 7%, 2024·2025년 5%, ${YEAR}년 ${pct(CT.ANNUAL_DISCOUNT[YEAR] || 0, 0)}로 낮아졌고 2027년 폐지 예정입니다. 그래도 위택스에서 1월 16~31일에 신청하면 두 번 낼 것을 한 번에 끝냅니다. 3월·6월·9월 연납도 남은 기간만큼 공제됩니다.</p>
+<p><b>중고차를 사면 일할 계산.</b> 소유권 이전일을 기준으로 전 주인과 나눠 내고, 차령은 최초 등록일부터 셉니다. 폐차·양도하면 남은 기간분은 환급됩니다.</p>
+<p><b>전기차는 13만원.</b> 배기량이 없는 전기·수소차는 자동차세 10만원 + 교육세 3만원 정액입니다. <a href="/car-tax/ev/">전기차 자동차세</a></p>
+<p><b>배기량 경계에 유의.</b> 1,600cc를 1cc라도 넘으면 cc당 140원이 200원이 되어 세금이 40% 넘게 뜁니다. 1,598cc 차와 1,999cc 차의 차이가 그것입니다.</p>
+</div>`)}
+${section('이어서 계산하기', null, list([{ href: '/car-tax/', title: '배기량별 자동차세표', sub: '998cc부터 5,000cc까지' }, { href: '/car-loan/', title: '자동차 할부', sub: '차값·개월별 월 납입액' }, { href: '/time/', title: '내 시간으로 사는 물건', sub: '자동차는 몇 시간 일해야 하나' }]))}
+${CAR_NOTE}`;
+  write(url, shell({ url, title, desc, body, nav: 'loan' }));
+}
+
+function carTaxEvPage() {
+  const t = CT.carTax(0, { ev: true, year: YEAR }), url = '/car-tax/ev/';
+  const body = `
+${crumb([['/car-tax/', '자동차세'], [null, '전기차']])}
+<h1 class="title">전기차·수소차 자동차세 — 연 ${won(t.total)}</h1>
+<p class="meta">배기량 없음 · 자동차세 10만원 정액 + 지방교육세 3만원 · 차령 경감 없음</p>
+${lead(`전기차와 수소차는 배기량이 없어 자동차세가 연 10만원 정액이고 지방교육세 30%를 더해 ${won(t.total)}입니다. 같은 값의 휘발유차(2,000cc 안팎)가 ${won(CT.carTax(1999).total)}인 것과 비교하면 4분의 1입니다. 6월·12월에 ${won(t.half)}씩 내고 1월 연납은 ${won(t.prepaid)}입니다.`)}
+${hero({ label: '연간 자동차세 (교육세 포함)', value: t.total, sub: `자동차세 ${won(t.tax)} + 지방교육세 ${won(t.educ)} · 6월·12월 각 ${won(t.half)}` })}
+${section('휘발유·디젤차와 비교', '1~2년차 연간 합계', table(['차종', '연간 자동차세'], [{ cls: 'on', cells: ['전기차·수소차', num(t.total)] }].concat([998, 1598, 1999, 2497, 3470].map((cc) => ({ cells: [`<a href="${carTaxUrl(cc)}">${num(cc)}cc</a>${CAR_EX[cc] ? ` (${CAR_EX[cc]})` : ''}`, num(CT.carTax(cc).total)] })))))}
+${ad()}
+${section('알아두면 좋은 것', null, `<div class="doc"><p>전기차 자동차세를 배터리 출력·차값 기준으로 바꾸는 논의가 있지만 ${YEAR}년 현재는 정액입니다. 차령에 따른 경감은 없고, 연납 공제(${pct(CT.ANNUAL_DISCOUNT[YEAR] || 0, 0)})는 같이 받습니다. 하이브리드는 배기량 기준으로 일반 승용차와 같습니다.</p></div>`)}
+${CAR_NOTE}`;
+  write(url, shell({ url, title: `전기차 자동차세 — 연 ${won(t.total)} (정액 10만원 + 교육세, ${YEAR}년)`, desc: '전기차·수소차 자동차세는 배기량과 관계없이 연 10만원에 지방교육세 3만원을 더한 13만원입니다. 휘발유차와 비교, 납부 시기, 연납.', body, nav: 'loan' }));
+}
+
+function carTaxIndex() {
+  const rows = CARS.map((cc) => { const t = CT.carTax(cc, { year: YEAR }), t5 = CT.carTax(cc, { age: 5, year: YEAR }); return { cells: [`<a href="${carTaxUrl(cc)}">${num(cc)}cc</a>${CAR_EX[cc] ? `<br><small>${CAR_EX[cc]}</small>` : ''}`, `${t.unit}원`, num(t.tax), num(t.educ), num(t.total), num(t.prepaid), num(t5.total)] }; });
+  const body = `
+${crumb([['/', '홈'], [null, '자동차세']])}
+<h1 class="title">자동차세 계산표 — 배기량별 연간 세금과 연납</h1>
+<p class="meta">${YEAR}년 비영업용 승용차 · cc당 80·140·200원 · 지방교육세 30% 포함 · 1월 연납 ${pct(CT.ANNUAL_DISCOUNT[YEAR] || 0, 0)} 공제</p>
+${lead(`자동차세는 배기량에 cc당 세액(1,000cc 이하 80원, 1,600cc 이하 140원, 초과 200원)을 곱하고 지방교육세 30%를 더합니다. 경차 998cc는 연 ${won(CT.carTax(998).total)}, 1,598cc는 ${won(CT.carTax(1598).total)}, 1,999cc는 ${won(CT.carTax(1999).total)}입니다. 등록 3년차부터 해마다 5%씩 줄어 12년차에는 절반이 되고, 전기차는 정액 ${won(CT.carTax(0, { ev: true }).total)}입니다.`)}
+${section('배기량별', '원 · 배기량을 누르면 연식별 표', table(['배기량', 'cc당', '자동차세', '교육세', '연 합계 (1~2년차)', '연납 시', '5년차 합계'], rows))}
+${ad()}
+${section('전기차·수소차', null, list([{ href: '/car-tax/ev/', title: '전기차 자동차세', sub: '배기량 없이 정액 10만원 + 교육세', value: CT.carTax(0, { ev: true }).total }]))}
+${section('자주 묻는 것', null, `<div class="doc">
+<p><b>연납하면 얼마나 이득인가요?</b> ${YEAR}년 공제율 ${pct(CT.ANNUAL_DISCOUNT[YEAR] || 0, 0)}를 2~12월분에 적용하니 실제 할인은 연세액의 약 ${pct((CT.ANNUAL_DISCOUNT[YEAR] || 0) * 11 / 12, 1)}입니다. 1,999cc면 약 ${won(CT.carTax(1999, { year: YEAR }).prepay)}입니다. 공제율은 2027년 폐지 예정입니다.</p>
+<p><b>차령은 어떻게 세나요?</b> 최초 등록 연도를 1년차로 보고 해가 바뀔 때마다 1년씩 더합니다. 3년차 5%, 4년차 10% … 12년차 이상 50%입니다. 중고차도 최초 등록일 기준입니다.</p>
+<p><b>자동차 취득세와 다른가요?</b> 취득세는 살 때 한 번(승용차 7%), 자동차세는 보유하는 동안 해마다 내는 세금입니다.</p>
+</div>`)}
+${CAR_NOTE}`;
+  write('/car-tax/', shell({ url: '/car-tax/', title: `자동차세 계산표 — 배기량별 연간 세금·연납 할인·연식 경감 (${YEAR}년)`, desc: '998cc부터 5,000cc까지 배기량별 자동차세와 지방교육세, 1월 연납 공제, 연식별 경감을 표로 정리했습니다. 전기차 정액 13만원.', body, nav: 'loan' }));
+}
+
+/* ---------- LTV 대출 한도 ---------- */
+const LTV_P = [30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000, 120000, 150000, 200000, 250000, 300000];
+const ltvUrl = (m) => `/ltv/${m}/`;
+const LTV_NOTE = `<p class="note">${LV.LTV_ASOF} 기준입니다. 규제지역 지정과 LTV·대출 한도는 정부 대책에 따라 바뀌므로 대출 전 은행에 확인하세요. 실제 한도는 LTV·DSR·은행 심사 중 가장 작은 값이고 방공제(서울 5,500만원 등, 보증보험 가입 시 면제)와 기존 대출만큼 줄어듭니다. <a href="/method/">계산 기준 보기</a></p>`;
+
+function ltvPage(m) {
+  const P = m * 10000, url = ltvUrl(m);
+  const reg = LV.ltvLimit(P, 'regulated'), regF = LV.ltvLimit(P, 'regulated', { firstHome: true }), met = LV.ltvLimit(P, 'metro'), metF = LV.ltvLimit(P, 'metro', { firstHome: true }), oth = LV.ltvLimit(P, 'other'), othF = LV.ltvLimit(P, 'other', { firstHome: true });
+  const title = `${manwon(P)} 집 LTV 대출 한도 — 규제지역 ${manwon(reg.limit)} · 비규제 ${manwon(met.limit)} · 생애최초 ${manwon(regF.limit)} (${LV.LTV_ASOF})`;
+  const desc = `${manwon(P)}짜리 집을 살 때 주택담보대출 한도는 규제지역(서울 등) LTV 40%로 ${manwon(reg.limit)}${reg.capped ? `(${manwon(reg.cap)} 한도)` : ''}, 수도권 비규제 ${manwon(met.limit)}, 지방 ${manwon(oth.limit)}, 생애최초는 규제지역 ${manwon(regF.limit)}·지방 ${manwon(othF.limit)}입니다. 연봉별 DSR 한도와 필요 현금까지.`;
+  const acq = RE.acquisitionTax(P), br = RE.brokerage(P);
+  const dsrRows = [3000, 4000, 5000, 7000, 10000, 15000, 20000].map((s) => { const d = L.dsrLimit(s * 10000, 0.045, 360).principal, ds = L.loanForPayment(L.dsrLimit(s * 10000, 0.045, 360).monthlyCap, 0.06, 360); const real = Math.min(reg.limit, ds); return { cells: [`<a href="${dsrUrl(nearest(SALARIES, s))}">연봉 ${manwon(s * 10000)}</a>`, num(d), num(ds), num(real), real < reg.limit ? 'DSR' : 'LTV'] }; });
+  const body = `
+${crumb([['/ltv/', 'LTV 한도'], [null, manwon(P)]])}
+<h1 class="title">${manwon(P)} 집, 주택담보대출은 얼마까지</h1>
+<p class="meta">LTV(담보인정비율) 기준 · ${LV.LTV_ASOF} · 무주택자 기준, 1주택자는 기존 집 처분 조건</p>
+${lead(`${manwon(P)}짜리 집을 담보로 빌릴 수 있는 돈은 지역에 따라 다릅니다. 서울 전역과 경기 12곳 같은 규제지역은 LTV 40%로 ${manwon(reg.raw)}${reg.capped ? `이지만 한도 ${manwon(reg.cap)}에 걸려 ${manwon(reg.limit)}` : ''}, 수도권 비규제지역은 70%로 ${manwon(met.raw)}${met.capped ? `이지만 6억원 한도에 걸려 ${manwon(met.limit)}` : ''}, 지방은 ${manwon(oth.limit)}입니다. 생애최초라면 규제지역 ${manwon(regF.limit)}, 지방 ${manwon(othF.limit)}까지 올라갑니다. 다만 연봉이 낮으면 DSR이 먼저 걸리니 아래 표를 함께 보세요.`)}
+${hero({ label: '규제지역 LTV 한도 (무주택 · 40%)', value: reg.limit, sub: `${reg.capped ? `40%면 ${manwon(reg.raw)}이지만 ${manwon(reg.cap)} 한도 적용 · ` : ''}나머지 ${manwon(reg.cash)}은 현금 · 생애최초 ${manwon(regF.limit)}` })}
+${section('지역·조건별 한도', `집값 ${manwon(P)}`, table(['지역', 'LTV', '한도', '생애최초 LTV', '생애최초 한도'], [
+  { cls: 'on', cells: [LV.REGIONS.regulated.label, pct(reg.ratio, 0), num(reg.limit) + (reg.capped ? ' (한도)' : ''), pct(regF.ratio, 0), num(regF.limit) + (regF.capped ? ' (한도)' : '')] },
+  { cells: [LV.REGIONS.metro.label, pct(met.ratio, 0), num(met.limit) + (met.capped ? ' (한도)' : ''), pct(metF.ratio, 0), num(metF.limit) + (metF.capped ? ' (한도)' : '')] },
+  { cells: [LV.REGIONS.other.label, pct(oth.ratio, 0), num(oth.limit), pct(othF.ratio, 0), num(othF.limit)] },
+]))}
+${section('연봉이 정하는 한도 (DSR)', `규제지역 한도 ${manwon(reg.limit)}과 연봉별 DSR 40% 한도 중 작은 쪽이 실제 한도 · 30년 원리금균등`, table(['연봉', 'DSR 한도 (4.5%)', '스트레스 6% 적용', '실제 한도', '걸리는 쪽'], dsrRows))}
+${section('현금은 얼마나 필요한가', `규제지역 무주택 기준 · 취득세·복비 포함`, tiles([{ label: '집값 − 대출', value: reg.cash }, { label: '취득세 (1주택 85㎡ 이하)', value: acq.total }, { label: '복비 (부가세 포함)', value: br.total }]) + `<p class="sub" style="margin-top:8px">합계 약 <b class="num">${num(reg.cash + acq.total + br.total)}</b>원 — 등기비용·이사비는 별도</p>`)}
+${section('집값이 바뀌면', '규제지역 무주택 한도', chips(neighbors(LTV_P, m, 3).map((x) => ({ label: short(x * 10000), value: LV.ltvLimit(x * 10000).limit, href: ltvUrl(x), on: x === m }))))}
+${ad()}
+${section('알아두면 좋은 것', null, `<div class="doc">
+<p><b>규제지역은 어디인가요?</b> ${LV.LTV_ASOF}로 서울 25개 구 전역과 경기 과천·광명·성남(분당·수정·중원)·수원(영통·장안·팔달)·안양 동안·용인 수지·의왕·하남이 조정대상지역·투기과열지구로 묶였습니다. 여기서는 LTV 40%, 15억 초과 4억원·25억 초과 2억원 한도, 6개월 안 전입 의무가 적용됩니다.</p>
+<p><b>1주택자는 기존 집을 팔아야.</b> 규제지역에서 1주택자가 새 집 담보대출을 받으려면 6개월 안에 기존 집을 처분해야 하고, 2주택 이상은 담보대출이 나오지 않습니다.</p>
+<p><b>방공제를 잊지 마세요.</b> 은행은 세입자 최우선변제금(서울 5,500만원, 경기 과밀억제권역 4,800만원 등)을 한도에서 뺍니다. 보증보험(MCI·MCG)에 가입하면 빼지 않습니다.</p>
+<p><b>생애최초 조건.</b> 본인과 배우자 모두 집을 가진 적이 없어야 하고, 규제지역 70%·비규제 80%가 적용되지만 6억원 한도와 DSR은 그대로입니다.</p>
+</div>`)}
+${section('이어서 계산하기', null, list([{ href: '/dsr/', title: '연봉별 DSR 한도표', sub: '내 연봉으로는 얼마까지' }, { href: loanUrl(nearest(LOAN_AMOUNTS, Math.round(reg.limit / 10000)), 30, 0.045), title: `대출 ${manwon(nearest(LOAN_AMOUNTS, Math.round(reg.limit / 10000)) * 10000)} 30년 상환표`, sub: '한도만큼 빌리면 매달 얼마' }, { href: '/couple/', title: '둘이 합쳐 얼마까지', sub: '부부 합산 DSR' }, { href: acqUrl(nearest(ACQ, m)), title: `${manwon(nearest(ACQ, m) * 10000)} 취득세`, sub: '살 때 드는 세금' }]))}
+${LTV_NOTE}`;
+  write(url, shell({ url, title, desc, body, nav: 'loan' }));
+}
+
+function ltvIndex() {
+  const rows = LTV_P.map((m) => { const P = m * 10000; return { cells: [`<a href="${ltvUrl(m)}">${manwon(P)}</a>`, num(LV.ltvLimit(P, 'regulated').limit), num(LV.ltvLimit(P, 'regulated', { firstHome: true }).limit), num(LV.ltvLimit(P, 'metro').limit), num(LV.ltvLimit(P, 'other').limit), num(LV.ltvLimit(P, 'other', { firstHome: true }).limit)] }; });
+  const body = `
+${crumb([['/', '홈'], [null, 'LTV 한도']])}
+<h1 class="title">LTV 주택담보대출 한도표 — 집값·지역별</h1>
+<p class="meta">${LV.LTV_ASOF} · 규제지역 40% (생애최초 70%) · 수도권 비규제 70% · 지방 70% (생애최초 80%) · 수도권 6억원, 규제지역 15억 초과 4억·25억 초과 2억 한도</p>
+${lead(`LTV는 집값 대비 대출 비율입니다. 10억원짜리 집이면 규제지역에서 ${manwon(LV.ltvLimit(1000000000).limit)}, 수도권 비규제지역에서 ${manwon(LV.ltvLimit(1000000000, 'metro').limit)}(70%지만 6억 한도), 지방에서 ${manwon(LV.ltvLimit(1000000000, 'other').limit)}까지입니다. 집값이 15억원을 넘으면 규제지역 한도가 4억원, 25억원을 넘으면 2억원으로 줄어 현금이 훨씬 많이 필요합니다. 실제 한도는 여기에 연봉 기준 DSR이 겹쳐 더 작아질 수 있습니다.`)}
+${section('집값별 한도', '원 · 집값을 누르면 연봉별 DSR과 필요 현금', table(['집값', '규제지역 40%', '규제 생애최초 70%', '수도권 비규제 70%', '지방 70%', '지방 생애최초 80%'], rows))}
+${ad()}
+${section('자주 묻는 것', null, `<div class="doc">
+<p><b>LTV와 DSR 중 무엇이 먼저 걸리나요?</b> 둘 다 적용되고 작은 쪽이 한도입니다. 집값이 비싸면 LTV 40%가, 연봉이 낮으면 DSR 40%가 먼저 걸립니다. 각 집값 페이지에 연봉별 비교표가 있습니다.</p>
+<p><b>전세 끼고 사도 되나요?</b> 규제지역에서 주택담보대출을 받으면 6개월 안에 전입해야 하므로 세입자를 둔 채로는 대출이 어렵습니다.</p>
+<p><b>한도가 바뀌면요?</b> 규제지역 지정과 LTV는 정부 대책으로 자주 바뀝니다. 이 표는 ${LV.LTV_ASOF} 기준이며 바뀌면 갱신합니다.</p>
+</div>`)}
+${LTV_NOTE}`;
+  write('/ltv/', shell({ url: '/ltv/', title: `LTV 주택담보대출 한도표 — 집값·지역·생애최초별 (${LV.LTV_ASOF})`, desc: '3억원부터 30억원까지 집값별 주택담보대출 LTV 한도를 규제지역 40%, 수도권 비규제 70%, 지방 70%, 생애최초 70~80%와 6억·4억·2억 한도로 계산했습니다.', body, nav: 'loan' }));
+}
+
 /* ---------- 빌드 ---------- */
 fs.rmSync(OUT, { recursive: true, force: true });
 fs.mkdirSync(OUT, { recursive: true });
@@ -1846,6 +2180,11 @@ giftIndex(); GIFT_RELS.forEach((r) => { giftRelIndex(r); GIFT_AMOUNTS.forEach((m
 bokbiIndex(); BOKBI.forEach(bokbiPage);
 acqIndex(); ACQ.forEach(acqPage);
 depositIndex(); DEP_P.forEach((pm) => DEP_N.forEach((nm) => depositPage(pm, nm)));
+inhIndex(); INH_CASES.forEach((c) => { inhCaseIndex(c); INH_AMOUNTS.forEach((m) => inhPage(c, m)); });
+incIndex(); INC.forEach(incPage);
+propIndex(); PROP.forEach(propPage);
+carTaxIndex(); carTaxEvPage(); CARS.forEach(carTaxPage);
+ltvIndex(); LTV_P.forEach(ltvPage);
 fs.writeFileSync(path.join(OUT, 'js', 'engine.js'), makeBundle(NT));
 docs();
 

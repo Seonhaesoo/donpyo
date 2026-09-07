@@ -31,10 +31,29 @@
     if (/요율/.test(t)) return { href: '/rates/', label: '4대보험 요율표' };
     var A = amounts(t);
     var big = A.filter(function (x) { return x.unit !== '' || x.man >= 100; });
-    var first = big.length ? big[0].man : (A.length ? A[0].man : null);
+    var firstTok = big.length ? big[0] : (A.length ? A[0] : null);
+    var first = firstTok ? firstTok.man : null;
     var years = pick(t, /(\d+)\s*년/), months = pick(t, /(\d+)\s*개월/), rate = pick(t, /(\d+(?:\.\d+)?)\s*(?:%|퍼|프로)/), hours = pick(t, /(?:주\s*)?(\d+)\s*시간/) || pick(t, /주\s*(\d+)/);
     if (rate == null) { var r2 = t.match(/금리\s*(\d+(?:\.\d+)?)/) || t.match(/(?:^|\s)(\d{1,2}\.\d+)(?!\s*(?:억|천|만|년|개월|시간|%))/); if (r2) rate = parseFloat(r2[1]); }
-    var man = function (v) { return v >= 100000 ? Math.round(v / 10000) : v; };   /* 원 단위로 적은 경우 */
+    /* 단위 없이 큰 숫자(35000000)만 원으로 보고 만원으로 바꿈 — "10억"처럼 단위가 붙은 값은 그대로 */
+    var man = function (v) { return (firstTok && firstTok.unit === '' && v >= 100000) ? Math.round(v / 10000) : v; };
+    if (/상속/.test(t)) {
+      var two = /자녀\s*2|둘|두\s*명/.test(t), three = /자녀\s*3|셋|세\s*명/.test(t);
+      var ic = /배우자|아내|남편|부부/.test(t) ? (three ? 'spouse3' : two ? 'spouse2' : 'spouse1') : (two ? 'child2' : 'child1');
+      if (!first) return { href: '/inheritance-tax/' + ic + '/', label: '상속세 표' };
+      var ia = nearest(G.inh || [first], man(first));
+      return { href: '/inheritance-tax/' + ic + '/' + ia + '/', label: fmtMan(ia) + '원 상속세' };
+    }
+    if (/종합소득|종소세/.test(t)) { if (!first) return { href: '/income-tax/', label: '종합소득세 표' }; var ii = nearest(G.inc || [first], man(first)); return { href: '/income-tax/' + ii + '/', label: '소득 ' + fmtMan(ii) + '원 종합소득세' }; }
+    if (/재산세|공시가/.test(t)) { if (!first) return { href: '/property-tax/', label: '재산세 표' }; var pp = nearest(G.prop || [first], man(first)); return { href: '/property-tax/' + pp + '/', label: '공시가 ' + fmtMan(pp) + '원 재산세' }; }
+    if (/자동차세|배기량|\d\s*cc/.test(t)) {
+      if (/전기|수소|ev/.test(t)) return { href: '/car-tax/ev/', label: '전기차 자동차세' };
+      var cc = pick(t, /(\d{3,4})\s*cc/) || (A.filter(function (x) { return x.unit === '' && x.man >= 600 && x.man <= 7000; })[0] || {}).man;
+      if (!cc) return { href: '/car-tax/', label: '자동차세 표' };
+      var cn = nearest(G.cars || [cc], cc);
+      return { href: '/car-tax/' + cn + '/', label: cn.toLocaleString('ko-KR') + 'cc 자동차세' };
+    }
+    if (/ltv|담보|집값|주담대/.test(t) && !/dsr/.test(t)) { if (!first) return { href: '/ltv/', label: 'LTV 한도표' }; var lp = nearest(G.ltv || [first], man(first)); return { href: '/ltv/' + lp + '/', label: '집값 ' + fmtMan(lp) + '원 대출 한도' }; }
     if (/증여/.test(t)) {
       var rel = /배우자|아내|남편|부부/.test(t) ? 'spouse' : /손자|손녀|조부|할아버지|할머니/.test(t) ? 'grandchild' : /미성년/.test(t) ? 'minor' : /부모|아버지|어머니|엄마|아빠/.test(t) ? 'parent' : /형제|자매|친족|삼촌|이모|고모|사위|며느리/.test(t) ? 'relative' : /타인/.test(t) ? 'other' : 'child';
       if (!first) return { href: '/gift-tax/' + rel + '/', label: '증여세 표' };

@@ -8,6 +8,11 @@ import * as YE from '../engine/yearend.mjs';
 import * as GT from '../engine/gift.mjs';
 import * as RE from '../engine/realty.mjs';
 import * as DP from '../engine/deposit.mjs';
+import * as IH from '../engine/inherit.mjs';
+import * as IC from '../engine/income.mjs';
+import * as PT from '../engine/property.mjs';
+import * as CT from '../engine/cartax.mjs';
+import * as LV from '../engine/ltv.mjs';
 
 let pass = 0, fail = 0;
 function ok(cond, name, detail = '') { if (cond) pass++; else { fail++; console.log('FAIL', name, detail); } }
@@ -199,6 +204,57 @@ ok(RE.acquisitionTax(800000000, { homes: 2 }).rate === RE.homeRate(800000000), '
   ok(DP.deposit(100000000, 12, 0.03, { compound: true }).interest === 3041596, '월복리 1억 1년 3%', DP.deposit(100000000, 12, 0.03, { compound: true }).interest);
   ok(DP.deposit(DP.principalForNet(1000000, 12, 0.03), 12, 0.03).net >= 1000000, '세후 100만 받는 원금 역산');
 }
+
+/* 상속세 */
+ok(IH.inheritTax(1000000000, { spouse: false, children: 1 }).tax === 87300000, '10억 자녀 1명 — 일괄공제 5억, 8,730만', IH.inheritTax(1000000000, { spouse: false, children: 1 }).tax);
+ok(IH.inheritTax(1000000000, { spouse: true, children: 1 }).tax === 0, '10억 배우자+자녀 1 — 배우자공제 6억 + 일괄 5억 = 면세');
+{
+  const r = IH.inheritTax(2000000000, { spouse: true, children: 2 });
+  ok(r.spouseDed === Math.floor(2000000000 * 1.5 / 3.5) && r.base === 2000000000 - 500000000 - r.spouseDed, '20억 배우자+자녀 2 — 배우자 법정지분 3/7', JSON.stringify([r.spouseDed, r.base]));
+  ok(r.calc === Math.floor(r.base * 0.3 - 60000000) && r.tax === r.calc - Math.floor(r.calc * 0.03), '과표 6.4억 → 30% 구간 · 신고공제 3%', r.tax);
+  const s = IH.inheritTax(5000000000, { spouse: true, children: 1 });
+  ok(s.spouseDed === 3000000000, '배우자공제 상한 30억');
+  const f = IH.inheritTax(1000000000, { spouse: false, children: 1, financial: 300000000 });
+  ok(f.fin === 60000000 && f.tax < 87300000, '금융재산공제 20%');
+  ok(IH.inheritTax(1000000000, { spouse: false, children: 7 }).lump === 550000000, '자녀 7명이면 기초+인적 5.5억 > 일괄 5억');
+  ok(IH.freeEstate('child1') === 500000000 && IH.freeEstate('spouse1') === 1250000000 && IH.freeEstate('spouse2') === 1000000000, '면세 한도 5억 / 12.5억(법정지분) / 10억', JSON.stringify([IH.freeEstate('child1'), IH.freeEstate('spouse1'), IH.freeEstate('spouse2')]));
+  ok(IH.inheritTax(1250000000, { spouse: true, children: 1 }).tax === 0 && IH.inheritTax(1260000000, { spouse: true, children: 1 }).tax > 0, '12.5억 경계');
+}
+
+/* 종합소득세 */
+{
+  const t = IC.incomeTax(31500000);
+  ok(t.base === 30000000 && t.calc === 3240000 && t.tax === 3170000 && t.local === 317000, '소득 3,150만 → 과표 3,000만 → 324만 − 표준 7만', JSON.stringify(t));
+  ok(IC.incomeTax(1000000).tax === 0, '기본공제 이하 0');
+  const s = IC.settle(60000000, 0.6);
+  ok(s.income === 24000000 && s.prepaid === 1980000 && s.refund === s.prepaid - s.total, '수입 6,000만·경비 60% 정산', JSON.stringify(s));
+}
+
+/* 재산세 */
+{
+  const p = PT.propertyTax(500000000);
+  ok(p.base === 220000000 && p.tax === 260000 && p.urban === 308000 && p.educ === 52000 && p.total === 620000, '공시 5억 1주택 — 44% · 특례세율 · 62만', JSON.stringify(p));
+  const q = PT.propertyTax(500000000, { oneHome: false });
+  ok(q.base === 300000000 && q.tax === 570000 && q.total === 1104000, '공시 5억 다주택 — 60% · 표준세율 · 110.4만', JSON.stringify(q));
+  ok(PT.propertyTax(1000000000).special === false && PT.propertyTax(900000000).special === true, '특례세율은 9억 이하');
+  ok(p.july + p.september === p.total && PT.propertyTax(100000000).september === 0, '7·9월 분납 / 20만 이하 7월 일괄');
+}
+
+/* 자동차세 */
+ok(CT.carTax(1598).total === 290836 && CT.carTax(1598).tax === 223720, '1,598cc 신차 29만 836원', CT.carTax(1598).total);
+ok(CT.carTax(1999).total === 519740, '1,999cc 51만 9,740원', CT.carTax(1999).total);
+ok(CT.carTax(998).tax === 79840 && CT.carTax(1000).unit === 80 && CT.carTax(1001).unit === 140, 'cc 구간 경계');
+ok(CT.carTax(1598, { age: 5 }).discount === 0.15 && CT.carTax(1598, { age: 12 }).discount === 0.5 && CT.carTax(1598, { age: 20 }).discount === 0.5, '차령 경감 5년차 15% · 12년차 이상 50%');
+ok(CT.carTax(0, { ev: true }).total === 130000, '전기차 13만');
+ok(CT.carTax(1598, { year: 2026 }).prepay === Math.floor(290836 * 0.03 * 11 / 12), '2026년 연납 3% × 11/12');
+
+/* LTV */
+ok(LV.ltvLimit(1000000000, 'regulated').limit === 400000000, '10억 규제지역 40%');
+ok(LV.ltvLimit(2000000000, 'regulated').limit === 400000000 && LV.ltvLimit(2000000000, 'regulated').capped, '20억 규제지역 — 4억 한도');
+ok(LV.ltvLimit(3000000000, 'regulated').limit === 200000000, '30억 규제지역 — 2억 한도');
+ok(LV.ltvLimit(1000000000, 'metro').limit === 600000000, '10억 수도권 비규제 — 70%지만 6억 한도');
+ok(LV.ltvLimit(500000000, 'other', { firstHome: true }).limit === 400000000, '5억 지방 생애최초 80%');
+ok(LV.ltvLimit(1000000000, 'regulated', { firstHome: true }).limit === 600000000, '10억 규제지역 생애최초 70% → 6억 한도');
 
 /* 브라우저 엔진 묶음 = 서버 엔진 (같은 소스에서 생성되는지 확인) */
 {

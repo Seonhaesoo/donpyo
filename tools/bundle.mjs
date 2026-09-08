@@ -31,7 +31,11 @@ export function makeBundle(NT = 200000) {
     wrap('S', strip(read('subscription.mjs')), ['subscriptionScore', 'homelessScore', 'familyScore', 'accountScore', 'subGrade', 'maxForFamily', 'SUB_MAX', 'HOMELESS_TABLE', 'FAMILY_TABLE', 'ACCOUNT_TABLE']),
     wrap('P', strip(read('parental.mjs')), ['parentalLeave', 'monthPay', 'bothTotal', 'babyBenefits', 'benefitTimeline', 'ageMonths', 'MODES', 'BENEFITS', 'BOTH_CAPS', 'NORMAL_CAPS', 'LEAVE_MIN']),
     wrap('E', strip(read('electric.mjs')), ['electricBill', 'marginalPerKwh', 'PLANS', 'SEASONS']),
-    `window.Donpyo = Object.assign({ YEAR, RATES, NT: ${NT} }, F, T, L, K, A, G, Y, S, P, E);`,
+    wrap('EI', strip(read('eitc.mjs')), ['eitc', 'workCredit', 'childCredit', 'propertyFactor', 'phaseText', 'TYPES', 'CTC', 'PROPERTY_LIMIT', 'PROPERTY_HALF', 'EITC_ASOF']),
+    wrap('NP', strip(read('pension.mjs')), ['pension', 'shiftTable', 'premium', 'premiumTable', 'payback', 'startAge', 'yearsFactor', 'A_VALUE', 'B_MIN', 'B_MAX', 'DEFAULT_CONST', 'MIN_YEARS', 'RATE_SCHEDULE']),
+    wrap('CG', strip(read('capgain.mjs')), ['capitalGains', 'longTermRate', 'bracketOf', 'EXEMPT_PRICE', 'BASIC_DEDUCTION', 'SURCHARGE_UNTIL', 'SURCHARGE']),
+    wrap('CC', strip(read('cartax.mjs')) + '\n' + strip(read('carcost.mjs')), ['carTax', 'carCost', 'depreciationRate', 'FUELS', 'DEFAULTS', 'CARCOST_ASOF']),
+    `window.Donpyo = Object.assign({ YEAR, RATES, NT: ${NT} }, F, T, L, K, A, G, Y, S, P, E, EI, NP, CG, CC);`,
   ];
   return `/* 돈표 계산 엔진 — 브라우저용, 빌드 때 engine/*.mjs 에서 생성 */\n(function(){\n${parts.join('\n')}\n})();\n`;
 }

@@ -27,6 +27,10 @@ import * as LV from '../engine/ltv.mjs';
 import * as SB from '../engine/subscription.mjs';
 import * as PL from '../engine/parental.mjs';
 import * as EL from '../engine/electric.mjs';
+import * as EI from '../engine/eitc.mjs';
+import * as NP from '../engine/pension.mjs';
+import * as CG from '../engine/capgain.mjs';
+import * as CC from '../engine/carcost.mjs';
 import { makeBundle } from './bundle.mjs';
 import { num, won, manwon, short, pct, rate as fmtRate, rateSlug } from '../engine/fmt.mjs';
 
@@ -518,8 +522,8 @@ function home() {
   <h1>연봉 4,200만원이면<br>손에 얼마가 남을까</h1>
   <p>연봉·월급·대출·퇴직금·알바 월급을 금액별로 미리 계산해 표로 묶어 두었습니다. 숫자만 고르면 바로 나옵니다.</p>
 </div>
-<form class="quick quick-smart" data-quick="smart"><label for="q-home">숫자로 바로 찾기 — 연봉·월급·대출·시급·퇴직금 무엇이든</label><div class="quick-row"><div class="quick-in"><input id="q-home" type="text" placeholder="연봉 4200 / 2억 30년 4.5% / 시급 12000 주20" autocomplete="off" autocapitalize="off"></div><button class="btn" type="submit">찾기</button></div><div class="quick-hint" data-hint aria-live="polite">예시를 누르거나 직접 적어 보세요</div><div class="quick-ex"><button type="button">연봉 4200</button><button type="button">월급 350</button><button type="button">실수령 300</button><button type="button">2억 30년 4.5%</button><button type="button">시급 12000 주 20시간</button><button type="button">퇴직금 350 5년</button><button type="button">전세 2억</button><button type="button">적금 50 3년</button><button type="button">증여 1억</button><button type="button">복비 5억</button><button type="button">예금 1억 1년</button><button type="button">상속 10억</button><button type="button">재산세 5억</button><button type="button">자동차세 1598cc</button><button type="button">전기요금 300kwh</button><button type="button">육아휴직 300만</button><button type="button">무주택 10년 부양가족 2명</button></div><div class="quick-links"><a href="/salary/">연봉표</a><a href="/monthly/">월급표</a><a href="/net/">실수령으로 연봉 찾기</a><a href="/loan/">대출표</a></div></form>
-<script>window.DONPYO_GRID=${JSON.stringify({ salary: SALARIES, monthly: MONTHLIES, net: NETS, loanA: LOAN_AMOUNTS, loanY: LOAN_YEARS, loanR: LOAN_RATES.map(rateSlug), retireP: RETIRE_PAYS, retireY: RETIRE_YEARS, hourlyW: HOURLY_WAGES, hourlyH: HOURLY_HOURS, uiP: UI_PAYS, uiY: UI_YEARS, jeonse: JEONSE, savM: SAV_M, savN: SAV_N, free: FREE, ot: OT_PAYS, carP: CAR_PRICES, carN: CAR_MONTHS, goals: GOALS, saveM: SAVE_M, gift: GIFT_AMOUNTS, bokbi: BOKBI, acq: ACQ, depP: DEP_P, depN: DEP_N, inh: INH_AMOUNTS, inc: INC, prop: PROP, cars: CARS, ltv: LTV_P, subH: SUB_H, subF: SUB_F, leave: PL_WAGES, elec: EL_KWH })}</script>
+<form class="quick quick-smart" data-quick="smart"><label for="q-home">숫자로 바로 찾기 — 연봉·월급·대출·시급·퇴직금 무엇이든</label><div class="quick-row"><div class="quick-in"><input id="q-home" type="text" placeholder="연봉 4200 / 2억 30년 4.5% / 시급 12000 주20" autocomplete="off" autocapitalize="off"></div><button class="btn" type="submit">찾기</button></div><div class="quick-hint" data-hint aria-live="polite">예시를 누르거나 직접 적어 보세요</div><div class="quick-ex"><button type="button">연봉 4200</button><button type="button">월급 350</button><button type="button">실수령 300</button><button type="button">2억 30년 4.5%</button><button type="button">시급 12000 주 20시간</button><button type="button">퇴직금 350 5년</button><button type="button">전세 2억</button><button type="button">적금 50 3년</button><button type="button">증여 1억</button><button type="button">복비 5억</button><button type="button">예금 1억 1년</button><button type="button">상속 10억</button><button type="button">재산세 5억</button><button type="button">자동차세 1598cc</button><button type="button">전기요금 300kwh</button><button type="button">육아휴직 300만</button><button type="button">무주택 10년 부양가족 2명</button><button type="button">근로장려금 1500 홑벌이</button><button type="button">국민연금 300 20년</button><button type="button">양도세 15억 9억</button><button type="button">차 유지비 3000</button></div><div class="quick-links"><a href="/salary/">연봉표</a><a href="/monthly/">월급표</a><a href="/net/">실수령으로 연봉 찾기</a><a href="/loan/">대출표</a></div></form>
+<script>window.DONPYO_GRID=${JSON.stringify({ salary: SALARIES, monthly: MONTHLIES, net: NETS, loanA: LOAN_AMOUNTS, loanY: LOAN_YEARS, loanR: LOAN_RATES.map(rateSlug), retireP: RETIRE_PAYS, retireY: RETIRE_YEARS, hourlyW: HOURLY_WAGES, hourlyH: HOURLY_HOURS, uiP: UI_PAYS, uiY: UI_YEARS, jeonse: JEONSE, savM: SAV_M, savN: SAV_N, free: FREE, ot: OT_PAYS, carP: CAR_PRICES, carN: CAR_MONTHS, goals: GOALS, saveM: SAVE_M, gift: GIFT_AMOUNTS, bokbi: BOKBI, acq: ACQ, depP: DEP_P, depN: DEP_N, inh: INH_AMOUNTS, inc: INC, prop: PROP, cars: CARS, ltv: LTV_P, subH: SUB_H, subF: SUB_F, leave: PL_WAGES, elec: EL_KWH, eitc: EITC_WAGES, penI: PEN_I, penY: PEN_Y, capS: CAP_SALES, carcost: CARCOST_P })}</script>
 <a class="feature" href="/yearend/"><span class="feature-mark">13</span><span class="feature-text"><b>연말정산, 돌려받을까 더 낼까</b><span>연봉·카드·의료비·연금저축만 넣으면 결정세액과 환급 예상액이 바로</span></span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5L10.5 8 6 12.5" stroke="#8A948E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></a>
 <a class="feature" href="/couple/"><span class="feature-mark">둘</span><span class="feature-text"><b>둘이 합쳐 얼마까지 빌릴 수 있을까</b><span>링크 하나 보내면 상대가 연봉만 넣고 끝 — 합산 대출 한도·전세 여력</span></span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5L10.5 8 6 12.5" stroke="#8A948E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></a>
 ${section('급여와 일', null, `<div class="dict">
@@ -546,6 +550,7 @@ ${section('대출·저축·제도', null, `<div class="dict">
 <a href="/jeonse/"><b>전세 vs 월세</b><span>전세 2억 대출 4% → 월 이자 <span class="num">${num(Math.round(200000000 * 0.04 / 12))}</span>원</span></a>
 <a href="/savings/"><b>적금 세후 이자</b><span>월 50만·3년·4% → <span class="num">${num(savings(500000, 36, 0.04).net)}</span>원</span></a>
 <a href="/car-loan/"><b>자동차 할부</b><span>3,000만·60개월·5% → 월 <span class="num">${num(L.annuityPayment(30000000, 0.05, 60))}</span>원</span></a>
+<a href="/carcost/"><b>자동차 유지비</b><span>3,000만 휘발유차 · 연 15,000km → 월 <span class="num">${num(carcostCalc(3000).monthly)}</span>원 (감가 포함) · 현금만 <span class="num">${num(carcostCalc(3000).cashMonthly)}</span>원</span></a>
 <a href="/retire/"><b>퇴직금 세후</b><span>월급 350만·5년 → <span class="num">${num(R.severanceTax(R.severance(3500000, 5).amount, 5).net)}</span>원</span></a>
 <a href="/unemployment/"><b>실업급여</b><span>월급 350만·5년 → 하루 <span class="num">${num(U.dailyBenefit(3500000).daily)}</span>원 × ${U.benefitDays(5)}일</span></a>
 <a href="/rates/"><b>${YEAR}년 4대보험 요율표</b><span>근로자 부담 국민연금 <span class="num">${pct(R0.pension, 2)}</span> · 건강보험 <span class="num">${pct(R0.health, 3)}</span></span></a>
@@ -561,11 +566,14 @@ ${section('세금·부동산', null, `<div class="dict">
 <a href="/ltv/"><b>LTV 대출 한도</b><span>10억 집 규제지역 → <span class="num">${num(LV.ltvLimit(1000000000).limit)}</span>원 · 비규제 <span class="num">${num(LV.ltvLimit(1000000000, 'metro').limit)}</span>원</span></a>
 <a href="/deposit/"><b>예금 이자</b><span>1억 1년 3% → 세후 <span class="num">${num(DP.deposit(100000000, 12, 0.03).net)}</span>원 · 매달 받으면 <span class="num">${num(DP.deposit(100000000, 12, 0.03).monthlyNet)}</span>원</span></a>
 <a href="/subscription/"><b>청약 가점</b><span>무주택 10년·부양가족 2명·통장 15년 → <span class="num">${SB.subscriptionScore({ homelessYears: 10, family: 2, accountMonths: 180 }).total}</span>점 (84점 만점)</span></a>
+<a href="/capgain/"><b>양도소득세</b><span>9억에 산 집 15억에 팔면 (1주택·5년) <span class="num">${num(capThree(1500000000, 900000000).one.total)}</span>원 · 12억 이하는 비과세</span></a>
+<a href="/eitc/"><b>근로장려금</b><span>총급여 1,500만 홑벌이 → <span class="num">${num(EI.eitc({ type: 'one', wage: 15000000 }).work)}</span>원 · 자녀 1명당 +<span class="num">${num(EI.eitc({ type: 'one', wage: 15000000, children: 1 }).perChild)}</span>원</span></a>
 </div>`)}
 ${section('가족·생활', null, `<div class="dict">
 <a href="/parental-leave/"><b>육아휴직 급여</b><span>통상임금 300만 → 12개월 <span class="num">${num(PL.parentalLeave({ wage: 3000000, months: 12 }).total)}</span>원 · 6+6은 둘이 <span class="num">${num(PL.bothTotal(3000000).total)}</span>원</span></a>
 <a href="/baby-benefit/"><b>출산·양육 지원금</b><span>첫째 만 2세까지 <span class="num">${num(PL.babyBenefits('2025-01-01', 1, '2025-01-01').total24)}</span>원 · 0세는 월 <span class="num">${num(PL.PARENT_PAY.age0 + PL.CHILD_ALLOWANCE.monthly)}</span>원</span></a>
 <a href="/electric/"><b>전기요금 누진제</b><span>한 달 300kWh → <span class="num">${num(EL.electricBill(300).total)}</span>원 · 여름 <span class="num">${num(EL.electricBill(300, { season: 'summer' }).total)}</span>원</span></a>
+<a href="/pension/"><b>국민연금 예상 수령액</b><span>월 300만·20년 가입 → 65세부터 월 <span class="num">${num(NP.pension({ avgIncome: 3000000, years: 20 }).monthly)}</span>원 · 40년이면 <span class="num">${num(NP.pension({ avgIncome: 3000000, years: 40 }).monthly)}</span>원 (어림)</span></a>
 </div>`)}
 ${section('많이 보는 연봉표', null, list(popular))}
 ${section('읽을거리', '계산 뒤에 있는 규칙을 풀어 쓴 글', list(GUIDES.slice(0, 6).map((g) => ({ href: guideUrl(g.slug), title: gtitle(g) }))) + `<p class="sub" style="margin-top:8px"><a href="/guide/">서재 전체 보기 →</a></p>`)}
@@ -632,6 +640,14 @@ ${table(['항목', `${PREV}년`, `${YEAR}년`, '비고'], [
 <p>2025년 전국 공통 지원만 넣었습니다. 첫만남이용권 첫째 200만원·둘째부터 300만원(바우처, 출생 후 1년 안에 사용), 부모급여 0~11개월 월 100만원·12~23개월 월 50만원(어린이집 이용 시 보육료를 뺀 차액), 아동수당 0~95개월 월 10만원, 양육수당 가정양육 24~86개월 월 10만원, 임신·출산 진료비 바우처 단태아 100만원·다태아 태아당 100만원입니다. "만 2세까지 총액"은 첫만남이용권 + 부모급여 24개월 + 아동수당 24개월이고, 개월 수는 생년월일 기준 만 개월입니다. 지역 출산장려금은 지자체별로 달라 넣지 않았습니다.</p>
 <h2>전기요금</h2>
 <p>한국전력 주택용 전기요금표(${EL.ELECTRIC_ASOF}) 기준입니다. 저압은 기본요금 910·1,600·7,300원, 전력량요금 kWh당 120.0·214.6·307.3원, 고압은 730·1,260·6,060원과 105.0·174.0·242.3원이고, 구간은 기타계절(1~6월·9~12월) 200·400kWh, 하계(7~8월) 300·450kWh입니다. 하계와 동계(12~2월)에 1,000kWh를 넘는 사용량은 슈퍼유저 요금(저압 736.2원·고압 601.3원)입니다. 전기요금계 = 기본요금 + 전력량요금 + 기후환경요금(9원/kWh) + 연료비조정요금(+5원/kWh)이고, 청구액은 여기에 부가가치세 10%(원 단위 반올림)와 전력산업기반기금 2.7%(2025년 7월부터, 10원 미만 절사)를 더해 10원 미만을 절사한 값입니다. 필수사용량 보장공제(2024년 폐지), 복지할인·대가족할인, TV수신료 2,500원(2023년 7월부터 분리 고지)은 넣지 않았습니다.</p>
+<h2>근로장려금·자녀장려금</h2>
+<p>조세특례제한법 제100조의2~제100조의13, ${EI.EITC_ASOF} 기준입니다. 근로장려금은 가구 유형별 '총급여액 등'(근로소득 총급여 + 사업소득 수입금액 × 업종별 조정률 + 종교인소득)에 따라 단독 가구 400만원 미만 총급여 × 165/400, 400만~900만원 165만원, 900만~2,200만원 165만원 − (총급여 − 900만원) × 165/1,300, 홑벌이 700만원 미만 × 285/700, 700만~1,400만원 285만원, 1,400만~3,200만원 285만원 − (총급여 − 1,400만원) × 285/1,800, 맞벌이 800만원 미만 × 330/800, 800만~1,700만원 330만원, 1,700만~3,800만원 330만원 − (총급여 − 1,700만원) × 330/2,100입니다. 자녀장려금은 18세 미만 부양자녀 1인당 총급여 2,100만원 미만 100만원, 2,100만~7,000만원 100만원 − (총급여 − 2,100만원) × 50/4,900(최소 50만원)입니다. 전년 6월 1일 기준 가구원 재산 합계가 2.4억원 이상이면 받지 못하고 1.7억원 이상이면 산정액의 50%를 받으며, 10원 미만은 절사합니다. 부부 합산 총소득 기준금액 판정, 기한 후 신청 감액(5%), 최소 지급액 규정은 넣지 않았습니다.</p>
+<h2>국민연금 예상 수령액</h2>
+<p>국민연금법 제51조·제63조의 기본연금액 산식을 단순화한 어림입니다. 기본연금액(연) = 비례상수 × (A값 + B값) × (1 + 0.05 × (가입연수 − 20)). A값은 전체 가입자의 최근 3년 평균 소득월액(${NP.PENSION_ASOF} 적용 ${won(NP.A_VALUE)}), B값은 본인 가입기간 평균 소득월액(기준소득월액 하한 ${manwon(NP.B_MIN)}·상한 ${manwon(NP.B_MAX)})이고, 비례상수는 2025년 1.26(소득대체율 42%), 2026년부터 1.29(43%, 2025년 3월 개정)로 여기서는 1.29를 전 기간에 씁니다. 가입기간 10년 이상 20년 미만은 법 제63조의 "기본연금액의 50% + 10년 초과 1년마다 5%"와 같은 식으로 계산하며 10년 미만은 노령연금이 없습니다. 조기연금은 1년당 6%(최대 5년 30%) 감액, 연기연금은 1년당 7.2%(최대 5년 36%) 증액하고, 수급 개시 연령은 1953~56년생 61세, 57~60년생 62세, 61~64년생 63세, 65~68년생 64세, 1969년생 이후 65세입니다. 월액은 연액 ÷ 12를 10원 미만 절사한 값입니다. 가입 시기별로 다른 비례상수(1988~98년 2.4, 1999~2007년 1.8 등), 물가 연동, 과거 소득 재평가, 부양가족연금, 소득활동에 따른 감액은 반영하지 않았습니다. 보험료율은 2025년 9%에서 2026년부터 매년 0.5%p 올라 2033년 13%가 되고 직장 가입자는 회사가 절반을 냅니다.</p>
+<h2>양도소득세</h2>
+<p>소득세법 제89조·제95조·제103조·제104조(${CG.CAP_ASOF}) 기준입니다. 양도차익 = 양도가액 − 취득가액 − 필요경비. 1세대 1주택을 2년 이상 보유(2017년 8월 3일 이후 조정대상지역 취득분은 2년 이상 거주)하고 양도가액 12억원 이하에 팔면 전액 비과세, 12억원을 넘으면 양도차익 × (양도가액 − 12억원) ÷ 양도가액만 과세합니다. 장기보유특별공제는 1세대 1주택(12억 초과분, 거주 2년 이상)이면 보유기간 3년 이상부터 연 4%(최대 40%)와 거주기간 3년 이상부터 연 4%(최대 40%)를 더해 최대 80%, 그 밖에는 보유 3년 이상부터 연 2%로 최대 30%(15년)입니다. 과세표준 = 과세 양도차익 − 장기보유특별공제 − 기본공제 250만원(연 1회). 세율은 보유 1년 미만 70%, 2년 미만 60%(주택·입주권·분양권), 2년 이상은 기본 누진세율(1,400만원 이하 6%, 5,000만원 15%(누진공제 126만), 8,800만원 24%(576만), 1억 5,000만원 35%(1,544만), 3억원 38%(1,994만), 5억원 40%(2,594만), 10억원 42%(3,594만), 초과 45%(6,594만))이고 지방소득세는 양도소득세의 10%입니다. 조정대상지역 2주택 +20%p·3주택 이상 +30%p 중과와 장기보유특별공제 배제는 ${CG.SURCHARGE_UNTIL}까지 한시 배제되어 기본 계산에 넣지 않고 옵션으로만 계산합니다. 거주 2년 이상 3년 미만의 8% 공제, 취득가액 환산, 상속·증여 취득분, 일시적 2주택 등 특례는 반영하지 않았습니다.</p>
+<h2>자동차 유지비</h2>
+<p>연 유지비 = 유류비 + 자동차세 + 보험료 + 정비·소모품 + 주차·통행료 + 감가상각. 유류비 = 연 주행거리 ÷ 연비 × 연료 단가(기본값 휘발유 1,650원·경유 1,550원·LPG 1,000원/L, 전기 350원/kWh, 연비 12·14·9km/L·5km/kWh), 자동차세는 위 자동차세 산식(배기량·차령 경감, 전기차 정액 13만원), 감가상각은 차량가 × 첫해 20%·2~3년차 15%·4년차부터 10%의 단순 정액 어림입니다. 보험료(연 80만원)·정비비(연 50만원)·주차·통행료(월 5만원)는 평균적인 기본값이며, 차량가별 페이지의 배기량은 2,500만원 이하 1,598cc, 4,000만원 이하 1,999cc, 5,500만원 이하 2,497cc, 그 이상 3,470cc로 가정했습니다. 월 유지비 = 연 합계 ÷ 12, 현금 지출은 감가상각을 뺀 값, km당 비용은 연 합계 ÷ 연 주행거리입니다. 취득세·공채·대출 이자·세차·과태료는 넣지 않았습니다.</p>
 <h2>대출 한도 (DSR)</h2>
 <p>DSR 40% = 모든 대출의 연간 원리금 상환액 ÷ 연소득 ≤ 40%. 월 상환 여력 = 연소득 × 40% ÷ 12이고, 그 여력으로 갚을 수 있는 원리금균등 원금을 한도로 봅니다. 스트레스 DSR은 실제 금리에 가산금리(수도권 주담대 1.5%p)를 더해 계산합니다.</p>
 <h2>연봉 순위</h2>
@@ -647,7 +663,7 @@ ${table(['항목', `${PREV}년`, `${YEAR}년`, '비고'], [
 <h2>나이대 비교</h2>
 <p>통계청 「${AGE.year}년 임금근로일자리 소득(보수) 결과」의 연령대별 월평균 소득과 소득구간 분포(10구간)를 씁니다. ${AGE.year}년 12월 한 달 동안 사회보험에 신고된 임금근로일자리의 세전 보수라서 연말정산 연봉 통계(연봉 순위)와 대상·기준이 다릅니다. "그 나이대에서 내 위치"는 연봉 ÷ 12를 소득구간 안에서 선형 보간해 구하고, 1,000만원 이상 구간은 3,000만원까지 고르게 퍼져 있다고 가정합니다.</p>
 <h2>출처</h2>
-<ul><li>통계청 ${AGE.year}년 임금근로일자리 소득(보수) 결과 (연령대별·성별 평균소득, 소득구간 분포)</li><li>국세청 근로소득 간이세액표 (소득세법 시행령 별표 2), 국세통계 근로소득 연말정산 신고 현황</li><li>국민연금공단·국민건강보험공단 보험료율 고시</li><li>고용노동부 최저임금 고시, 근로기준법 시행령(주휴·퇴직금), 고용보험법(구직급여)</li><li>주택임대차보호법(전월세전환율), 소득세법(이자소득세)</li><li>주택공급에 관한 규칙 별표 1(청약 가점), 고용보험법 시행령(육아휴직 급여, 2025.1.1 시행), 보건복지부 부모급여·아동수당·첫만남이용권 안내, 한국전력 전기요금표(주택용 저압·고압)</li></ul>
+<ul><li>통계청 ${AGE.year}년 임금근로일자리 소득(보수) 결과 (연령대별·성별 평균소득, 소득구간 분포)</li><li>국세청 근로소득 간이세액표 (소득세법 시행령 별표 2), 국세통계 근로소득 연말정산 신고 현황</li><li>국민연금공단·국민건강보험공단 보험료율 고시</li><li>고용노동부 최저임금 고시, 근로기준법 시행령(주휴·퇴직금), 고용보험법(구직급여)</li><li>주택임대차보호법(전월세전환율), 소득세법(이자소득세)</li><li>주택공급에 관한 규칙 별표 1(청약 가점), 고용보험법 시행령(육아휴직 급여, 2025.1.1 시행), 보건복지부 부모급여·아동수당·첫만남이용권 안내, 한국전력 전기요금표(주택용 저압·고압)</li><li>조세특례제한법 제100조의2~제100조의13·국세청 근로장려금 안내(2025년 신청), 국민연금법 제51조·제63조·국민연금공단 A값 고시(2025년), 소득세법 제89조·제95조·제103조·제104조(양도소득세), 한국석유공사 오피넷 평균 유가(자동차 유지비 기본 단가)</li></ul>
 </div>`;
   write('/method/', shell({ url: '/method/', title: '계산 기준과 요율 — 돈표', desc: '돈표의 실수령액·대출·퇴직금·알바 월급 계산 방식과 연도별 4대보험 요율, 출처를 정리했습니다.', body: method }));
 
@@ -2453,6 +2469,447 @@ ${EL_NOTE}`;
   write(url, shell({ url, title: `전기요금 계산기 — 주택용 누진제 100~1,000kWh 청구액 (여름·기타계절, ${EL.ELECTRIC_ASOF})`, desc: '한 달 사용량(kWh)과 계절, 저압·고압을 넣으면 기본요금·누진 단계별 전력량요금·기후환경요금·연료비조정요금·부가세·전력산업기반기금까지 계산해 청구액을 보여줍니다. 100~1,000kWh 요금표.', body, scripts: ['/js/engine.js', '/js/electric.js'] }));
 }
 
+/* ---------- 근로장려금·자녀장려금 ---------- */
+const range = (a, b, step) => { const out = []; for (let v = a; v <= b; v += step) out.push(v); return out; };
+const EITC_TYPES = ['single', 'one', 'dual'];
+const EITC_WAGES = { single: range(500, 2100, 100), one: range(500, 3100, 100), dual: range(500, 3700, 100) };
+const eitcUrl = (t, m) => m ? `/eitc/${t}/${m}/` : `/eitc/${t}/`;
+const EITC_NOTE = `<p class="note">조세특례제한법 제100조의2~제100조의13(${EI.EITC_ASOF} 기준)의 산식으로 계산한 예상액입니다. 실제 지급액은 국세청이 부부 합산 총소득, 가구원 재산(전년 6월 1일 기준), 사업소득의 업종별 조정률, 다른 거주자의 부양자녀 여부를 심사해 확정합니다. 참고용이며 홈택스 '장려금 미리보기'와 국세청 장려금 상담센터(1566-3636)에서 확인하세요. <a href="/method/">계산 기준 보기</a></p>`;
+const EITC_TIPS = `<div class="doc">
+<p><b>신청은 5월, 지급은 8월 말.</b> 정기 신청 기간은 5월 1일~31일이고 심사를 거쳐 8월 말에 신청할 때 적은 계좌로 들어옵니다. 기간을 놓치면 6월 1일~11월 30일에 기한 후 신청을 할 수 있지만 산정액의 5%가 깎이고 지급도 신청한 달부터 넉 달 안으로 늦어집니다.</p>
+<p><b>근로소득만 있으면 반기 신청도 됩니다.</b> 상반기 소득분은 9월 1~15일에 신청해 12월 말에 산정액의 35%를 먼저 받고, 하반기분은 다음 해 3월 1~15일에 신청해 6월 말에 나머지를 정산받습니다. 사업소득이나 종교인소득이 있으면 5월 정기 신청만 할 수 있습니다.</p>
+<p><b>신청 방법.</b> 국세청이 5월 초 안내문(모바일·우편)을 보내면 홈택스·손택스(앱)·ARS 1544-9944에서 개별인증번호로 1~2분 만에 끝납니다. 안내문이 없어도 요건이 되면 홈택스 '장려금 신청'에서 직접 신청할 수 있습니다. 심사 결과와 지급 예정액은 홈택스 '장려금 심사 진행 상황'에서 봅니다.</p>
+<p><b>'총급여액 등'은 근로소득 총급여 + 사업소득 수입금액 × 업종별 조정률 + 종교인소득입니다.</b> 회사 원천징수영수증의 총급여(비과세 제외)가 기준이고, 신청 자격을 볼 때는 여기에 이자·배당·연금·기타소득까지 더한 부부 합산 총소득이 단독 2,200만, 홑벌이 3,200만, 맞벌이 3,800만원 미만이어야 합니다(자녀장려금은 7,000만원 미만).</p>
+<p><b>재산은 부채를 빼지 않고 더합니다.</b> 전년 6월 1일 기준 가구원 전체의 주택·토지·건물(시가표준액), 승용차, 전세보증금, 예금·주식·보험 등을 더한 금액이 2.4억원 미만이어야 하고, 1.7억원 이상이면 절반만 받습니다. 대출이 있어도 빼 주지 않으니 전세보증금이 큰 가구는 재산 요건에 걸리기 쉽습니다.</p>
+<p><b>받지 못하는 경우.</b> 전년 12월 31일 기준 대한민국 국적이 아닌 사람(배우자나 부양자녀가 한국 국적이면 가능), 다른 거주자의 부양자녀인 사람, 변호사·의사·회계사 같은 전문직 사업자는 대상에서 빠집니다.</p>
+</div>`;
+const eitcPhaseRow = (T, r) => r.phase === 'in' ? [`점증 구간 (${manwon(T.phaseIn)} 미만)`, num(r.workRaw), `총급여 × ${Math.round(T.max / 10000)}/${Math.round(T.phaseIn / 10000)}`]
+  : r.phase === 'flat' ? ['평탄 구간 (최대 지급)', num(r.workRaw), `${manwon(T.phaseIn)} 이상 ${manwon(T.flatTo)} 미만`]
+  : r.phase === 'out' ? [`점감 구간 (${manwon(T.flatTo)} 이상 ${manwon(T.limit)} 미만)`, num(r.workRaw), `${manwon(T.max)} − (총급여 − ${manwon(T.flatTo)}) × ${Math.round(T.max / 10000)}/${Math.round((T.limit - T.flatTo) / 10000).toLocaleString('ko-KR')}`]
+  : [`총급여 ${manwon(T.limit)} 이상`, '0', '근로장려금 대상 아님'];
+const eitcPhaseLabel = (p) => p === 'in' ? '점증' : p === 'flat' ? '최대' : p === 'out' ? '점감' : '대상 아님';
+const eitcReqRows = (T) => [
+  { cells: ['가구 유형', T.who] },
+  { cells: ['총급여액 등', `${manwon(T.limit)} 미만 (근로장려금) · 자녀장려금은 ${manwon(EI.CTC.limit)} 미만`] },
+  { cells: ['총소득 기준금액', `부부 합산 ${manwon(T.limit)} 미만 — 근로·사업·종교인·이자·배당·연금·기타소득 합계`] },
+  { cells: ['재산', `전년 6월 1일 기준 가구원 합계 ${manwon(EI.PROPERTY_LIMIT)} 미만 · ${manwon(EI.PROPERTY_HALF)} 이상이면 50% 감액`] },
+  { cells: ['부양자녀', '18세 미만(2024년 귀속은 2006년 1월 2일 이후 출생) · 연 소득 100만원 이하 · 자녀장려금은 1인당'] },
+  { cells: ['신청', '5월 1~31일 정기 (홈택스·손택스·ARS 1544-9944) · 기한 후 6월 1일~11월 30일 (5% 감액)'] },
+  { cells: ['지급', '8월 말 · 반기 신청은 12월 말(35%)과 6월 말(정산)'] },
+];
+
+function eitcPage(type, m) {
+  const T = EI.TYPES[type], W = m * 10000, url = eitcUrl(type, m), isSingle = type === 'single';
+  const r0 = EI.eitc({ type, wage: W }), r1 = EI.eitc({ type, wage: W, children: 1 });
+  const kids = [0, 1, 2, 3].map((k) => EI.eitc({ type, wage: W, children: k }));
+  const half = EI.eitc({ type, wage: W, children: 1, property: 200000000 });
+  const title = isSingle
+    ? `총급여 ${manwon(W)} 단독 가구 근로장려금 — 예상 ${short(r0.work)}원 (2025년 신청, 재산 1.7억 이상이면 절반)`
+    : `총급여 ${manwon(W)} ${T.short} 근로장려금 — 예상 ${short(r0.work)}원 (2025년 신청, 자녀장려금 포함 시 ${short(r1.total)}원)`;
+  const desc = `${EI.EITC_ASOF} 기준 총급여액 등 ${manwon(W)}인 ${T.label}의 근로장려금은 ${won(r0.work)}입니다 (${EI.phaseText(W, type)}). ${isSingle ? '재산 1.7억원 이상이면 절반, 2.4억원 이상이면 받지 못합니다.' : `18세 미만 부양자녀 1명당 자녀장려금 ${won(r1.perChild)}이 더해져 자녀 1명이면 ${won(r1.total)}, 2명이면 ${won(kids[2].total)}입니다.`} 5월 신청, 8월 말 지급. 계산 흐름과 요건, 반기 신청.`;
+  const ledgerRows = [['총급여액 등', num(W), T.label], eitcPhaseRow(T, r0), ['재산 감액', '0', '1.7억원 미만 기준 · 1.7억 이상 2.4억 미만이면 −50%'], ['근로장려금 (10원 미만 절사)', num(r0.work)]];
+  if (!isSingle) ledgerRows.push(['자녀장려금 (부양자녀 1명당)', num(r1.perChild), r1.childPhase === 'flat' ? `총급여 ${manwon(EI.CTC.flatTo)} 미만 최대 ${manwon(EI.CTC.max)}` : r1.childPhase === 'out' ? `${manwon(EI.CTC.max)} − (총급여 − ${manwon(EI.CTC.flatTo)}) × 50/4,900 (최소 ${manwon(EI.CTC.min)})` : '대상 아님'], ['자녀 1명일 때 합계', num(r1.total)]);
+  const body = `
+${crumb([['/eitc/', '근로장려금'], [eitcUrl(type), T.label], [null, `총급여 ${manwon(W)}`]])}
+<h1 class="title">총급여 ${manwon(W)} ${T.label}의 근로장려금은</h1>
+<p class="meta">${EI.EITC_ASOF} · 조세특례제한법 · 재산 1.7억원 미만 · 5월 정기 신청 → 8월 말 지급 기준</p>
+${lead(`총급여액 등이 ${manwon(W)}인 ${T.label}는 ${EI.phaseText(W, type)}이라 근로장려금이 ${won(r0.work)}입니다. ${isSingle ? `단독 가구 최대 지급액 ${manwon(T.max)}의 ${pct(r0.work / T.max, 0)}입니다. 배우자나 18세 미만 자녀, 70세 이상 부모를 부양하면 홑벌이 가구가 되어 최대 ${manwon(EI.TYPES.one.max)}까지 늘어납니다.` : `18세 미만 부양자녀가 있으면 자녀장려금이 1명당 ${won(r1.perChild)} 더해져 자녀 1명이면 합계 ${won(r1.total)}, 2명이면 ${won(kids[2].total)}입니다.`} 가구원 재산이 1.7억원 이상 2.4억원 미만이면 절반인 ${won(half.work)}${isSingle ? '' : `(자녀 1명 포함 ${won(half.total)})`}을 받고, 2.4억원 이상이면 받지 못합니다. 5월에 신청하면 8월 말에 들어옵니다.`)}
+${hero({ label: '근로장려금 예상액 (연 1회)', value: r0.work, sub: `${T.label} · 총급여액 등 ${manwon(W)} · 최대 ${manwon(T.max)}의 ${pct(r0.work / T.max, 0)} · ${eitcPhaseLabel(r0.phase)} 구간` })}
+${tiles(isSingle ? [{ label: '재산 1.7억~2.4억이면', value: half.work }, { label: '월로 나누면', value: Math.round(r0.work / 12) }, { label: '단독 가구 최대', value: T.max }] : [{ label: '자녀장려금 (자녀 1명당)', value: r1.perChild }, { label: '자녀 1명 합계', value: r1.total }, { label: '재산 1.7억~2.4억이면 (자녀 1명)', value: half.total }])}
+${led('계산 흐름', '원 · 연 1회', ledgerRows)}
+${isSingle ? '' : section('부양자녀 수별 합계', `${T.label} · 총급여 ${manwon(W)} · 원`, table(['부양자녀', '근로장려금', '자녀장려금', '합계', '재산 1.7억~2.4억이면'], kids.map((k) => ({ cls: k.children === 1 ? 'on' : '', cells: [k.children ? `${k.children}명` : '없음', num(k.work), num(k.child), num(k.total), num(EI.eitc({ type, wage: W, children: k.children, property: 200000000 }).total)] }))))}
+${section('총급여가 바뀌면', `${T.label} 근로장려금`, chips(neighbors(EITC_WAGES[type], m, 3).map((x) => ({ label: short(x * 10000), value: EI.eitc({ type, wage: x * 10000 }).work, href: eitcUrl(type, x), on: x === m }))))}
+${section('가구 유형이 다르면', `총급여 ${manwon(W)} 기준 근로장려금 · 유형을 누르면 그 표로`, cells(EITC_TYPES.map((t) => ({ label: EI.TYPES[t].label, value: EI.eitc({ type: t, wage: W }).work, href: EITC_WAGES[t].includes(m) ? eitcUrl(t, m) : eitcUrl(t), on: t === type }))))}
+${ad()}
+${section('요건 한눈에', EI.EITC_ASOF, table(['항목', '기준'], eitcReqRows(T)))}
+${section('알아두면 좋은 것', null, EITC_TIPS)}
+${section('이어서 계산하기', null, list([
+  { href: '/eitc/', title: '근로장려금 계산기', sub: '가구 유형·총급여·재산·자녀 수를 직접 넣기' },
+  { href: monthlyUrl(nearest(MONTHLIES, Math.round(W / 12 / 10000))), title: `월급 ${manwon(nearest(MONTHLIES, Math.round(W / 12 / 10000)) * 10000)} 실수령액`, sub: '이 총급여의 한 달 실수령' },
+  { href: '/yearend/', title: '연말정산 미리보기', sub: '총급여로 환급 예상액 보기' },
+  { href: '/baby-benefit/', title: '출산·양육 지원금', sub: '자녀가 있으면 함께 받는 것' },
+]))}
+${EITC_NOTE}`;
+  write(url, shell({ url, title, desc, body, nav: 'salary' }));
+}
+
+function eitcTypeIndex(type) {
+  const T = EI.TYPES[type], url = eitcUrl(type), isSingle = type === 'single';
+  const rows = EITC_WAGES[type].map((m) => { const W = m * 10000, r = EI.eitc({ type, wage: W, children: 1 }), r2 = EI.eitc({ type, wage: W, children: 2 }); return { cells: [`<a href="${eitcUrl(type, m)}">${manwon(W)}</a>`, eitcPhaseLabel(r.phase), num(r.work)].concat(isSingle ? [num(EI.eitc({ type, wage: W, property: 200000000 }).work)] : [num(r.perChild), num(r.total), num(r2.total)]) }; });
+  const body = `
+${crumb([['/eitc/', '근로장려금'], [null, T.label]])}
+<h1 class="title">${T.label} 근로장려금 지급액표 — 총급여별 예상액</h1>
+<p class="meta">${EI.EITC_ASOF} · 최대 ${manwon(T.max)} · 총급여액 등 ${manwon(T.limit)} 미만 · 재산 1.7억원 미만 기준</p>
+${lead(`${T.label}는 ${T.who}입니다. 근로장려금은 총급여액 등 ${manwon(T.phaseIn)}까지 비례해 늘다가 ${manwon(T.phaseIn)}~${manwon(T.flatTo)}에서 최대 ${manwon(T.max)}을 받고, 그 위로는 줄어들어 ${manwon(T.limit)}에서 0이 됩니다. ${isSingle ? '단독 가구는 부양자녀가 없으므로 자녀장려금은 없습니다.' : `18세 미만 부양자녀가 있으면 1명당 자녀장려금 최대 ${manwon(EI.CTC.max)}(총급여 ${manwon(EI.CTC.flatTo)} 미만)이 더해집니다.`} 총급여를 누르면 계산 흐름과 재산·자녀 수별 금액이 나옵니다.`)}
+${section('총급여별 지급액', '원 · 연 1회', table(['총급여액 등', '구간', '근로장려금'].concat(isSingle ? ['재산 1.7억~2.4억이면'] : ['자녀장려금 (1명당)', '자녀 1명 합계', '자녀 2명 합계']), rows))}
+${ad()}
+${section('산정 구간', `${T.label}`, table(['구간', '총급여액 등', '근로장려금'], [
+  { cells: ['점증', `${manwon(T.phaseIn)} 미만`, `총급여 × ${Math.round(T.max / 10000)}/${Math.round(T.phaseIn / 10000)}`] },
+  { cells: ['평탄 (최대)', `${manwon(T.phaseIn)} 이상 ${manwon(T.flatTo)} 미만`, won(T.max)] },
+  { cells: ['점감', `${manwon(T.flatTo)} 이상 ${manwon(T.limit)} 미만`, `${manwon(T.max)} − (총급여 − ${manwon(T.flatTo)}) × ${Math.round(T.max / 10000)}/${Math.round((T.limit - T.flatTo) / 10000).toLocaleString('ko-KR')}`] },
+  { cells: ['대상 아님', `${manwon(T.limit)} 이상`, '0원'] },
+]))}
+${section('다른 가구 유형', null, list(EITC_TYPES.filter((t) => t !== type).map((t) => ({ href: eitcUrl(t), title: `${EI.TYPES[t].label} 지급액표`, sub: `최대 ${manwon(EI.TYPES[t].max)} · ${manwon(EI.TYPES[t].limit)} 미만`, value: EI.TYPES[t].max }))))}
+${section('요건 한눈에', EI.EITC_ASOF, table(['항목', '기준'], eitcReqRows(T)))}
+${section('알아두면 좋은 것', null, EITC_TIPS)}
+${EITC_NOTE}`;
+  write(url, shell({ url, title: `${T.label} 근로장려금 지급액표 — 총급여 ${manwon(EITC_WAGES[type][0] * 10000)}~${manwon(EITC_WAGES[type][EITC_WAGES[type].length - 1] * 10000)} 예상액 (2025년 신청)`, desc: `${T.label}(${T.who})의 근로장려금을 총급여별로 미리 계산했습니다. 최대 ${manwon(T.max)}, ${manwon(T.limit)} 미만까지. ${isSingle ? '재산 감액 기준' : '자녀장려금 포함 합계'}와 산정 구간, 신청·지급 일정.`, body, nav: 'salary' }));
+}
+
+function eitcIndex() {
+  const url = '/eitc/';
+  const inp = (id, label, value) => `<label class="ye-f"><span>${label}</span><input id="${id}" type="text" inputmode="numeric" value="${value}"></label>`;
+  const ex = EI.eitc({ type: 'one', wage: 15000000, children: 1 });
+  const all = range(500, 3700, 100);
+  const gridRows = all.map((m) => ({ cells: [`${manwon(m * 10000)}`].concat(EITC_TYPES.map((t) => EITC_WAGES[t].includes(m) ? `<a href="${eitcUrl(t, m)}">${num(EI.eitc({ type: t, wage: m * 10000 }).work)}</a>` : '—')) }));
+  const ctcRows = [1000, 2000, 3000, 4000, 5000, 6000, 6900].map((m) => ({ cells: [manwon(m * 10000), num(EI.childCredit(m * 10000, 'one').raw), num(EI.childCredit(m * 10000, 'one').raw * 2), num(EI.childCredit(m * 10000, 'one').raw * 3)] }));
+  const body = `
+${crumb([['/', '홈'], [null, '근로장려금']])}
+<h1 class="title">근로장려금·자녀장려금 계산기 — 가구 유형·총급여별 예상액</h1>
+<p class="meta">${EI.EITC_ASOF} · 조세특례제한법 · 단독 최대 165만 · 홑벌이 285만 · 맞벌이 330만 · 자녀 1명당 최대 100만 · 입력값은 이 기기 밖으로 나가지 않습니다</p>
+${lead(`근로장려금은 일은 하지만 소득이 적은 가구에 국세청이 해마다 한 번 현금으로 주는 돈입니다. 총급여액 등이 단독 가구 2,200만원, 홑벌이 3,200만원, 맞벌이 3,800만원 미만이고 가구원 재산이 2.4억원 미만이면 대상이며, 총급여 1,500만원 홑벌이 가구는 ${won(ex.work)}, 18세 미만 자녀가 1명 있으면 자녀장려금 ${won(ex.perChild)}을 더해 ${won(ex.total)}을 받습니다. 5월 1~31일에 홈택스·손택스로 신청하면 8월 말에 들어옵니다.`)}
+<form class="quick ye-form" id="ei-form">
+<div class="ye-grid">
+<label class="ye-f"><span>가구 유형</span><select id="ei-type"><option value="single">단독 가구 (배우자·부양자녀·70세 이상 부모 없음)</option><option value="one" selected>홑벌이 가구 (배우자 총급여 300만 미만 또는 부양자녀·부모)</option><option value="dual">맞벌이 가구 (부부 모두 총급여 300만 이상)</option></select></label>
+${inp('ei-wage', '총급여액 등 (연 · 만원)', 1500)}
+${inp('ei-prop', '가구 재산 합계 (만원)', 10000)}
+${inp('ei-kids', '18세 미만 부양자녀 수', 1)}
+</div>
+</form>
+<div class="hero"><div class="hero-label">근로장려금 + 자녀장려금 예상액</div><div class="hero-num"><span class="num" id="ei-total">0</span><span class="unit">원</span></div><div class="hero-sub" id="ei-sub">계산 중</div></div>
+<div class="tiles"><div class="tile"><small>근로장려금</small><span class="num" id="ei-work">0</span></div><div class="tile"><small>자녀장려금</small><span class="num" id="ei-child">0</span></div><div class="tile"><small id="ei-prop-label">재산 감액</small><span class="num" id="ei-prop-out">0</span></div></div>
+<div id="ei-tips"></div>
+<div class="ledger"><div class="lg-head"><h2>계산 흐름</h2><span>원 · 연 1회</span></div><div id="ei-rows"></div></div>
+<p class="sub" style="margin-top:8px"><a id="ei-link" href="${eitcUrl('one', 1500)}">총급여 1,500만원 홑벌이 표로 →</a></p>
+${section('가구 유형별 산정 구간', `${EI.EITC_ASOF} · 총급여액 등 기준`, table(['가구 유형', '점증 (비례)', '최대 지급', '점감', '대상 아님'], EITC_TYPES.map((t) => { const T = EI.TYPES[t]; return { cells: [`<a href="${eitcUrl(t)}">${T.label}</a>`, `${manwon(T.phaseIn)} 미만`, `${manwon(T.phaseIn)}~${manwon(T.flatTo)} · <b>${manwon(T.max)}</b>`, `${manwon(T.flatTo)}~${manwon(T.limit)}`, `${manwon(T.limit)} 이상`] }; })))}
+${ad()}
+${section('총급여별 근로장려금', '원 · 재산 1.7억원 미만 · 금액을 누르면 계산 흐름과 자녀장려금 합계', table(['총급여액 등', '단독', '홑벌이', '맞벌이'], gridRows))}
+${section('자녀장려금', '18세 미만 부양자녀 1명당 · 홑벌이·맞벌이 · 총급여 2,100만원 미만 100만원, 7,000만원까지 점감 (최소 50만원)', table(['총급여액 등', '자녀 1명', '자녀 2명', '자녀 3명'], ctcRows))}
+${section('신청·지급 일정', '2025년 (2024년 소득분)', table(['구분', '신청 기간', '지급', '비고'], [
+  { cells: ['정기 신청', '5월 1일 ~ 5월 31일', '8월 말', '근로·사업·종교인소득 모두'] },
+  { cells: ['기한 후 신청', '6월 1일 ~ 11월 30일', '신청 후 4개월 안', '산정액의 5% 감액'] },
+  { cells: ['반기 신청 (상반기분)', '9월 1일 ~ 9월 15일', '12월 말', '근로소득만 · 산정액의 35%'] },
+  { cells: ['반기 신청 (하반기분)', '다음 해 3월 1일 ~ 3월 15일', '6월 말', '연간 산정액에서 정산'] },
+]))}
+${section('자주 묻는 것', null, `<div class="doc">
+<p><b>안내문을 못 받았는데 신청할 수 있나요?</b> 요건이 되면 홈택스·손택스 '장려금 신청'에서 직접 할 수 있습니다. 안내문은 국세청이 파악한 자료로 보내는 것이라 이직·소득 변동이 있으면 빠질 수 있습니다.</p>
+<p><b>맞벌이인데 배우자 소득이 적으면?</b> 배우자의 총급여액 등이 300만원 미만이면 홑벌이 가구로 봅니다. 홑벌이는 최대 285만원, 맞벌이는 330만원으로 최대액도 다르고 소득 구간도 다릅니다.</p>
+<p><b>전세로 사는데 재산에 들어가나요?</b> 들어갑니다. 전세보증금(임차보증금)은 재산으로 합산하고, 대출은 빼 주지 않습니다. 재산이 1.7억원 이상이면 절반, 2.4억원 이상이면 못 받습니다.</p>
+<p><b>자녀장려금은 근로장려금과 따로 받나요?</b> 신청은 한 번에 하고 둘을 더해 지급합니다. 자녀장려금은 소득 요건(7,000만원 미만)이 훨씬 넓어 근로장려금이 0원이어도 자녀장려금만 받을 수 있습니다.</p>
+<p><b>받은 돈에 세금이 붙나요?</b> 아닙니다. 장려금은 소득이 아니라 환급 형태의 지원이라 세금이 없고, 다만 체납 세금이 있으면 지급액의 30%까지 충당될 수 있습니다.</p>
+</div>`)}
+${section('알아두면 좋은 것', null, EITC_TIPS)}
+${section('이어서 계산하기', null, list([{ href: '/monthly/', title: '월급 실수령액표', sub: '총급여로 한 달 실수령 보기' }, { href: '/yearend/', title: '연말정산 미리보기', sub: '환급 예상액' }, { href: '/baby-benefit/', title: '출산·양육 지원금', sub: '자녀가 있으면 함께 받는 것' }, { href: '/minimum-wage/', title: `${YEAR}년 최저임금`, sub: '최저임금 월급은 어느 구간인지' }]))}
+${EITC_NOTE}`;
+  write(url, shell({ url, title: `근로장려금 계산기 — 단독·홑벌이·맞벌이 총급여별 예상액과 자녀장려금 (2025년 신청)`, desc: '가구 유형과 총급여액 등, 재산, 부양자녀 수를 넣으면 근로장려금과 자녀장려금 예상액을 계산합니다. 단독 최대 165만, 홑벌이 285만, 맞벌이 330만, 자녀 1명당 100만원. 2024년 귀속 산정 구간, 재산 감액, 5월 신청·8월 지급 일정과 반기 신청.', body, nav: 'salary', scripts: ['/js/engine.js', '/js/eitc.js'] }));
+}
+
+/* ---------- 국민연금 예상 수령액 ---------- */
+const PEN_I = range(100, 600, 50);
+const PEN_Y = [10, 15, 20, 25, 30, 35, 40];
+const penUrl = (i, y) => `/pension/${i}/${y}/`;
+const PEN_NOTE = `<p class="note">국민연금법 제51조(기본연금액)·제63조(노령연금액)·제62조(연기연금)·제63조의2(조기노령연금)의 산식을 단순화한 어림입니다. 비례상수 ${NP.DEFAULT_CONST}(2026년부터 소득대체율 43%)과 ${NP.PENSION_ASOF} A값 ${won(NP.A_VALUE)}을 전 가입기간에 적용했고, 가입 시기별로 다른 비례상수, 물가 연동, 과거 소득의 재평가, 부양가족연금, 소득이 있을 때의 감액은 반영하지 않았습니다. 참고용이며 정확한 금액은 국민연금공단 '내 연금 알아보기'(nps.or.kr)나 고객센터 1355에서 확인하세요. <a href="/method/">계산 기준 보기</a></p>`;
+const PEN_TIPS = `<div class="doc">
+<p><b>정확한 예상액은 공단에서.</b> 국민연금공단 누리집(nps.or.kr) '내 연금 알아보기'나 '내곁에 국민연금' 앱에 로그인하면 실제 납부 이력으로 계산한 예상연금액을 볼 수 있습니다. 이 페이지는 산식을 이해하고 감을 잡는 용도입니다.</p>
+<p><b>물가만큼 오릅니다.</b> 받기 시작한 연금은 해마다 1월에 전년도 소비자물가 상승률만큼 오르고, 과거에 낸 보험료의 기준 소득도 받을 때의 가치로 재평가해 계산합니다. 그래서 실제 수령액은 지금 돈 기준인 이 어림보다 명목상 더 큽니다.</p>
+<p><b>가입기간이 수령액을 정합니다.</b> 산식에서 가입기간 20년이 기준(계수 1.0)이고 1년 늘 때마다 5%씩 커집니다. 10년 미만이면 노령연금이 아니라 낸 돈에 이자를 더한 반환일시금을 받습니다. 추후납부(추납), 임의계속가입(60세 이후), 군복무·출산 크레딧으로 기간을 늘릴 수 있습니다.</p>
+<p><b>조기 수령은 평생 깎입니다.</b> 개시 연령 5년 전부터 신청할 수 있지만 1년마다 6%씩 최대 30% 감액된 금액을 평생 받습니다. 반대로 5년까지 늦추면 1년마다 7.2%, 최대 36%를 더 받습니다. 오래 살수록 늦추는 쪽이 유리하고, 손익분기는 대략 80세 전후입니다.</p>
+<p><b>부양가족연금은 별도.</b> 배우자, 19세 미만 자녀, 60세 이상 부모가 있으면 배우자 연 30만원, 자녀·부모 1인당 연 20만원 안팎의 부양가족연금이 더해집니다. 소득이 있는 업무에 종사하면 개시 후 5년 동안 A값을 넘는 소득에 따라 감액될 수 있습니다.</p>
+<p><b>연금에도 세금이 있습니다.</b> 2002년 이후 납입분으로 받는 노령연금은 연금소득으로 과세 대상이지만, 연금소득공제와 기본공제가 있어 연 수령액이 수백만원대면 세금이 거의 없습니다.</p>
+</div>`;
+const penYearsRows = (I, y) => PEN_Y.map((k) => { const p = NP.pension({ avgIncome: I, years: k }); return { cls: k === y ? 'on' : '', cells: [`<a href="${penUrl(Math.round(I / 10000), k)}">${k}년</a>`, p.mult.toFixed(2), num(p.monthly), num(p.annual), pct(p.replacement, 1)] }; });
+const penShiftRows = (I, y, birthYear) => NP.shiftTable({ avgIncome: I, years: y, birthYear }).map((r) => ({ cls: r.shift === 0 ? 'on' : '', cells: [`${r.age}세`, r.shift === 0 ? '정상 개시' : r.shift < 0 ? `${-r.shift}년 조기 · −${pct(-r.shift * NP.EARLY_CUT, 0)}` : `${r.shift}년 연기 · +${pct(r.shift * NP.DEFER_ADD, 1)}`, num(r.monthly), num(r.monthly * 12 * (85 - r.age))] }));
+const penPremiumRows = (I) => NP.premiumTable(I).map((p) => ({ cls: p.year === YEAR ? 'on' : '', cells: [`${p.year}년`, pct(p.rate, 1), num(p.total), num(p.employee), num(p.self)] }));
+
+function penPage(im, y) {
+  const I = im * 10000, url = penUrl(im, y);
+  const p = NP.payback({ avgIncome: I, years: y });
+  const early = NP.pension({ avgIncome: I, years: y, startAge: 60 }), late = NP.pension({ avgIncome: I, years: y, startAge: 70 });
+  const p30 = NP.pension({ avgIncome: I, years: 30 }), p40 = NP.pension({ avgIncome: I, years: 40 });
+  const title = `월 ${manwon(I)} 소득 ${y}년 가입 국민연금 예상 수령액 — 월 약 ${Math.round(p.monthly / 10000)}만원 (참고용 어림)`;
+  const desc = `가입기간 평균 소득월액 ${manwon(I)}으로 국민연금에 ${y}년 가입하면 노령연금은 65세부터 월 약 ${won(p.monthly)}(연 ${won(p.annual)})입니다. 기본연금액 산식 ${NP.DEFAULT_CONST} × (A값 + 본인 소득) × 가입기간 계수로 계산한 어림이며, 60세 조기 수령 ${won(early.monthly)}, 70세 연기 ${won(late.monthly)}, 가입기간별 표와 보험료 인상 일정.`;
+  const body = `
+${crumb([['/pension/', '국민연금 예상 수령액'], [null, `월 ${manwon(I)} · ${y}년`]])}
+<h1 class="title">월 소득 ${manwon(I)}으로 ${y}년 가입하면 국민연금은</h1>
+<p class="meta">${YEAR}년 기준 어림 · 비례상수 ${NP.DEFAULT_CONST} (소득대체율 43%) · A값 ${won(NP.A_VALUE)} · 65세 개시 (1969년생 이후) · 물가 연동·부양가족연금 미반영</p>
+${lead(`가입기간 평균 소득월액이 ${manwon(I)}이고 ${y}년을 채우면, 기본연금액 산식 ${NP.DEFAULT_CONST} × (A값 ${won(NP.A_VALUE)} + 본인 소득 ${won(I)}) × 가입기간 계수(${p.mult.toFixed(2)})로 계산하면 연 ${won(p.annual)}, 월 ${won(p.monthly)}을 65세부터 받습니다. 소득의 ${pct(p.replacement, 1)}입니다. 30년이면 월 ${won(p30.monthly)}, 40년이면 ${won(p40.monthly)}으로 가입기간 1년마다 5%씩 늘어납니다. ${y}년 동안 낸 보험료는 요율 9% 기준 ${won(p.paidTotal)}(직장 가입자 본인 부담 ${won(p.paidSelf)})이라 본인 부담분은 ${Math.floor(p.monthsSelf / 12)}년 ${p.monthsSelf % 12 ? `${p.monthsSelf % 12}개월` : ''}이면 돌려받습니다. 60세부터 조기 수령하면 30% 줄어 월 ${won(early.monthly)}, 70세로 늦추면 36% 늘어 월 ${won(late.monthly)}입니다.`)}
+${hero({ label: '월 예상 수령액 (65세 개시)', value: p.monthly, sub: `연 ${won(p.annual)} · 소득의 ${pct(p.replacement, 1)} · ${y}년 가입 · 지금 돈 기준 어림` })}
+${tiles([{ label: '60세 조기 수령 (−30%)', value: early.monthly }, { label: '70세 연기 수령 (+36%)', value: late.monthly }, { label: `${y}년 낸 보험료 (9% 기준)`, value: p.paidTotal }])}
+${led('계산 흐름', '원', [['A값 (전체 가입자 3년 평균 소득월액)', num(NP.A_VALUE), `${NP.PENSION_ASOF} 적용`], ['B값 (본인 가입기간 평균 소득월액)', num(I), `하한 ${manwon(NP.B_MIN)} · 상한 ${manwon(NP.B_MAX)}`], ['(A + B) × 비례상수', num(Math.round(NP.DEFAULT_CONST * (NP.A_VALUE + I))), `${num(NP.A_VALUE + I)} × ${NP.DEFAULT_CONST}`], [`× 가입기간 계수 (1 + 0.05 × (${y} − 20))`, p.mult.toFixed(2), '10년 0.5 · 20년 1.0 · 40년 2.0'], ['기본연금액 (연)', num(p.base)], ['÷ 12 → 월 수령액 (10원 미만 절사)', num(p.monthly)]])}
+${section('가입기간별', `월 소득 ${manwon(I)} · 65세 개시 · 원`, table(['가입기간', '계수', '월 수령액', '연 수령액', '소득 대비'], penYearsRows(I, y)))}
+${section('소득이 바뀌면', `${y}년 가입 · 월 수령액`, chips(neighbors(PEN_I, im, 3).map((x) => ({ label: short(x * 10000), value: NP.pension({ avgIncome: x * 10000, years: y }).monthly, href: penUrl(x, y), on: x === im }))))}
+${section('조기·연기 수령', '1969년생 이후(정상 개시 65세) 기준 · 조기 1년당 6% 감액, 연기 1년당 7.2% 증액 · 85세까지 누적은 물가 반영 없이 단순 합산', table(['개시 나이', '조정', '월 수령액', '85세까지 누적'], penShiftRows(I, y)))}
+${ad()}
+${section('보험료 인상 일정', `기준소득월액 ${manwon(I)} · 2025년 3월 개정 국민연금법 — 매년 0.5%p씩 올라 2033년 13% · 직장 가입자는 회사가 절반 부담`, table(['연도', '보험료율', '월 보험료', '직장 본인 부담', '지역·임의 가입자'], penPremiumRows(I)))}
+${section('알아두면 좋은 것', null, PEN_TIPS)}
+${section('이어서 계산하기', null, list([
+  { href: '/pension/', title: '국민연금 계산기', sub: '소득·가입기간·출생연도·수급 시기를 직접 넣기' },
+  { href: retireUrl(nearest(RETIRE_PAYS, im), 20), title: `월급 ${manwon(nearest(RETIRE_PAYS, im) * 10000)} 퇴직금`, sub: '20년 근속 세전·세후' },
+  { href: monthlyUrl(nearest(MONTHLIES, im)), title: `월급 ${manwon(nearest(MONTHLIES, im) * 10000)} 실수령액`, sub: '국민연금 보험료를 뗀 뒤 손에 쥐는 돈' },
+  { href: '/goal/', title: '목돈 모으기 시계', sub: '연금 말고 따로 모은다면' },
+]))}
+${PEN_NOTE}`;
+  write(url, shell({ url, title, desc, body, nav: 'retire' }));
+}
+
+function penIndex() {
+  const url = '/pension/';
+  const inp = (id, label, value) => `<label class="ye-f"><span>${label}</span><input id="${id}" type="text" inputmode="numeric" value="${value}"></label>`;
+  const ex = NP.pension({ avgIncome: 3000000, years: 20 });
+  const gridRows = PEN_I.map((im) => ({ cells: [manwon(im * 10000)].concat(PEN_Y.map((y) => `<a href="${penUrl(im, y)}">${num(NP.pension({ avgIncome: im * 10000, years: y }).monthly)}</a>`)) }));
+  const shiftOpts = [];
+  for (let s = -5; s <= 5; s++) shiftOpts.push(`<option value="${s}"${s === 0 ? ' selected' : ''}>${s === 0 ? '정상 개시' : s < 0 ? `${-s}년 조기 (−${pct(-s * NP.EARLY_CUT, 0)})` : `${s}년 연기 (+${pct(s * NP.DEFER_ADD, 1)})`}</option>`);
+  const body = `
+${crumb([['/', '홈'], [null, '국민연금 예상 수령액']])}
+<h1 class="title">국민연금 예상 수령액 계산기 — 소득·가입기간별 월 수령액</h1>
+<p class="meta">국민연금법 기본연금액 산식 · ${YEAR}년 기준 어림 (비례상수 ${NP.DEFAULT_CONST} · A값 ${won(NP.A_VALUE)}) · 조기·연기 · 입력값은 이 기기 밖으로 나가지 않습니다</p>
+${lead(`노령연금은 기본연금액 = ${NP.DEFAULT_CONST} × (A값 + 본인 평균 소득) × (1 + 0.05 × (가입연수 − 20))으로 정해집니다. A값은 전체 가입자의 3년 평균 소득월액(${won(NP.A_VALUE)})이라 소득이 적을수록 낸 돈 대비 많이 받고, 가입기간 1년마다 5%씩 커집니다. 월 소득 300만원으로 20년 가입하면 월 약 ${won(ex.monthly)}, 40년이면 ${won(NP.pension({ avgIncome: 3000000, years: 40 }).monthly)}입니다. 1969년생 이후는 65세부터 받고, 5년 앞당기면 30% 덜, 5년 늦추면 36% 더 받습니다.`)}
+<form class="quick ye-form" id="pn-form">
+<div class="ye-grid">
+${inp('pn-income', '가입기간 평균 소득월액 (만원)', 300)}
+${inp('pn-years', '가입기간 (년)', 20)}
+${inp('pn-birth', '출생연도', 1985)}
+<label class="ye-f"><span>수급 시기</span><select id="pn-shift">${shiftOpts.join('')}</select></label>
+</div>
+</form>
+<div class="hero"><div class="hero-label">월 예상 수령액</div><div class="hero-num"><span class="num" id="pn-monthly">0</span><span class="unit">원</span></div><div class="hero-sub" id="pn-sub">계산 중</div></div>
+<div class="tiles"><div class="tile"><small>연 수령액</small><span class="num" id="pn-annual">0</span></div><div class="tile"><small>수급 개시</small><span class="num" id="pn-age">-</span></div><div class="tile"><small>소득 대비</small><span class="num" id="pn-rep">0%</span></div></div>
+<div id="pn-tips"></div>
+<div class="ledger"><div class="lg-head"><h2>계산 흐름</h2><span>원</span></div><div id="pn-rows"></div></div>
+<p class="sub" style="margin-top:8px"><a id="pn-link" href="${penUrl(300, 20)}">월 300만원 · 20년 표로 →</a></p>
+${section('가입기간별', '입력한 소득 기준 · 원', `<div class="tbl"><table><thead><tr><th>가입기간</th><th>계수</th><th>월 수령액</th><th>연 수령액</th></tr></thead><tbody id="pn-years-rows"></tbody></table></div>`)}
+${section('조기·연기 수령', '입력한 출생연도의 정상 개시 연령 기준 · 85세까지 누적은 단순 합산', `<div class="tbl"><table><thead><tr><th>개시 나이</th><th>조정</th><th>월 수령액</th><th>85세까지 누적</th></tr></thead><tbody id="pn-shift-rows"></tbody></table></div>`)}
+${section('소득 × 가입기간 월 수령액표', '65세 개시 · 원 · 금액을 누르면 계산 흐름과 조기·연기, 보험료 표', table(['평균 소득월액'].concat(PEN_Y.map((y) => `${y}년`)), gridRows))}
+${ad()}
+${section('수급 개시 연령', '국민연금법 부칙 · 출생연도별', table(['출생연도', '노령연금 개시', '조기연금 가능 (최대 5년)'], [['~1952년', 60], ['1953~1956년', 61], ['1957~1960년', 62], ['1961~1964년', 63], ['1965~1968년', 64], ['1969년 이후', 65]].map(([b, a]) => ({ cells: [b, `${a}세`, `${a - 5}세부터`] }))))}
+${section('보험료 인상 일정', '2025년 3월 개정 · 월 소득 300만원 기준 · 직장 가입자는 회사가 절반', table(['연도', '보험료율', '월 보험료', '직장 본인 부담', '지역·임의 가입자'], penPremiumRows(3000000)))}
+${section('자주 묻는 것', null, `<div class="doc">
+<p><b>A값이 뭔가요?</b> 연금을 받기 시작하기 전 3년 동안 전체 가입자의 평균 소득월액입니다(${NP.PENSION_ASOF} 적용 ${won(NP.A_VALUE)}). 산식에 A값이 절반 들어가 있어 소득이 적은 사람은 낸 돈에 비해 많이, 많은 사람은 적게 받는 소득재분배 장치입니다.</p>
+<p><b>소득대체율 43%는 무슨 뜻인가요?</b> 40년 가입한 평균 소득자(B값 = A값)가 가입기간 평균 소득의 43%를 연금으로 받는다는 뜻입니다. 2025년 3월 개정으로 2026년부터 43%로 고정됐고(비례상수 1.29), 가입기간이 20년이면 절반인 약 21.5%, 10년이면 약 10.8%가 됩니다.</p>
+<p><b>보험료가 오르면 연금도 오르나요?</b> 보험료율(9% → 13%)은 내는 돈이고, 받는 돈은 소득대체율(43%)이 정합니다. 개정으로 내는 돈은 늘고 받는 돈은 40%에서 43%로 조금 늘었습니다.</p>
+<p><b>지역 가입자는 다른가요?</b> 산식은 같고 보험료를 본인이 전액(2026년 9.5%) 내는 점만 다릅니다. 직장 가입자는 회사가 절반을 내 줍니다.</p>
+<p><b>부부가 둘 다 받을 수 있나요?</b> 각자 가입기간이 10년 이상이면 각자의 노령연금을 받습니다. 한 사람이 사망하면 남은 배우자는 본인 노령연금과 유족연금(사망자 연금의 40~60%) 중 하나를 고르거나, 본인 연금에 유족연금의 30%를 더해 받습니다.</p>
+</div>`)}
+${section('알아두면 좋은 것', null, PEN_TIPS)}
+${section('이어서 계산하기', null, list([{ href: '/retire/', title: '퇴직금 세후', sub: '은퇴 자금의 다른 한 축' }, { href: '/salary/', title: '연봉 실수령액표', sub: '국민연금 보험료가 빠진 월 실수령' }, { href: '/rates/', title: `${YEAR}년 4대보험 요율표`, sub: '국민연금 근로자 부담률' }]))}
+${PEN_NOTE}`;
+  write(url, shell({ url, title: `국민연금 예상 수령액 계산기 — 월 소득·가입기간별 노령연금 월 수령액 (${YEAR}년 어림)`, desc: '가입기간 평균 소득월액과 가입기간, 출생연도를 넣으면 국민연금 노령연금 예상 수령액을 기본연금액 산식으로 어림합니다. 소득 100~600만원 × 가입 10~40년 표, 조기·연기 수령액, 수급 개시 연령, 2033년까지 보험료 인상 일정.', body, nav: 'retire', scripts: ['/js/engine.js', '/js/pension.js'] }));
+}
+
+/* ---------- 양도소득세 ---------- */
+const CAP_SALES = [30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000, 120000, 150000, 200000];
+const capCosts = (s) => range(10000, s - 10000, 10000);
+const capUrl = (s, c) => `/capgain/${s}/${c}/`;
+const CAP_HOLD = 5, CAP_LIVE = 5;
+const capCalc = (S, C, o = {}) => CG.capitalGains({ sale: S, cost: C, expense: 0, holdYears: CAP_HOLD, liveYears: CAP_LIVE, oneHouse: true, ...o });
+const capThree = (S, C, hold = CAP_HOLD, expense = 0) => ({ one: capCalc(S, C, { holdYears: hold, liveYears: hold, expense }), gen: capCalc(S, C, { oneHouse: false, liveYears: 0, holdYears: hold, expense }), sur: capCalc(S, C, { oneHouse: false, liveYears: 0, holdYears: hold, expense, multi: 2 }) });
+const capRateText = (r) => r.base <= 0 ? '—' : r.kind === 'short1' ? '70% (보유 1년 미만)' : r.kind === 'short2' ? '60% (보유 2년 미만)' : r.kind === 'surcharge' ? `${pct(r.rate, 0)} (기본 ${pct(r.rate - r.surcharge, 0)} + ${pct(r.surcharge, 0)}p) − ${num(r.sub)}` : `${pct(r.rate, 0)} − 누진공제 ${num(r.sub)}`;
+const capLtText = (r) => r.taxableGain <= 0 ? '—' : r.ltRate ? `${pct(r.ltRate, 0)} (${r.ltTable === 2 ? `보유 ${pct(r.ltHold, 0)} + 거주 ${pct(r.ltLive, 0)}` : '표1'}) · −${num(r.ltd)}` : r.multi ? '중과 대상 배제' : '3년 미만 없음';
+const capLedger = (t) => [
+  { cells: ['양도가액', num(t.one.sale), num(t.gen.sale), num(t.sur.sale)] },
+  { cells: ['취득가액', neg(t.one.cost), neg(t.gen.cost), neg(t.sur.cost)] },
+  { cells: ['필요경비', neg(t.one.expense), neg(t.gen.expense), neg(t.sur.expense)] },
+  { cls: 'sum', cells: ['양도차익', num(t.one.gain), num(t.gen.gain), num(t.sur.gain)] },
+  { cells: ['비과세 양도차익 (12억 이하분)', t.one.exempt ? neg(t.one.exemptGain) : '비과세 아님', '—', '—'] },
+  { cells: ['과세 양도차익', num(t.one.taxableGain), num(t.gen.taxableGain), num(t.sur.taxableGain)] },
+  { cells: ['장기보유특별공제', capLtText(t.one), capLtText(t.gen), capLtText(t.sur)] },
+  { cells: ['양도소득금액', num(t.one.income), num(t.gen.income), num(t.sur.income)] },
+  { cells: ['기본공제', neg(t.one.basic), neg(t.gen.basic), neg(t.sur.basic)] },
+  { cls: 'sum', cells: ['과세표준', num(t.one.base), num(t.gen.base), num(t.sur.base)] },
+  { cells: ['세율', capRateText(t.one), capRateText(t.gen), capRateText(t.sur)] },
+  { cells: ['양도소득세', num(t.one.tax), num(t.gen.tax), num(t.sur.tax)] },
+  { cells: ['지방소득세 10%', num(t.one.local), num(t.gen.local), num(t.sur.local)] },
+  { cls: 'sum', cells: ['총 세액', num(t.one.total), num(t.gen.total), num(t.sur.total)] },
+  { cells: ['양도차익 대비', pct(t.one.effective, 1), pct(t.gen.effective, 1), pct(t.sur.effective, 1)] },
+];
+const CAP_HEAD = ['항목', '1세대 1주택<br><small>2년 이상 보유·거주</small>', '일반 과세<br><small>비과세 요건 미충족 · 중과 유예</small>', '2주택 중과 시<br><small>조정대상지역 +20%p</small>'];
+const CAP_NOTE = `<p class="note">소득세법 제89조(1세대 1주택 비과세)·제95조(장기보유특별공제)·제103조(기본공제)·제104조(세율)와 지방세법의 지방소득세 10%를 ${CG.CAP_ASOF} 기준으로 계산했습니다. 조정대상지역 다주택 중과는 ${CG.SURCHARGE_UNTIL}까지 한시 배제되어 기본 계산에 넣지 않았고, 취득가액 환산·감정, 상속·증여로 취득한 주택, 일시적 2주택·상생임대 등 특례, 비거주자는 반영하지 않았습니다. 참고용이며 실제 신고는 홈택스 모의계산과 세무사 상담으로 확인하세요. <a href="/method/">계산 기준 보기</a></p>`;
+const CAP_TIPS = `<div class="doc">
+<p><b>1세대 1주택 비과세 요건.</b> 양도일 현재 1세대가 국내에 주택 1채를 2년 이상 보유했으면 양도가액 12억원까지 비과세입니다. 2017년 8월 3일 이후 조정대상지역에서 취득한 주택은 보유 중 2년 이상 거주도 해야 합니다. 12억원을 넘는 고가주택은 양도차익 가운데 (양도가액 − 12억) ÷ 양도가액 비율만큼만 과세합니다.</p>
+<p><b>장기보유특별공제는 두 가지 표.</b> 1세대 1주택(2년 이상 거주)은 보유기간 연 4%(3년부터, 최대 40%)와 거주기간 연 4%(최대 40%)를 더해 최대 80%까지 빼 줍니다. 그 밖의 주택은 보유 3년부터 연 2%, 15년 이상 30%가 최대입니다. 중과 대상 다주택은 공제가 없습니다.</p>
+<p><b>필요경비를 챙기면 세금이 줄어듭니다.</b> 취득 때 낸 취득세·등록면허세, 법무사 비용, 중개수수료, 양도 때 중개수수료·신고 대행 수수료, 발코니 확장·새시·보일러 교체 같은 자본적 지출이 필요경비입니다. 도배·장판·싱크대 교체 같은 수리비(수익적 지출)는 인정되지 않습니다. 영수증과 이체 기록을 남겨 두세요.</p>
+<p><b>다주택 중과는 ${CG.SURCHARGE_UNTIL}까지 유예.</b> 조정대상지역 2주택 +20%p, 3주택 이상 +30%p 중과와 장기보유특별공제 배제는 2022년 5월 10일부터 한시적으로 적용하지 않고 있습니다. 그 뒤에 팔 계획이면 연장 여부를 확인하세요.</p>
+<p><b>신고는 양도일이 속한 달의 말일부터 2개월 안에.</b> 홈택스 '양도소득세 예정신고'로 신고·납부하고, 세액이 1,000만원을 넘으면 2개월 안에 나눠 낼 수 있습니다. 같은 해에 두 건 이상 양도했으면 다음 해 5월 확정신고로 합산합니다. 지방소득세(10%)는 위택스에 따로 신고합니다.</p>
+<p><b>보유 2년을 못 채우면 세금이 큽니다.</b> 1년 미만 70%, 2년 미만 60%의 단일세율이 과세표준 전체에 붙고 장기보유특별공제도 없습니다. 이사 계획이 있다면 취득일(잔금일·등기접수일 중 빠른 날)부터 2년을 확인하세요.</p>
+</div>`;
+
+function capPage(s, c) {
+  const S = s * 10000, C = c * 10000, url = capUrl(s, c);
+  const t = capThree(S, C), { one, gen, sur } = t;
+  const over = S > CG.EXEMPT_PRICE;
+  const title = over
+    ? `양도가 ${short(S)} · 취득가 ${short(C)} 양도소득세 — 1주택 ${short(one.total)}원 · 일반 ${short(gen.total)}원 (보유 5년, ${CG.CAP_ASOF})`
+    : `양도가 ${short(S)} · 취득가 ${short(C)} 양도소득세 — 1주택 비과세 0원 · 일반 ${short(gen.total)}원 (보유 5년, ${CG.CAP_ASOF})`;
+  const desc = `양도가액 ${manwon(S)}, 취득가액 ${manwon(C)} 주택의 양도차익은 ${manwon(one.gain)}입니다. 1세대 1주택(2년 이상 보유·거주)이면 ${over ? `12억원 초과분만 과세해 장기보유특별공제 ${pct(one.ltRate, 0)}를 뺀 뒤 총 ${won(one.total)}` : '12억원 이하라 전액 비과세'}, 비과세 요건이 안 되는 일반 과세는 ${won(gen.total)}, 조정대상지역 2주택 중과를 적용하면 ${won(sur.total)}(${CG.SURCHARGE_UNTIL}까지 유예). 보유기간·필요경비별 표와 계산 흐름.`;
+  const holdRows = [[0.5, '1년 미만'], [1, '1년 (2년 미만)'], [2, '2년'], [3, '3년'], [5, '5년'], [10, '10년'], [15, '15년']].map(([h, label]) => { const x = capThree(S, C, h); return { cls: h === CAP_HOLD ? 'on' : '', cells: [label, num(x.one.total), num(x.gen.total), num(x.sur.total)] }; });
+  const expRows = [0, 10000000, 30000000, 50000000].map((e) => { const x = capThree(S, C, CAP_HOLD, e); return { cls: e === 0 ? 'on' : '', cells: [e ? manwon(e) : '없음', num(x.one.gain), num(x.one.total), num(x.gen.total)] }; });
+  const body = `
+${crumb([['/capgain/', '양도소득세'], [null, `양도가 ${short(S)} · 취득가 ${short(C)}`]])}
+<h1 class="title">양도가 ${manwon(S)} · 취득가 ${manwon(C)} 주택의 양도소득세는</h1>
+<p class="meta">${CG.CAP_ASOF} 소득세법 · 필요경비 0원 · 보유 5년 · 거주 5년 · 지방소득세 10% 포함 · 다주택 중과 유예 기준</p>
+${lead(`양도차익은 ${manwon(S)} − ${manwon(C)} = ${manwon(one.gain)}입니다. ${over ? `1세대 1주택으로 2년 이상 보유·거주했다면 양도가액 12억원을 넘는 비율(${pct((S - CG.EXEMPT_PRICE) / S, 1)})만큼인 ${won(one.taxableGain)}만 과세하고, 장기보유특별공제 ${pct(one.ltRate, 0)}(보유 5년 ${pct(one.ltHold, 0)} + 거주 5년 ${pct(one.ltLive, 0)}) ${won(one.ltd)}과 기본공제 250만원을 빼면 과세표준 ${won(one.base)}, 양도소득세 ${won(one.tax)}에 지방소득세 ${won(one.local)}을 더해 총 ${won(one.total)}입니다.` : `1세대 1주택으로 2년 이상 보유(조정대상지역 취득분은 2년 이상 거주)했다면 양도가액이 12억원 이하라 전액 비과세, 세금이 0원입니다.`} 비과세 요건을 채우지 못한 일반 과세라면 장기보유특별공제 ${pct(gen.ltRate, 0)}(5년 보유)만 적용되어 총 ${won(gen.total)}이고, 조정대상지역 2주택 중과(+20%p, 장특공제 없음)를 적용하면 ${won(sur.total)}입니다. 중과는 ${CG.SURCHARGE_UNTIL}까지 유예 중입니다.`)}
+${hero({ label: '1세대 1주택 총 세액 (양도세 + 지방소득세)', value: one.total, sub: over ? `양도차익 ${manwon(one.gain)} 가운데 12억 초과분 ${manwon(one.taxableGain)} 과세 · 장특공제 ${pct(one.ltRate, 0)} · 실효세율 ${pct(one.effective, 1)}` : `양도가액 12억원 이하 · 2년 이상 보유(조정대상지역은 거주 2년)면 전액 비과세` })}
+${tiles([{ label: '양도차익', value: one.gain }, { label: '일반 과세 (비과세 아닐 때)', value: gen.total }, { label: '2주택 중과 시', value: sur.total }])}
+${section('계산 흐름', `양도가 ${manwon(S)} · 취득가 ${manwon(C)} · 보유 5년 · 원`, table(CAP_HEAD, capLedger(t)))}
+${section('보유기간별 총 세액', '1세대 1주택은 거주기간 = 보유기간으로 가정 · 2년 미만은 단기세율 60~70% · 원', table(['보유기간', '1세대 1주택', '일반 과세', '2주택 중과'], holdRows))}
+${section('필요경비를 넣으면', '취득세·중개수수료·법무사비·자본적 지출 합계 · 보유 5년 · 원', table(['필요경비', '양도차익', '1세대 1주택', '일반 과세'], expRows))}
+${section('취득가가 바뀌면', `양도가 ${manwon(S)} · 일반 과세 총 세액`, chips(neighbors(capCosts(s), c, 3).map((x) => ({ label: short(x * 10000), value: capThree(S, x * 10000).gen.total, href: capUrl(s, x), on: x === c }))))}
+${section('양도가가 바뀌면', `취득가 ${manwon(C)} · 일반 과세 총 세액`, chips(neighbors(CAP_SALES.filter((x) => x > c), s, 3).map((x) => ({ label: short(x * 10000), value: capThree(x * 10000, C).gen.total, href: capUrl(x, c), on: x === s }))))}
+${ad()}
+${section('알아두면 좋은 것', null, CAP_TIPS)}
+${section('이어서 계산하기', null, list([
+  { href: '/capgain/', title: '양도소득세 계산기', sub: '양도가·취득가·필요경비·보유·거주 기간을 직접 넣기' },
+  { href: '/acquisition-tax/', title: '주택 취득세', sub: '살 때 낸 취득세는 필요경비' },
+  { href: '/bokbi/', title: '부동산 복비', sub: '중개수수료도 필요경비' },
+  { href: '/gift-tax/', title: '증여세', sub: '팔지 않고 자녀에게 넘기면' },
+]))}
+${CAP_NOTE}`;
+  write(url, shell({ url, title, desc, body }));
+}
+
+function capIndex() {
+  const url = '/capgain/';
+  const inp = (id, label, value) => `<label class="ye-f"><span>${label}</span><input id="${id}" type="text" inputmode="numeric" value="${value}"></label>`;
+  const ex = capThree(1500000000, 900000000);
+  const groups = CAP_SALES.map((s) => section(`양도가 ${manwon(s * 10000)}`, `보유 5년 · 필요경비 0원 · 원 · 취득가를 누르면 계산 흐름과 보유기간별 표`, table(['취득가', '양도차익', '1세대 1주택', '일반 과세', '2주택 중과'], capCosts(s).map((c) => { const t = capThree(s * 10000, c * 10000); return { cells: [`<a href="${capUrl(s, c)}">${manwon(c * 10000)}</a>`, num(t.one.gain), num(t.one.total), num(t.gen.total), num(t.sur.total)] }; })))).join('\n');
+  const body = `
+${crumb([['/', '홈'], [null, '양도소득세']])}
+<h1 class="title">양도소득세 계산기 — 주택 양도가·취득가별 세금과 1세대 1주택 비과세</h1>
+<p class="meta">${CG.CAP_ASOF} 소득세법 · 12억 비과세 · 장기보유특별공제 · 단기세율 · 다주택 중과 옵션 · 지방소득세 포함 · 입력값은 이 기기 밖으로 나가지 않습니다</p>
+${lead(`양도소득세는 양도가액에서 취득가액과 필요경비를 뺀 양도차익에 장기보유특별공제와 기본공제 250만원을 뺀 과세표준에 6~45% 누진세율을 곱하고, 지방소득세 10%를 더한 금액입니다. 1세대 1주택을 2년 이상 보유(조정대상지역 취득분은 2년 거주)하고 12억원 이하에 팔면 전액 비과세이고, 12억원을 넘으면 초과 비율만큼만 과세합니다. 15억원에 판 9억원 집(보유·거주 5년)은 1주택이면 ${won(ex.one.total)}, 비과세 요건이 안 되면 ${won(ex.gen.total)}입니다. 보유 1년 미만은 70%, 2년 미만은 60% 단일세율입니다.`)}
+<form class="quick ye-form" id="cg-form">
+<div class="ye-grid">
+${inp('cg-sale', '양도가액 (만원)', 150000)}
+${inp('cg-cost', '취득가액 (만원)', 90000)}
+${inp('cg-exp', '필요경비 (만원)', 3000)}
+${inp('cg-hold', '보유기간 (년)', 5)}
+${inp('cg-live', '거주기간 (년)', 5)}
+<label class="ye-f"><span>주택 수</span><select id="cg-house"><option value="1">1세대 1주택</option><option value="2">2주택</option><option value="3">3주택 이상</option></select></label>
+</div>
+<div class="ye-checks"><label><input type="checkbox" id="cg-adj"> 조정대상지역에서 취득 (비과세에 거주 2년 필요)</label><label><input type="checkbox" id="cg-sur"> 다주택 중과 포함 계산 (${CG.SURCHARGE_UNTIL}까지 유예 중)</label></div>
+</form>
+<div class="hero"><div class="hero-label">총 세액 (양도소득세 + 지방소득세)</div><div class="hero-num"><span class="num" id="cg-total">0</span><span class="unit">원</span></div><div class="hero-sub" id="cg-sub">계산 중</div></div>
+<div class="tiles"><div class="tile"><small>양도차익</small><span class="num" id="cg-gain">0</span></div><div class="tile"><small>양도소득세</small><span class="num" id="cg-tax">0</span></div><div class="tile"><small>지방소득세</small><span class="num" id="cg-local">0</span></div></div>
+<div id="cg-tips"></div>
+<div class="ledger"><div class="lg-head"><h2>계산 흐름</h2><span>원</span></div><div id="cg-rows"></div></div>
+<p class="sub" style="margin-top:8px"><a id="cg-link" href="${capUrl(150000, 90000)}">양도가 15억 · 취득가 9억 표로 →</a></p>
+${section('세율', `${CG.CAP_ASOF} 소득세법 제104조 · 지방소득세 10% 별도`, table(['과세표준', '세율', '누진공제'], CG.BRACKETS.map(([lim, r, sub], i) => ({ cells: [i === 0 ? `${manwon(lim)} 이하` : lim === Infinity ? `${manwon(CG.BRACKETS[i - 1][0])} 초과` : `${manwon(CG.BRACKETS[i - 1][0])} 초과 ${manwon(lim)} 이하`, pct(r, 0), sub ? num(sub) : '—'] })).concat([{ cells: ['보유 1년 미만 (주택·입주권·분양권)', '70%', '단일세율'] }, { cells: ['보유 1년 이상 2년 미만', '60%', '단일세율'] }, { cells: ['조정대상지역 2주택 · 3주택 이상', '기본세율 + 20%p · + 30%p', `${CG.SURCHARGE_UNTIL}까지 유예`] }])))}
+${section('장기보유특별공제율', '소득세법 제95조 · 보유 3년 이상부터', table(['보유기간', '일반 (표1)', '1세대 1주택 보유분 (표2)', '1세대 1주택 거주분 (표2)'], [3, 4, 5, 6, 7, 8, 9, 10, 15].map((y) => ({ cells: [y === 15 ? '15년 이상' : y === 10 ? '10년 이상' : `${y}년`, pct(CG.longTermRate(y, 0, 1).rate, 0), pct(CG.longTermRate(y, 0, 2).hold, 0), pct(CG.longTermRate(y, y, 2).live, 0)] }))))}
+<p class="sub" style="margin-top:8px">표2는 양도가액 12억원 초과 1세대 1주택에 거주 2년 이상일 때 적용하며 보유분과 거주분을 더해 최대 80%입니다. 중과 대상 다주택은 공제가 없습니다.</p>
+${ad()}
+${groups}
+${section('자주 묻는 것', null, `<div class="doc">
+<p><b>12억 넘게 팔면 전부 과세인가요?</b> 아닙니다. 양도차익 × (양도가액 − 12억) ÷ 양도가액만 과세합니다. 15억원에 팔면 양도차익의 20%만 과세 대상이고, 여기에 장기보유특별공제(최대 80%)까지 빠지니 실제 세금은 양도차익의 몇 % 수준입니다.</p>
+<p><b>취득가액을 모르면요?</b> 매매계약서·등기부·계좌이체 기록으로 실지거래가액을 증명합니다. 오래된 집이라 증빙이 없으면 기준시가로 환산한 취득가액을 쓸 수 있는데, 실제보다 낮게 잡히는 일이 많아 세금이 늘어납니다.</p>
+<p><b>일시적 2주택도 비과세되나요?</b> 종전 주택을 취득한 지 1년 이상 지나 새집을 사고, 새집 취득일부터 3년 안에 종전 주택을 팔면(종전 주택은 2년 이상 보유·거주 요건 충족) 1주택으로 보아 비과세됩니다. 이 계산기에서는 '1세대 1주택'을 고르면 됩니다.</p>
+<p><b>부부 공동명의면?</b> 각자 지분만큼 양도차익을 나누어 각자 신고하고 기본공제 250만원도 각자 받습니다. 누진세율이 낮은 구간에 나눠 걸려 단독명의보다 세금이 줄어드는 것이 보통입니다.</p>
+<p><b>손해 보고 팔면?</b> 양도차손이면 세금이 없고, 같은 해에 다른 부동산 양도차익이 있으면 서로 통산합니다. 다음 해로 넘기지는 못합니다.</p>
+</div>`)}
+${section('알아두면 좋은 것', null, CAP_TIPS)}
+${section('이어서 계산하기', null, list([{ href: '/acquisition-tax/', title: '주택 취득세', sub: '살 때 내는 세금 · 필요경비' }, { href: '/property-tax/', title: '주택 재산세', sub: '보유하는 동안 해마다' }, { href: '/gift-tax/', title: '증여세', sub: '팔지 않고 넘길 때' }, { href: '/inheritance-tax/', title: '상속세', sub: '상속받은 집을 팔 때 취득가액은 상속 당시 평가액' }]))}
+${CAP_NOTE}`;
+  write(url, shell({ url, title: `양도소득세 계산기 — 주택 양도가·취득가별 세금, 1세대 1주택 12억 비과세·장특공제 (${CG.CAP_ASOF})`, desc: '양도가액·취득가액·필요경비·보유·거주 기간을 넣으면 1세대 1주택 비과세와 12억 초과분 과세, 장기보유특별공제, 기본공제, 누진세율, 지방소득세까지 계산합니다. 양도가 3억~20억 × 취득가별 세액표, 다주택 중과 옵션, 단기세율.', body, scripts: ['/js/engine.js', '/js/capgain.js'] }));
+}
+
+/* ---------- 자동차 유지비 ---------- */
+const CARCOST_P = range(2000, 8000, 500);
+const carcostUrl = (p) => `/carcost/${p}/`;
+const carcostCc = (pm) => pm <= 2500 ? 1598 : pm <= 4000 ? 1999 : pm <= 5500 ? 2497 : 3470;
+const carcostCalc = (pm, o = {}) => CC.carCost({ price: pm * 10000, cc: carcostCc(pm), year: YEAR, ...o });
+const CARCOST_NOTE = `<p class="note">유류비·보험료·정비비·주차비는 입력값과 전국 평균 어림이고 자동차세는 지방세법 제127조·제130조(배기량·차령 경감, 전기차 정액), 감가상각은 차량가 × 첫해 20%·2~3년차 15%·4년차부터 10%의 단순 정액 어림입니다. 취득세(7%)·공채·검사비·세차·과태료·대출 이자는 넣지 않았습니다. 참고용이며 실제 비용은 차종·운전 습관·보험 가입 조건에 따라 크게 다릅니다. <a href="/method/">계산 기준 보기</a></p>`;
+const CARCOST_TIPS = `<div class="doc">
+<p><b>가장 큰 비용은 감가상각입니다.</b> 새 차는 첫해에 값의 20% 안팎, 3년이면 40% 가까이 떨어집니다. 눈에 보이지 않지만 팔 때 그대로 확정되는 비용이라, 유지비를 따질 때 가장 먼저 넣어야 합니다. 3년 된 중고차를 사면 이 부분이 크게 줄어듭니다.</p>
+<p><b>보험료는 사람마다 두 배 넘게 차이 납니다.</b> 나이·운전 경력·사고 이력·차종·특약(운전자 한정, 블랙박스, 마일리지)에 따라 연 50만원에서 150만원을 넘기도 합니다. 만 26세 미만이나 첫 가입은 훨씬 비쌉니다. 다이렉트 보험과 마일리지 특약(연 1만km 이하)으로 줄일 수 있습니다.</p>
+<p><b>살 때 드는 돈은 따로.</b> 취득세는 차값의 7%(경차 4%), 여기에 공채 매입(지역별)·번호판·탁송료가 붙어 3,000만원 차면 200만원 안팎이 첫해에 더 나갑니다. 할부로 사면 이자도 더해집니다.</p>
+<p><b>정비·소모품.</b> 엔진오일(연 1~2회, 5~10만원), 타이어(4년마다 40~80만원), 브레이크 패드, 배터리(3~4년), 자동차 검사(2년마다 2~3만원)를 평균하면 연 50만원 안팎이고, 5년을 넘기면 늘어납니다. 전기차는 엔진오일이 없어 절반 이하입니다.</p>
+<p><b>전기차는 연료비가 절반, 세금은 1/4.</b> 전기 350원/kWh(공용 충전 기준, 집 완속은 더 쌈)에 5km/kWh면 km당 70원으로 휘발유 12km/L(km당 137원)의 절반이고 자동차세는 정액 13만원입니다. 대신 보험료가 조금 비싸고 감가는 더 빠른 편입니다.</p>
+<p><b>주차비가 복병.</b> 아파트는 월 1~3만원 수준이지만 도심 월 주차는 10~30만원이고, 출퇴근 통행료·주유소 세차까지 더하면 월 5만원은 최소치입니다.</p>
+</div>`;
+const carcostLedger = (c) => c.items.map((r) => [r.label, num(r.annual), `${r.note} · 월 ${won(r.monthly)} · ${pct(r.share, 0)}`]);
+
+function carcostPage(pm) {
+  const P = pm * 10000, url = carcostUrl(pm), c = carcostCalc(pm);
+  const c2 = carcostCalc(pm, { age: 2 }), c4 = carcostCalc(pm, { age: 4 });
+  const title = `차량가 ${manwon(P)} 자동차 유지비 — 월 약 ${Math.round(c.monthly / 10000)}만원 (유류비·보험·세금·감가 포함)`;
+  const desc = `차량가 ${manwon(P)} 휘발유차(연비 ${c.eff}km/L, 연 ${num(c.km)}km, ${num(c.cc)}cc)의 유지비는 유류비 ${won(c.fuelCost)}, 자동차세 ${won(c.tax)}, 보험료 ${won(c.insurance)}, 정비 ${won(c.maintenance)}, 주차·통행료 ${won(c.parking)}, 첫해 감가상각 ${won(c.depreciation)}으로 연 ${won(c.annual)}, 월 ${won(c.monthly)}입니다. 감가를 뺀 현금 지출은 월 ${won(c.cashMonthly)}, km당 ${won(c.perKm)}. 주행거리·연식·연료별 표.`;
+  const kmRows = [10000, 15000, 20000, 30000].map((k) => { const x = carcostCalc(pm, { km: k }); return { cls: k === c.km ? 'on' : '', cells: [`${num(k)}km`, num(x.fuelCost), num(x.monthly), num(x.cashMonthly), num(x.perKm)] }; });
+  const ageRows = [1, 2, 3, 4, 5, 7, 10].map((a) => { const x = carcostCalc(pm, { age: a }); return { cls: a === 1 ? 'on' : '', cells: [`${a}년차`, pct(x.depRate, 0), num(x.depreciation), num(x.tax), num(x.monthly), num(x.cashMonthly)] }; });
+  const fuelRows = Object.values(CC.FUELS).map((F) => { const x = carcostCalc(pm, { fuel: F.key }); return { cls: F.key === 'gasoline' ? 'on' : '', cells: [`${F.label} (${F.eff}${F.effUnit} · ${num(F.price)}원/${F.unit})`, num(x.fuelCost), num(x.tax), num(x.monthly), num(x.perKm)] }; });
+  const body = `
+${crumb([['/carcost/', '자동차 유지비'], [null, `차량가 ${manwon(P)}`]])}
+<h1 class="title">차량가 ${manwon(P)} 자동차 유지비는 한 달에</h1>
+<p class="meta">휘발유 ${c.eff}km/L · ${num(c.fuelPrice)}원/L · 연 ${num(c.km)}km · ${num(c.cc)}cc 자동차세 · 보험 ${manwon(c.insurance)} · 정비 ${manwon(c.maintenance)} · 주차·통행 월 ${manwon(c.parking / 12)} · 첫해 감가 ${pct(c.depRate, 0)} 기준</p>
+${lead(`차량가 ${manwon(P)} 휘발유차를 1년에 ${num(c.km)}km 타면 유류비 ${won(c.fuelCost)}, 자동차세 ${won(c.tax)}(${num(c.cc)}cc), 보험료 ${won(c.insurance)}, 정비·소모품 ${won(c.maintenance)}, 주차·통행료 ${won(c.parking)}에 첫해 감가상각 ${won(c.depreciation)}을 더해 연 ${won(c.annual)}, 월 ${won(c.monthly)}이 듭니다. 감가를 빼고 실제로 통장에서 나가는 돈은 월 ${won(c.cashMonthly)}이고 km당 ${won(c.perKm)}입니다. 2년차부터는 감가가 15%로 줄어 월 ${won(c2.monthly)}, 4년차부터 10%와 자동차세 경감으로 월 ${won(c4.monthly)}이 됩니다.`)}
+${hero({ label: '월 유지비 (감가상각 포함 · 첫해)', value: c.monthly, sub: `연 ${won(c.annual)} · 감가 제외 현금 지출 월 ${won(c.cashMonthly)} · km당 ${won(c.perKm)}` })}
+${tiles([{ label: '현금 지출 (감가 제외) 월', value: c.cashMonthly }, { label: 'km당 비용', value: c.perKm }, { label: '연 합계', value: c.annual }])}
+${led('항목별 연 비용', '원 · 1년', carcostLedger(c))}
+${section('주행거리별', `차량가 ${manwon(P)} · 휘발유 ${c.eff}km/L · 첫해 · 원`, table(['연 주행거리', '유류비 (연)', '월 유지비', '현금 지출 (월)', 'km당'], kmRows))}
+${section('연식별', `연 ${num(c.km)}km · 감가율과 자동차세 경감이 바뀜 · 원`, table(['연식', '감가율', '감가상각 (연)', '자동차세', '월 유지비', '현금 지출 (월)'], ageRows))}
+${section('연료별', `차량가 ${manwon(P)} · 연 ${num(c.km)}km · 연비는 연료별 평균 가정 · 전기차 자동차세 13만원 · 원`, table(['연료 (연비 · 단가)', '유류비 (연)', '자동차세', '월 유지비', 'km당'], fuelRows))}
+${section('차량가가 바뀌면', '첫해 월 유지비', chips(neighbors(CARCOST_P, pm, 3).map((x) => ({ label: short(x * 10000), value: carcostCalc(x).monthly, href: carcostUrl(x), on: x === pm }))))}
+${ad()}
+${section('알아두면 좋은 것', null, CARCOST_TIPS)}
+${section('이어서 계산하기', null, list([
+  { href: '/carcost/', title: '자동차 유지비 계산기', sub: '연비·주행거리·보험료·배기량을 직접 넣기' },
+  { href: carUrl(nearest(CAR_PRICES, pm), 60), title: `차값 ${manwon(nearest(CAR_PRICES, pm) * 10000)} 60개월 할부`, sub: '월 납입액과 총 이자' },
+  { href: carTaxUrl(c.cc), title: `${num(c.cc)}cc 자동차세`, sub: '연식별 세금과 연납 할인' },
+  { href: '/time/', title: '내 시간으로 사는 물건', sub: '자동차는 몇 시간 일한 값인가' },
+]))}
+${CARCOST_NOTE}`;
+  write(url, shell({ url, title, desc, body, nav: 'loan' }));
+}
+
+function carcostIndex() {
+  const url = '/carcost/';
+  const inp = (id, label, value) => `<label class="ye-f"><span>${label}</span><input id="${id}" type="text" inputmode="decimal" value="${value}"></label>`;
+  const ex = carcostCalc(3000);
+  const rows = CARCOST_P.map((pm) => { const c = carcostCalc(pm), c4 = carcostCalc(pm, { age: 4 }); return { cells: [`<a href="${carcostUrl(pm)}">${manwon(pm * 10000)}</a><br><small>${num(c.cc)}cc 가정</small>`, num(c.fuelCost + c.tax + c.insurance + c.maintenance + c.parking), num(c.depreciation), num(c.monthly), num(c.cashMonthly), num(c4.monthly)] }; });
+  const body = `
+${crumb([['/', '홈'], [null, '자동차 유지비']])}
+<h1 class="title">자동차 유지비 계산기 — 차량가별 월·연 비용 (유류비·보험·세금·감가)</h1>
+<p class="meta">유류비 + 자동차세 + 보험료 + 정비·소모품 + 주차·통행료 + 감가상각 · ${CC.CARCOST_ASOF} 어림 · 입력값은 이 기기 밖으로 나가지 않습니다</p>
+${lead(`자동차 유지비는 기름값만이 아닙니다. 차량가 3,000만원 휘발유차(12km/L)를 연 15,000km 타면 유류비 ${won(ex.fuelCost)}, 자동차세 ${won(ex.tax)}, 보험료 ${won(ex.insurance)}, 정비 ${won(ex.maintenance)}, 주차·통행료 ${won(ex.parking)}에 첫해 감가상각 ${won(ex.depreciation)}까지 연 ${won(ex.annual)}, 월 ${won(ex.monthly)}이 듭니다. 감가를 뺀 현금 지출만 봐도 월 ${won(ex.cashMonthly)}, km당 ${won(ex.perKm)}입니다. 아래에 내 차 조건을 넣으면 항목별로 다시 계산합니다.`)}
+<form class="quick ye-form" id="cc-form">
+<div class="ye-grid">
+${inp('cc-price', '차량가 (만원)', 3000)}
+${inp('cc-age', '연식 (구입 후 몇 년째)', 1)}
+<label class="ye-f"><span>연료</span><select id="cc-fuel">${Object.values(CC.FUELS).map((F) => `<option value="${F.key}">${F.label}</option>`).join('')}</select></label>
+${inp('cc-eff', '연비 (km/L · 전기는 km/kWh)', 12)}
+${inp('cc-km', '연 주행거리 (km)', 15000)}
+${inp('cc-fuelprice', '연료 단가 (원/L · 원/kWh)', 1650)}
+${inp('cc-cc', '배기량 (cc · 전기차는 무시)', 1999)}
+${inp('cc-ins', '보험료 (연 · 만원)', 80)}
+${inp('cc-maint', '정비·소모품 (연 · 만원)', 50)}
+${inp('cc-park', '주차·통행료 (월 · 만원)', 5)}
+</div>
+</form>
+<div class="hero"><div class="hero-label">월 유지비 (감가상각 포함)</div><div class="hero-num"><span class="num" id="cc-monthly">0</span><span class="unit">원</span></div><div class="hero-sub" id="cc-sub">계산 중</div></div>
+<div class="tiles"><div class="tile"><small>현금 지출 (감가 제외) 월</small><span class="num" id="cc-cash">0</span></div><div class="tile"><small>km당 비용</small><span class="num" id="cc-perkm">0</span></div><div class="tile"><small>연 합계</small><span class="num" id="cc-annual">0</span></div></div>
+<div id="cc-tips"></div>
+<div class="ledger"><div class="lg-head"><h2>항목별 연 비용</h2><span>원 · 1년</span></div><div id="cc-rows"></div></div>
+<p class="sub" style="margin-top:8px"><a id="cc-link" href="${carcostUrl(3000)}">차량가 3,000만원 표로 →</a></p>
+${section('차량가별 유지비', '휘발유 12km/L · 연 15,000km · 보험 80만 · 정비 50만 · 주차 월 5만 · 원 · 차량가를 누르면 주행거리·연식·연료별 표', table(['차량가', '현금 지출 (연)', '첫해 감가', '월 유지비 (첫해)', '현금 지출 (월)', '4년차 월 유지비'], rows))}
+${ad()}
+${section('기본값으로 쓴 단가', `${CC.CARCOST_ASOF} 어림 · 계산기에서 바꿀 수 있습니다`, table(['항목', '기본값', '비고'], [
+  { cells: ['휘발유 · 경유 · LPG', '1,650 · 1,550 · 1,000원/L', '전국 평균 안팎 · 오피넷에서 확인'] },
+  { cells: ['전기', '350원/kWh', '공용 급속·완속 평균 · 집 완속은 더 쌈'] },
+  { cells: ['연비', '휘발유 12 · 경유 14 · LPG 9km/L · 전기 5km/kWh', '복합연비 기준 · 시내 주행은 더 낮음'] },
+  { cells: ['자동차세', '배기량 × 80·140·200원 + 교육세 30%', '3년차부터 해마다 5% 경감 · 전기차 13만원'] },
+  { cells: ['감가상각', '첫해 20% · 2~3년차 15% · 4년차~ 10%', '차량가 기준 단순 정액'] },
+  { cells: ['보험 · 정비 · 주차', '연 80만 · 연 50만 · 월 5만', '나이·경력·차종·지역에 따라 차이 큼'] },
+]))}
+${section('자주 묻는 것', null, `<div class="doc">
+<p><b>감가상각을 왜 유지비에 넣나요?</b> 차를 팔 때 돌려받지 못하는 돈이라 실제로는 가장 큰 비용입니다. 다만 매달 통장에서 나가지는 않으니 '현금 지출' 숫자를 따로 보여 줍니다. 차를 오래 탈수록 연평균 감가는 줄어듭니다.</p>
+<p><b>월 100만원이면 차를 사도 되나요?</b> 유지비가 월 실수령의 15~20%를 넘으면 부담스럽다는 게 통념입니다. 월 실수령 300만원이면 유지비 45~60만원 안에서, 할부금까지 더하면 그 이상이 됩니다. 실수령액은 <a href="/monthly/">월급 실수령액표</a>에서 보세요.</p>
+<p><b>기름값이 오르면?</b> 연 15,000km에 12km/L면 1년에 1,250L를 쓰니 리터당 100원이 오르면 연 12만 5천원, 월 1만원 남짓 늘어납니다. 계산기의 연료 단가를 바꿔 보세요.</p>
+<p><b>경차는 얼마나 싼가요?</b> 자동차세(998cc 연 ${won(CT.carTax(998).total)}), 취득세 4%, 보험료·통행료 할인, 연비까지 더해 같은 거리라면 중형차의 절반 안팎입니다.</p>
+</div>`)}
+${section('알아두면 좋은 것', null, CARCOST_TIPS)}
+${section('이어서 계산하기', null, list([{ href: '/car-loan/', title: '자동차 할부', sub: '차값·개월별 월 납입액' }, { href: '/car-tax/', title: '배기량별 자동차세', sub: '연식별 세금과 연납 할인' }, { href: '/monthly/', title: '월급 실수령액표', sub: '유지비는 실수령의 몇 %인지' }, { href: '/time/', title: '내 시간으로 사는 물건', sub: '자동차는 몇 시간 일한 값인가' }]))}
+${CARCOST_NOTE}`;
+  write(url, shell({ url, title: `자동차 유지비 계산기 — 차량가 2,000~8,000만원 월·연 비용 (유류비·보험·자동차세·감가, ${CC.CARCOST_ASOF})`, desc: '차량가·연식·연료·연비·주행거리·보험료·배기량을 넣으면 유류비, 자동차세, 보험료, 정비비, 주차비, 감가상각을 더한 월·연 유지비와 km당 비용을 계산합니다. 차량가별 표, 주행거리·연식·연료별 비교, 감가 제외 현금 지출.', body, nav: 'loan', scripts: ['/js/engine.js', '/js/carcost.js'] }));
+}
+
 /* ---------- 빌드 ---------- */
 fs.rmSync(OUT, { recursive: true, force: true });
 fs.mkdirSync(OUT, { recursive: true });
@@ -2496,6 +2953,10 @@ ltvIndex(); LTV_P.forEach(ltvPage);
 subIndex(); SUB_H.forEach((h) => SUB_F.forEach((f) => subPage(h, f)));
 plIndex(); PL_WAGES.forEach(plPage); babyPage();
 elIndex(); EL_KWH.forEach(elPage);
+eitcIndex(); EITC_TYPES.forEach((t) => { eitcTypeIndex(t); EITC_WAGES[t].forEach((m) => eitcPage(t, m)); });
+penIndex(); PEN_I.forEach((i) => PEN_Y.forEach((y) => penPage(i, y)));
+capIndex(); CAP_SALES.forEach((s) => capCosts(s).forEach((c) => capPage(s, c)));
+carcostIndex(); CARCOST_P.forEach(carcostPage);
 fs.writeFileSync(path.join(OUT, 'js', 'engine.js'), makeBundle(NT));
 docs();
 

@@ -37,6 +37,35 @@
     if (rate == null) { var r2 = t.match(/금리\s*(\d+(?:\.\d+)?)/) || t.match(/(?:^|\s)(\d{1,2}\.\d+)(?!\s*(?:억|천|만|년|개월|시간|%))/); if (r2) rate = parseFloat(r2[1]); }
     /* 단위 없이 큰 숫자(35000000)만 원으로 보고 만원으로 바꿈 — "10억"처럼 단위가 붙은 값은 그대로 */
     var man = function (v) { return (firstTok && firstTok.unit === '' && v >= 100000) ? Math.round(v / 10000) : v; };
+    if (/장려금/.test(t)) {
+      var et = /맞벌이/.test(t) ? 'dual' : /홑벌이|외벌이|배우자|자녀|아이|부양/.test(t) ? 'one' : 'single';
+      var etLabel = { single: '단독', one: '홑벌이', dual: '맞벌이' }[et];
+      if (!first) return { href: '/eitc/' + et + '/', label: etLabel + ' 가구 근로장려금 표' };
+      var ew = nearest((G.eitc && G.eitc[et]) || [first], man(first));
+      return { href: '/eitc/' + et + '/' + ew + '/', label: '총급여 ' + fmtMan(ew) + '원 ' + etLabel + ' 근로장려금' };
+    }
+    if (/국민연금|노령연금|연금\s*수령|연금\s*예상|연금\s*얼마/.test(t)) {
+      if (!first) return { href: '/pension/', label: '국민연금 예상 수령액 계산기' };
+      var pi = nearest(G.penI || [first], man(first)), py = nearest(G.penY || [20], years || 20);
+      return { href: '/pension/' + pi + '/' + py + '/', label: '월 ' + fmtMan(pi) + '원 · ' + py + '년 가입 국민연금' };
+    }
+    if (/양도/.test(t)) {
+      /* "15억 9억"처럼 억 단위가 둘이면 앞이 양도가, 뒤가 취득가 (amounts()는 연속된 억을 하나로 합치므로 따로 읽는다) */
+      var eoks = [], em, ere = /(\d+(?:\.\d+)?)\s*억/g;
+      while ((em = ere.exec(t))) eoks.push(Math.round(parseFloat(em[1]) * 10000));
+      if (!eoks.length) eoks = big.slice(0, 2).map(function (x) { return man(x.man); });
+      if (!eoks.length) return { href: '/capgain/', label: '양도소득세 계산기' };
+      var cs = nearest(G.capS || [eoks[0]], eoks[0]);
+      var costs = []; for (var ci = 10000; ci < cs; ci += 10000) costs.push(ci);
+      if (!costs.length) return { href: '/capgain/', label: '양도소득세 계산기' };
+      var cc0 = eoks.length > 1 ? nearest(costs, eoks[1]) : costs[Math.floor(costs.length / 2)];
+      return { href: '/capgain/' + cs + '/' + cc0 + '/', label: '양도가 ' + fmtMan(cs) + '원 · 취득가 ' + fmtMan(cc0) + '원 양도소득세' };
+    }
+    if (/유지비|유지\s*비용|기름값|유류비|주유비/.test(t)) {
+      if (!first) return { href: '/carcost/', label: '자동차 유지비 계산기' };
+      var cv = nearest(G.carcost || [first], man(first));
+      return { href: '/carcost/' + cv + '/', label: '차량가 ' + fmtMan(cv) + '원 자동차 유지비' };
+    }
     if (/청약|가점|무주택/.test(t)) {
       var sh = pick(t, /무주택\s*(\d+)/), sf = pick(t, /부양(?:가족)?\s*(\d+)/);
       if (sh == null && sf == null) return { href: '/subscription/', label: '청약 가점 계산기' };

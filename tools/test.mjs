@@ -16,6 +16,10 @@ import * as LV from '../engine/ltv.mjs';
 import * as SB from '../engine/subscription.mjs';
 import * as PL from '../engine/parental.mjs';
 import * as EL from '../engine/electric.mjs';
+import * as EI from '../engine/eitc.mjs';
+import * as NP from '../engine/pension.mjs';
+import * as CG from '../engine/capgain.mjs';
+import * as CC from '../engine/carcost.mjs';
 
 let pass = 0, fail = 0;
 function ok(cond, name, detail = '') { if (cond) pass++; else { fail++; console.log('FAIL', name, detail); } }
@@ -311,6 +315,71 @@ ok([0, 5, 6, 11, 12, 23, 24, 168, 179, 180, 300].map(SB.accountScore).join() ===
   ok(EL.electricBill(300, { season: 'summer' }).total === 46320, '300kWh 하계 1단계 46,320', EL.electricBill(300, { season: 'summer' }).total);
 }
 
+/* 근로장려금·자녀장려금 — 2024년 귀속 (2025년 신청) */
+ok(EI.workCredit(3000000, 'single').raw === 1237500 && EI.workCredit(3000000, 'single').phase === 'in', '단독 300만 — 점증 300만 × 165/400 = 123.75만', EI.workCredit(3000000, 'single').raw);
+ok(EI.workCredit(5000000, 'single').raw === 1650000 && EI.workCredit(8990000, 'single').raw === 1650000, '단독 400~900만 평탄 165만');
+ok(EI.workCredit(15000000, 'single').raw === 888460 && EI.workCredit(22000000, 'single').raw === 0, '단독 1,500만 점감 88.846만 · 2,200만 0', EI.workCredit(15000000, 'single').raw);
+ok(EI.workCredit(6000000, 'one').raw === 2442850 && EI.workCredit(10000000, 'one').raw === 2850000, '홑벌이 600만 244.285만 · 1,000만 최대 285만', EI.workCredit(6000000, 'one').raw);
+ok(EI.workCredit(15000000, 'one').raw === 2691660 && EI.workCredit(32000000, 'one').raw === 0, '홑벌이 1,500만 — 285만 − 100만 × 285/1,800 = 269.166만', EI.workCredit(15000000, 'one').raw);
+ok(EI.workCredit(20000000, 'dual').raw === 2828570 && EI.workCredit(37990000, 'dual').raw > 0 && EI.workCredit(38000000, 'dual').raw === 0, '맞벌이 2,000만 282.857만 · 3,800만 경계', EI.workCredit(20000000, 'dual').raw);
+ok(EI.childCredit(15000000, 'one').raw === 1000000 && EI.childCredit(30000000, 'one').raw === 908160 && EI.childCredit(69990000, 'one').raw === 500100 && EI.childCredit(70000000, 'one').raw === 0, '자녀장려금 100만 · 3,000만 90.816만 · 최소 50만 · 7,000만 0', EI.childCredit(30000000, 'one').raw);
+ok(EI.childCredit(10000000, 'single').raw === 0 && EI.eitc({ type: 'single', wage: 10000000, children: 2 }).child === 0, '단독 가구는 자녀장려금 없음');
+{
+  const r = EI.eitc({ type: 'one', wage: 15000000, children: 2 });
+  ok(r.work === 2691660 && r.perChild === 1000000 && r.child === 2000000 && r.total === 4691660, '홑벌이 1,500만 자녀 2명 합계 469.166만', JSON.stringify(r));
+  const h = EI.eitc({ type: 'one', wage: 15000000, children: 2, property: 200000000 });
+  ok(h.factor === 0.5 && h.work === 1345830 && h.child === 1000000, '재산 2억 — 50% 감액', JSON.stringify([h.work, h.child]));
+  ok(EI.eitc({ type: 'one', wage: 15000000, children: 2, property: 240000000 }).total === 0 && !EI.eitc({ type: 'one', wage: 15000000, property: 240000000 }).eligible, '재산 2.4억 이상 제외');
+  ok(EI.eitc({ type: 'one', wage: 15000000, property: 169990000 }).factor === 1, '재산 1.7억 미만 전액');
+}
+
+/* 국민연금 예상 수령액 — 국민연금법 §51·§63 어림 */
+{
+  const p = NP.pension({ avgIncome: 3000000, years: 20 });
+  ok(p.base === 7854890 && p.monthly === 654570 && p.mult === 1 && p.startAge === 65, '월 300만 · 20년 — 1.29 × (3,089,062 + 300만) = 연 785.489만 · 월 65.457만', JSON.stringify([p.base, p.monthly]));
+  ok(NP.pension({ avgIncome: 3000000, years: 10 }).monthly === 327280 && NP.pension({ avgIncome: 3000000, years: 40 }).monthly === 1309140, '10년 = 20년의 절반 · 40년 = 2배', NP.pension({ avgIncome: 3000000, years: 10 }).monthly);
+  ok(near(NP.pension({ avgIncome: NP.A_VALUE, years: 40 }).monthly / NP.A_VALUE, 0.43, 0.001), '평균 소득자 40년 가입 = 소득대체율 43%', NP.pension({ avgIncome: NP.A_VALUE, years: 40 }).monthly / NP.A_VALUE);
+  ok(NP.pension({ avgIncome: 3000000, years: 9 }).monthly === 0 && !NP.pension({ avgIncome: 3000000, years: 9 }).eligible, '가입 10년 미만은 노령연금 없음');
+  ok(NP.pension({ avgIncome: 10000000, years: 20 }).B === 6370000 && NP.pension({ avgIncome: 100000, years: 20 }).B === 400000, 'B값 상한 637만 · 하한 40만');
+  ok(NP.pension({ avgIncome: 3000000, years: 20, birthYear: 1970, startAge: 60 }).rate === 0.7 && NP.pension({ avgIncome: 3000000, years: 20, birthYear: 1970, startAge: 55 }).shift === -5, '조기 5년 30% 감액 · 5년 넘게는 불가');
+  ok(near(NP.pension({ avgIncome: 3000000, years: 20, birthYear: 1970, startAge: 70 }).rate, 1.36, 1e-9) && near(NP.pension({ avgIncome: 3000000, years: 20, birthYear: 1970, startAge: 66 }).rate, 1.072, 1e-9), '연기 5년 36% · 1년 7.2%');
+  ok([1950, 1953, 1957, 1961, 1965, 1969, 1990].map(NP.startAge).join() === '60,61,62,63,64,65,65', '수급 개시 연령 60~65세', [1950, 1953, 1957, 1961, 1965, 1969, 1990].map(NP.startAge).join());
+  ok(NP.pension({ avgIncome: 3000000, years: 20, constant: 1.26 }).base === Math.round(1.26 * 6089062), '2025년 비례상수 1.26');
+  ok(NP.premium(3000000, 2026).total === 285000 && NP.premium(3000000, 2026).employee === 142500 && NP.premium(3000000, 2033).total === 390000, '보험료 2026년 9.5% → 2033년 13%', NP.premium(3000000, 2026).total);
+  const pb = NP.payback({ avgIncome: 3000000, years: 20 });
+  ok(pb.paidTotal === 64800000 && pb.paidSelf === 32400000 && pb.monthsSelf === 50, '20년 납부 6,480만(본인 3,240만) → 본인 부담 회수 50개월', JSON.stringify([pb.paidTotal, pb.monthsSelf]));
+}
+
+/* 양도소득세 — 소득세법 §89·§95·§103·§104 (2025) */
+{
+  const r = CG.capitalGains({ sale: 1500000000, cost: 900000000, expense: 30000000, holdYears: 5, liveYears: 5, oneHouse: true });
+  ok(r.gain === 570000000 && r.taxableGain === 114000000 && r.ltRate === 0.4 && r.ltd === 45600000, '1주택 15억·9억·경비 3천만 — 양도차익 5.7억 · 12억 초과분 1.14억 · 장특 40%', JSON.stringify([r.gain, r.taxableGain, r.ltd]));
+  ok(r.base === 65900000 && r.tax === 10056000 && r.local === 1005600 && r.total === 11061600, '과세표준 6,590만 → 24% − 576만 = 1,005.6만 · 총 1,106.16만', JSON.stringify([r.base, r.tax, r.total]));
+  ok(CG.capitalGains({ sale: 1000000000, cost: 500000000, holdYears: 5, liveYears: 5, oneHouse: true }).total === 0 && CG.capitalGains({ sale: 1200000000, cost: 300000000, holdYears: 2, oneHouse: true }).fullyExempt, '1주택 12억 이하 전액 비과세');
+  ok(!CG.capitalGains({ sale: 1000000000, cost: 500000000, holdYears: 5, liveYears: 1, oneHouse: true, adjusted: true }).exempt && !CG.capitalGains({ sale: 1000000000, cost: 500000000, holdYears: 1.5, oneHouse: true }).exempt, '조정대상지역 거주 2년 미만 · 보유 2년 미만은 비과세 아님');
+  const g = CG.capitalGains({ sale: 1000000000, cost: 500000000, holdYears: 5 });
+  ok(g.ltRate === 0.1 && g.base === 447500000 && g.tax === 153060000 && g.total === 168366000, '일반 10억·5억·5년 — 장특 10% · 40% − 2,594만 = 1억 5,306만 · 총 1억 6,836.6만', JSON.stringify([g.ltRate, g.base, g.total]));
+  ok(CG.capitalGains({ sale: 600000000, cost: 500000000, holdYears: 0.5 }).total === 75075000 && CG.capitalGains({ sale: 600000000, cost: 500000000, holdYears: 1.5 }).total === 64350000, '단기 1년 미만 70% · 2년 미만 60%', CG.capitalGains({ sale: 600000000, cost: 500000000, holdYears: 0.5 }).total);
+  const m = CG.capitalGains({ sale: 1000000000, cost: 500000000, holdYears: 5, multi: 2 });
+  ok(m.ltRate === 0 && m.rate === 0.6 && m.tax === 272560000 && m.total === 299816000, '2주택 중과 +20%p · 장특 배제 — 4.975억 × 60% − 2,594만', JSON.stringify([m.rate, m.total]));
+  ok(CG.capitalGains({ sale: 1000000000, cost: 500000000, holdYears: 5, multi: 3 }).rate === 0.7, '3주택 중과 +30%p');
+  ok(CG.longTermRate(15, 0, 1).rate === 0.3 && CG.longTermRate(20, 0, 1).rate === 0.3 && CG.longTermRate(2, 2, 1).rate === 0, '표1 연 2% 최대 30% · 3년 미만 0');
+  ok(CG.longTermRate(10, 10, 2).rate === 0.8 && CG.longTermRate(3, 2, 2).rate === 0.12 && CG.longTermRate(12, 12, 2).rate === 0.8, '표2 보유 4% + 거주 4% 최대 80%');
+  ok(CG.capitalGains({ sale: 500000000, cost: 600000000, holdYears: 5 }).total === 0 && CG.capitalGains({ sale: 500000000, cost: 498000000, holdYears: 5 }).total === 0, '양도차손 · 기본공제 이하 0');
+  ok(CG.capitalGains({ sale: 1500000000, cost: 900000000, expense: 30000000, holdYears: 5, liveYears: 5, oneHouse: true, multi: 2 }).exempt === false, '중과 포함이면 비과세 아님');
+}
+
+/* 자동차 유지비 — cartax 재사용 */
+{
+  const c = CC.carCost({ price: 30000000 });
+  ok(c.fuelCost === 2062500 && c.tax === 519740 && c.depreciation === 6000000 && c.annual === 10482240 && c.monthly === 873520, '3,000만 휘발유 12km/L · 15,000km — 연 1,048.224만 · 월 87.352만', JSON.stringify([c.fuelCost, c.tax, c.annual]));
+  ok(c.cash === 4482240 && c.cashMonthly === 373520 && c.perKm === 699, '감가 제외 현금 월 37.352만 · km당 699원', JSON.stringify([c.cash, c.perKm]));
+  ok(CC.carCost({ price: 30000000, km: 30000 }).fuelCost === 4125000 && CC.carCost({ price: 30000000, age: 2 }).depreciation === 4500000 && CC.carCost({ price: 30000000, age: 4 }).depreciation === 3000000, '주행 2배면 유류비 2배 · 감가 2년차 15% · 4년차 10%');
+  ok(CC.carCost({ price: 30000000, fuel: 'ev' }).tax === 130000 && CC.carCost({ price: 30000000, fuel: 'ev' }).fuelCost === 1050000, '전기차 자동차세 13만 · 15,000km ÷ 5km/kWh × 350원');
+  ok(CC.carCost({ price: 30000000, age: 4 }).tax === CT.carTax(1999, { age: 4 }).total, '자동차세는 cartax 엔진 값');
+  ok(near(c.items.reduce((a, r) => a + r.share, 0), 1, 1e-9) && c.items.find((r) => r.key === 'depreciation').share > 0.5, '항목 비중 합 100% · 첫해는 감가가 절반 이상');
+}
+
 /* 브라우저 엔진 묶음 = 서버 엔진 (같은 소스에서 생성되는지 확인) */
 {
   const vm = await import('node:vm');
@@ -332,6 +401,8 @@ ok([0, 5, 6, 11, 12, 23, 24, 168, 179, 180, 300].map(SB.accountScore).join() ===
   ok(B.subscriptionScore({ homelessYears: 10, family: 2, accountMonths: 180 }).total === 54 && B.subGrade(54).key === 'mid', '번들 subscriptionScore');
   ok(B.parentalLeave({ wage: 3000000, months: 12 }).total === PL.parentalLeave({ wage: 3000000, months: 12 }).total && B.babyBenefits('2025-03-15', 1, '2026-09-08').total24 === 22400000, '번들 parentalLeave · babyBenefits');
   ok(B.electricBill(300).total === EL.electricBill(300).total && B.electricBill(1100, { season: 'summer' }).total === 375870, '번들 electricBill');
+  ok(B.eitc({ type: 'one', wage: 15000000, children: 1 }).total === 3691660 && B.pension({ avgIncome: 3000000, years: 20 }).monthly === 654570, '번들 eitc · pension');
+  ok(B.capitalGains({ sale: 1500000000, cost: 900000000, expense: 30000000, holdYears: 5, liveYears: 5, oneHouse: true }).total === 11061600 && B.carCost({ price: 30000000 }).monthly === 873520 && B.carTax(1598).total === 290836, '번들 capitalGains · carCost · carTax');
 }
 
 console.log(`test: ${pass} pass, ${fail} fail`);

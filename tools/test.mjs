@@ -13,6 +13,9 @@ import * as IC from '../engine/income.mjs';
 import * as PT from '../engine/property.mjs';
 import * as CT from '../engine/cartax.mjs';
 import * as LV from '../engine/ltv.mjs';
+import * as SB from '../engine/subscription.mjs';
+import * as PL from '../engine/parental.mjs';
+import * as EL from '../engine/electric.mjs';
 
 let pass = 0, fail = 0;
 function ok(cond, name, detail = '') { if (cond) pass++; else { fail++; console.log('FAIL', name, detail); } }
@@ -256,6 +259,58 @@ ok(LV.ltvLimit(1000000000, 'metro').limit === 600000000, '10억 수도권 비규
 ok(LV.ltvLimit(500000000, 'other', { firstHome: true }).limit === 400000000, '5억 지방 생애최초 80%');
 ok(LV.ltvLimit(1000000000, 'regulated', { firstHome: true }).limit === 600000000, '10억 규제지역 생애최초 70% → 6억 한도');
 
+/* 청약 가점 — 주택공급에 관한 규칙 별표 1 */
+ok([0, 0.5, 1, 1.9, 2, 14, 14.9, 15, 20].map((y) => SB.homelessScore(y)).join() === '2,2,4,4,6,30,30,32,32', '무주택기간 1년 미만 2점 · 1년마다 2점 · 15년 이상 32점', [0, 0.5, 1, 1.9, 2, 14, 14.9, 15, 20].map((y) => SB.homelessScore(y)).join());
+ok(SB.homelessScore(10, { owner: true }) === 0 && SB.homelessScore(10, { under30Single: true }) === 0, '유주택자 · 만 30세 미만 미혼은 0점');
+ok([0, 1, 2, 3, 6, 9].map(SB.familyScore).join() === '5,10,15,20,35,35', '부양가족 0명 5점 · 1명당 5점 · 6명 이상 35점');
+ok([0, 5, 6, 11, 12, 23, 24, 168, 179, 180, 300].map(SB.accountScore).join() === '1,1,2,2,3,3,4,16,16,17,17', '통장 6개월 미만 1 · 1년 미만 2 · 1년마다 1 · 15년 이상 17', [0, 5, 6, 11, 12, 23, 24, 168, 179, 180, 300].map(SB.accountScore).join());
+{
+  const s = SB.subscriptionScore({ homelessYears: 10, family: 2, accountMonths: 180 });
+  ok(s.homeless === 22 && s.family === 15 && s.account === 17 && s.total === 54, '무주택 10년 · 부양가족 2명 · 통장 15년 = 54점', JSON.stringify(s));
+  ok(SB.subscriptionScore({ homelessYears: 15, family: 6, accountMonths: 180 }).total === 84, '만점 84');
+  ok([0, 1, 2, 3].map(SB.maxForFamily).join() === '54,59,64,69', '1인 54 · 2인 59 · 3인 64 · 4인 69');
+  ok(SB.HOMELESS_TABLE.length === 17 && SB.FAMILY_TABLE.length === 7 && SB.ACCOUNT_TABLE.length === 17 && SB.ACCOUNT_TABLE[16].score === 17, '점수표 크기');
+  ok(SB.subGrade(69).key === 'high' && SB.subGrade(72).key === 'top' && SB.subGrade(40).key === 'low', '등급 구간');
+}
+
+/* 육아휴직 급여 — 2025 고용보험법 시행령 */
+{
+  const r = PL.parentalLeave({ wage: 3000000, months: 12 });
+  ok(r.rows.map((x) => x.pay / 10000).join() === '250,250,250,200,200,200,160,160,160,160,160,160' && r.total === 23100000, '통상임금 300만 12개월 = 2,310만', r.total);
+  ok(PL.parentalLeave({ wage: 1500000, months: 12 }).total === 16200000, '150만 — 150×6 + 120×6 = 1,620만', PL.parentalLeave({ wage: 1500000, months: 12 }).total);
+  ok(PL.parentalLeave({ wage: 3000000, months: 18 }).total === 23100000 + 1600000 * 6, '18개월 — 13개월째부터 160만');
+  const b = PL.parentalLeave({ wage: 5000000, months: 6, mode: 'both' });
+  ok(b.rows.map((x) => x.pay / 10000).join() === '250,250,300,350,400,450' && b.total === 20000000, '6+6 상한 250·250·300·350·400·450 = 2,000만', b.rows.map((x) => x.pay).join());
+  ok(PL.parentalLeave({ wage: 5000000, months: 7, mode: 'both' }).rows[6].pay === 1600000, '6+6 7개월째는 일반 80% 상한 160만');
+  ok(PL.bothTotal(3000000).total === 34000000 && PL.bothTotal(3000000, 5000000).total === 17000000 + 20000000, '6+6 두 사람 합계 300만 → 3,400만 · 300만+500만 → 3,700만', PL.bothTotal(3000000).total);
+  const s = PL.parentalLeave({ wage: 4000000, months: 12, mode: 'single' });
+  ok(s.rows[0].pay === 3000000 && s.rows[3].pay === 2000000 && s.rows[6].pay === 1600000, '한부모 1~3개월 상한 300만', s.rows.map((x) => x.pay).join());
+  ok(PL.parentalLeave({ wage: 800000, months: 7 }).rows[6].pay === 700000 && PL.parentalLeave({ wage: 800000, months: 7 }).rows[6].floored, '하한 70만');
+  ok(PL.ageMonths('2025-03-15', '2026-09-08') === 17 && PL.ageMonths('2025-09-10', '2026-09-08') === 11 && PL.ageMonths('2026-09-08', '2026-09-08') === 0, '만 개월 계산');
+  const bb = PL.babyBenefits('2025-03-15', 1, '2026-09-08');
+  ok(bb.parent === 500000 && bb.child === 100000 && bb.monthly === 600000, '생후 17개월 — 부모급여 50만 + 아동수당 10만', JSON.stringify(bb));
+  ok(bb.total24 === 2000000 + 18000000 + 2400000 && PL.babyBenefits('2025-03-15', 2, '2026-09-08').total24 === 3000000 + 18000000 + 2400000, '만 2세까지 총액 첫째 2,240만 · 둘째 2,340만');
+  ok(bb.remaining24 === 7 * 600000 && PL.babyBenefits('2024-01-01', 1, '2026-09-08').monthly === 100000, '남은 7개월 × 60만 · 2세 넘으면 아동수당만');
+  const tl = PL.benefitTimeline('2025-03-15');
+  ok(tl.length === 4 && tl[0].start === '2025-03' && tl[0].end === '2026-02' && tl[0].monthly === 1100000 && tl[1].monthly === 600000 && tl[3].end === '2033-02', '지원금 타임라인', JSON.stringify(tl.map((p) => [p.start, p.end, p.monthly])));
+}
+
+/* 전기요금 — 한전 주택용 저압 (2025) */
+{
+  const b = EL.electricBill(300);
+  ok(b.base === 1600 && b.energy === 45460 && b.climate === 2700 && b.fuel === 1500 && b.subtotal === 51260, '300kWh 기타계절 전기요금계 51,260', JSON.stringify(b));
+  ok(b.vat === 5126 && b.fund === 1380 && b.total === 57760 && b.tier === 2, '300kWh — 부가세 5,126 · 기금 1,380 · 청구 57,760', JSON.stringify([b.vat, b.fund, b.total]));
+  ok(EL.electricBill(200).total === 31220 && EL.electricBill(200).tier === 1 && EL.electricBill(200).base === 910, '200kWh 기타계절 31,220', EL.electricBill(200).total);
+  const s = EL.electricBill(450, { season: 'summer' });
+  ok(s.tier === 2 && s.subtotal === 76090 && s.total === 85740, '450kWh 하계 — 2단계 · 85,740', JSON.stringify([s.tier, s.subtotal, s.total]));
+  ok(EL.electricBill(450).tier === 3 && EL.electricBill(450).total > s.total, '450kWh 기타계절은 3단계');
+  const u = EL.electricBill(1100, { season: 'summer' });
+  ok(u.superUser && u.rows[3].kwh === 100 && u.rows[3].rate === 736.2 && u.subtotal === 333525 && u.total === 375870, '1,100kWh 하계 슈퍼유저 375,870', JSON.stringify([u.subtotal, u.vat, u.fund, u.total]));
+  ok(EL.electricBill(1100, { season: 'winter' }).superUser && !EL.electricBill(1100).superUser, '슈퍼유저는 하계·동계만');
+  ok(EL.electricBill(300, { voltage: 'high' }).total === 49420, '300kWh 고압 49,420', EL.electricBill(300, { voltage: 'high' }).total);
+  ok(EL.electricBill(300, { season: 'summer' }).total === 46320, '300kWh 하계 1단계 46,320', EL.electricBill(300, { season: 'summer' }).total);
+}
+
 /* 브라우저 엔진 묶음 = 서버 엔진 (같은 소스에서 생성되는지 확인) */
 {
   const vm = await import('node:vm');
@@ -274,6 +329,9 @@ ok(LV.ltvLimit(1000000000, 'regulated', { firstHome: true }).limit === 600000000
   ok(B.manwon(42000000) === '4,200만원', '번들 fmt');
   ok(B.yearEnd({ gross: 40000000, dependents: 1, creditCard: 20000000, checkCard: 5000000 }).determined === YE.yearEnd({ gross: 40000000, dependents: 1, creditCard: 20000000, checkCard: 5000000 }).determined, '번들 yearEnd = 서버 yearEnd');
   ok(B.severance(3500000, 5).amount === R.severance(3500000, 5).amount, '번들 severance');
+  ok(B.subscriptionScore({ homelessYears: 10, family: 2, accountMonths: 180 }).total === 54 && B.subGrade(54).key === 'mid', '번들 subscriptionScore');
+  ok(B.parentalLeave({ wage: 3000000, months: 12 }).total === PL.parentalLeave({ wage: 3000000, months: 12 }).total && B.babyBenefits('2025-03-15', 1, '2026-09-08').total24 === 22400000, '번들 parentalLeave · babyBenefits');
+  ok(B.electricBill(300).total === EL.electricBill(300).total && B.electricBill(1100, { season: 'summer' }).total === 375870, '번들 electricBill');
 }
 
 console.log(`test: ${pass} pass, ${fail} fail`);

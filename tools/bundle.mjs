@@ -28,7 +28,10 @@ export function makeBundle(NT = 200000) {
     wrap('A', strip(read('age.mjs')), ['ageRank', 'medianOf']),
     wrap('G', strip(read('goal.mjs')), ['monthsToGoal', 'balanceAfter', 'fmtMonths']),
     wrap('Y', strip(read('retire.mjs')) + '\n' + strip(read('yearend.mjs')), ['basicTax', 'severance', 'severanceTax', 'yearEnd', 'cardDeduction', 'earnedIncomeDeduction']),
-    `window.Donpyo = Object.assign({ YEAR, RATES, NT: ${NT} }, F, T, L, K, A, G, Y);`,
+    wrap('S', strip(read('subscription.mjs')), ['subscriptionScore', 'homelessScore', 'familyScore', 'accountScore', 'subGrade', 'maxForFamily', 'SUB_MAX', 'HOMELESS_TABLE', 'FAMILY_TABLE', 'ACCOUNT_TABLE']),
+    wrap('P', strip(read('parental.mjs')), ['parentalLeave', 'monthPay', 'bothTotal', 'babyBenefits', 'benefitTimeline', 'ageMonths', 'MODES', 'BENEFITS', 'BOTH_CAPS', 'NORMAL_CAPS', 'LEAVE_MIN']),
+    wrap('E', strip(read('electric.mjs')), ['electricBill', 'marginalPerKwh', 'PLANS', 'SEASONS']),
+    `window.Donpyo = Object.assign({ YEAR, RATES, NT: ${NT} }, F, T, L, K, A, G, Y, S, P, E);`,
   ];
   return `/* 돈표 계산 엔진 — 브라우저용, 빌드 때 engine/*.mjs 에서 생성 */\n(function(){\n${parts.join('\n')}\n})();\n`;
 }

@@ -24,6 +24,9 @@ import * as IC from '../engine/income.mjs';
 import * as PT from '../engine/property.mjs';
 import * as CT from '../engine/cartax.mjs';
 import * as LV from '../engine/ltv.mjs';
+import * as SB from '../engine/subscription.mjs';
+import * as PL from '../engine/parental.mjs';
+import * as EL from '../engine/electric.mjs';
 import { makeBundle } from './bundle.mjs';
 import { num, won, manwon, short, pct, rate as fmtRate, rateSlug } from '../engine/fmt.mjs';
 
@@ -103,10 +106,10 @@ ${(o.scripts || []).map((s) => `<script src="${s}" defer></script>`).join('\n')}
 
 /* ---------- 조각 ---------- */
 const crumb = (items) => `<div class="crumb">${items.map(([h, t]) => h ? `<a href="${h}">${t}</a>` : `<span>${t}</span>`).join('<span>›</span>')}</div>`;
-const hero = (o) => `<div class="hero"><div class="hero-label">${o.label}</div><div class="hero-num"><span class="num">${num(o.value)}</span><span class="unit">원</span></div><div class="hero-sub">${o.sub}</div>${o.bars ? `<div class="bar">${o.bars.map((w) => `<i style="width:${(w * 100).toFixed(1)}%"></i>`).join('')}</div><div class="bar-legend"><span>${o.legendL}</span><span>${o.legendR}</span></div>` : ''}</div>`;
+const hero = (o) => `<div class="hero"><div class="hero-label">${o.label}</div><div class="hero-num"><span class="num">${num(o.value)}</span><span class="unit">${o.unit || '원'}</span></div><div class="hero-sub">${o.sub}</div>${o.bars ? `<div class="bar">${o.bars.map((w) => `<i style="width:${(w * 100).toFixed(1)}%"></i>`).join('')}</div><div class="bar-legend"><span>${o.legendL}</span><span>${o.legendR}</span></div>` : ''}</div>`;
 const ledger = (title, unit, rows, total) => `<div class="ledger"><div class="lg-head"><h2>${title}</h2><span>${unit}</span></div>${rows.map((r) => `<div class="lg-row"><div class="lbl"><span>${r.label}</span>${r.note ? `<small>${r.note}</small>` : ''}</div>${n(r.value)}</div>`).join('')}${total ? `<div class="lg-total"><span>${total.label}</span>${n(total.value)}</div>` : ''}</div>`;
 /* 값이 11자(1억 이상) 넘는 타일이 있으면 좁은 화면에서 2열로 — 숫자가 두 줄로 꺾이지 않게 */
-const tiles = (items) => `<div class="tiles${items.some((t) => (typeof t.value === 'number' ? num(t.value) : String(t.value)).length >= 11) ? ' tiles-wide' : ''}">${items.map((t) => `<div class="tile"><small>${t.label}</small>${n(t.value)}</div>`).join('')}</div>`;
+const tiles = (items) => `<div class="tiles${items.some((t) => (typeof t.value === 'number' ? num(t.value) : String(t.value)).length >= 11) ? ' tiles-wide' : ''}">${items.map((t) => `<div class="tile"><small>${t.label}</small>${typeof t.value === 'number' ? n(t.value) : `<span class="num">${t.value}</span>`}</div>`).join('')}</div>`;
 const chips = (items) => `<div class="chips">${items.map((c) => c.on ? `<span class="chip on"><small>${c.label}</small>${n(c.value)}</span>` : `<a class="chip" href="${c.href}"><small>${c.label}</small>${n(c.value)}</a>`).join('')}</div>`;
 const cells = (items, cols = 3) => `<div class="grid${cols === 2 ? ' grid-2' : cols === 4 ? ' grid-4' : ''}">${items.map((c) => c.on ? `<span class="cell on"><small>${c.label}</small>${n(c.value)}</span>` : `<a class="cell" href="${c.href}"><small>${c.label}</small>${n(c.value)}</a>`).join('')}</div>`;
 const list = (items) => `<div class="list">${items.map((i) => `<a href="${i.href}"><span class="t"><b>${i.title}</b>${i.sub ? `<small>${i.sub}</small>` : ''}</span>${i.value != null ? n(i.value) : CHEV}</a>`).join('')}</div>`;
@@ -515,8 +518,8 @@ function home() {
   <h1>연봉 4,200만원이면<br>손에 얼마가 남을까</h1>
   <p>연봉·월급·대출·퇴직금·알바 월급을 금액별로 미리 계산해 표로 묶어 두었습니다. 숫자만 고르면 바로 나옵니다.</p>
 </div>
-<form class="quick quick-smart" data-quick="smart"><label for="q-home">숫자로 바로 찾기 — 연봉·월급·대출·시급·퇴직금 무엇이든</label><div class="quick-row"><div class="quick-in"><input id="q-home" type="text" placeholder="연봉 4200 / 2억 30년 4.5% / 시급 12000 주20" autocomplete="off" autocapitalize="off"></div><button class="btn" type="submit">찾기</button></div><div class="quick-hint" data-hint aria-live="polite">예시를 누르거나 직접 적어 보세요</div><div class="quick-ex"><button type="button">연봉 4200</button><button type="button">월급 350</button><button type="button">실수령 300</button><button type="button">2억 30년 4.5%</button><button type="button">시급 12000 주 20시간</button><button type="button">퇴직금 350 5년</button><button type="button">전세 2억</button><button type="button">적금 50 3년</button><button type="button">증여 1억</button><button type="button">복비 5억</button><button type="button">예금 1억 1년</button><button type="button">상속 10억</button><button type="button">재산세 5억</button><button type="button">자동차세 1598cc</button></div><div class="quick-links"><a href="/salary/">연봉표</a><a href="/monthly/">월급표</a><a href="/net/">실수령으로 연봉 찾기</a><a href="/loan/">대출표</a></div></form>
-<script>window.DONPYO_GRID=${JSON.stringify({ salary: SALARIES, monthly: MONTHLIES, net: NETS, loanA: LOAN_AMOUNTS, loanY: LOAN_YEARS, loanR: LOAN_RATES.map(rateSlug), retireP: RETIRE_PAYS, retireY: RETIRE_YEARS, hourlyW: HOURLY_WAGES, hourlyH: HOURLY_HOURS, uiP: UI_PAYS, uiY: UI_YEARS, jeonse: JEONSE, savM: SAV_M, savN: SAV_N, free: FREE, ot: OT_PAYS, carP: CAR_PRICES, carN: CAR_MONTHS, goals: GOALS, saveM: SAVE_M, gift: GIFT_AMOUNTS, bokbi: BOKBI, acq: ACQ, depP: DEP_P, depN: DEP_N, inh: INH_AMOUNTS, inc: INC, prop: PROP, cars: CARS, ltv: LTV_P })}</script>
+<form class="quick quick-smart" data-quick="smart"><label for="q-home">숫자로 바로 찾기 — 연봉·월급·대출·시급·퇴직금 무엇이든</label><div class="quick-row"><div class="quick-in"><input id="q-home" type="text" placeholder="연봉 4200 / 2억 30년 4.5% / 시급 12000 주20" autocomplete="off" autocapitalize="off"></div><button class="btn" type="submit">찾기</button></div><div class="quick-hint" data-hint aria-live="polite">예시를 누르거나 직접 적어 보세요</div><div class="quick-ex"><button type="button">연봉 4200</button><button type="button">월급 350</button><button type="button">실수령 300</button><button type="button">2억 30년 4.5%</button><button type="button">시급 12000 주 20시간</button><button type="button">퇴직금 350 5년</button><button type="button">전세 2억</button><button type="button">적금 50 3년</button><button type="button">증여 1억</button><button type="button">복비 5억</button><button type="button">예금 1억 1년</button><button type="button">상속 10억</button><button type="button">재산세 5억</button><button type="button">자동차세 1598cc</button><button type="button">전기요금 300kwh</button><button type="button">육아휴직 300만</button><button type="button">무주택 10년 부양가족 2명</button></div><div class="quick-links"><a href="/salary/">연봉표</a><a href="/monthly/">월급표</a><a href="/net/">실수령으로 연봉 찾기</a><a href="/loan/">대출표</a></div></form>
+<script>window.DONPYO_GRID=${JSON.stringify({ salary: SALARIES, monthly: MONTHLIES, net: NETS, loanA: LOAN_AMOUNTS, loanY: LOAN_YEARS, loanR: LOAN_RATES.map(rateSlug), retireP: RETIRE_PAYS, retireY: RETIRE_YEARS, hourlyW: HOURLY_WAGES, hourlyH: HOURLY_HOURS, uiP: UI_PAYS, uiY: UI_YEARS, jeonse: JEONSE, savM: SAV_M, savN: SAV_N, free: FREE, ot: OT_PAYS, carP: CAR_PRICES, carN: CAR_MONTHS, goals: GOALS, saveM: SAVE_M, gift: GIFT_AMOUNTS, bokbi: BOKBI, acq: ACQ, depP: DEP_P, depN: DEP_N, inh: INH_AMOUNTS, inc: INC, prop: PROP, cars: CARS, ltv: LTV_P, subH: SUB_H, subF: SUB_F, leave: PL_WAGES, elec: EL_KWH })}</script>
 <a class="feature" href="/yearend/"><span class="feature-mark">13</span><span class="feature-text"><b>연말정산, 돌려받을까 더 낼까</b><span>연봉·카드·의료비·연금저축만 넣으면 결정세액과 환급 예상액이 바로</span></span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5L10.5 8 6 12.5" stroke="#8A948E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></a>
 <a class="feature" href="/couple/"><span class="feature-mark">둘</span><span class="feature-text"><b>둘이 합쳐 얼마까지 빌릴 수 있을까</b><span>링크 하나 보내면 상대가 연봉만 넣고 끝 — 합산 대출 한도·전세 여력</span></span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5L10.5 8 6 12.5" stroke="#8A948E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></a>
 ${section('급여와 일', null, `<div class="dict">
@@ -557,6 +560,12 @@ ${section('세금·부동산', null, `<div class="dict">
 <a href="/car-tax/"><b>자동차세</b><span>1,598cc → 연 <span class="num">${num(CT.carTax(1598).total)}</span>원 · 1월 연납 ${pct(CT.ANNUAL_DISCOUNT[YEAR] || 0, 0)} 할인</span></a>
 <a href="/ltv/"><b>LTV 대출 한도</b><span>10억 집 규제지역 → <span class="num">${num(LV.ltvLimit(1000000000).limit)}</span>원 · 비규제 <span class="num">${num(LV.ltvLimit(1000000000, 'metro').limit)}</span>원</span></a>
 <a href="/deposit/"><b>예금 이자</b><span>1억 1년 3% → 세후 <span class="num">${num(DP.deposit(100000000, 12, 0.03).net)}</span>원 · 매달 받으면 <span class="num">${num(DP.deposit(100000000, 12, 0.03).monthlyNet)}</span>원</span></a>
+<a href="/subscription/"><b>청약 가점</b><span>무주택 10년·부양가족 2명·통장 15년 → <span class="num">${SB.subscriptionScore({ homelessYears: 10, family: 2, accountMonths: 180 }).total}</span>점 (84점 만점)</span></a>
+</div>`)}
+${section('가족·생활', null, `<div class="dict">
+<a href="/parental-leave/"><b>육아휴직 급여</b><span>통상임금 300만 → 12개월 <span class="num">${num(PL.parentalLeave({ wage: 3000000, months: 12 }).total)}</span>원 · 6+6은 둘이 <span class="num">${num(PL.bothTotal(3000000).total)}</span>원</span></a>
+<a href="/baby-benefit/"><b>출산·양육 지원금</b><span>첫째 만 2세까지 <span class="num">${num(PL.babyBenefits('2025-01-01', 1, '2025-01-01').total24)}</span>원 · 0세는 월 <span class="num">${num(PL.PARENT_PAY.age0 + PL.CHILD_ALLOWANCE.monthly)}</span>원</span></a>
+<a href="/electric/"><b>전기요금 누진제</b><span>한 달 300kWh → <span class="num">${num(EL.electricBill(300).total)}</span>원 · 여름 <span class="num">${num(EL.electricBill(300, { season: 'summer' }).total)}</span>원</span></a>
 </div>`)}
 ${section('많이 보는 연봉표', null, list(popular))}
 ${section('읽을거리', '계산 뒤에 있는 규칙을 풀어 쓴 글', list(GUIDES.slice(0, 6).map((g) => ({ href: guideUrl(g.slug), title: gtitle(g) }))) + `<p class="sub" style="margin-top:8px"><a href="/guide/">서재 전체 보기 →</a></p>`)}
@@ -615,6 +624,14 @@ ${table(['항목', `${PREV}년`, `${YEAR}년`, '비고'], [
 <p>비영업용 승용차 연세액 = 배기량 × cc당 세액(1,000cc 이하 80원, 1,600cc 이하 140원, 초과 200원), 전기·수소차는 10만원 정액. 지방교육세 30%를 더합니다. 차령 3년차부터 해마다 5%씩 최대 50%까지 경감하고, 6월과 12월에 절반씩 냅니다. 1월 연납 공제율은 행정안전부 고시(2024·2025년 5%, ${YEAR}년 ${pct(CT.ANNUAL_DISCOUNT[YEAR] || 0, 0)})이며 2~12월분(11/12)에 적용합니다. 지방세법 제127조·제128조·제130조.</p>
 <h2>LTV 대출 한도</h2>
 <p>LTV 한도 = 집값(시세) × 담보인정비율. ${LV.LTV_ASOF} 기준으로 규제지역(서울 전역과 경기 과천·광명·성남 분당·수정·중원·수원 영통·장안·팔달·안양 동안·용인 수지·의왕·하남)은 40%(생애최초 70%), 수도권 비규제지역은 70%(생애최초 80%), 지방은 70%(생애최초 80%)이고, 수도권·규제지역 주택담보대출은 6억원(규제지역 15억 초과 4억원, 25억 초과 2억원)을 넘지 못합니다. 실제 대출은 LTV·DSR·은행 심사 가운데 가장 작은 값이며 방공제(소액임차보증금)와 기존 대출에 따라 줄어듭니다. 규제는 자주 바뀌므로 대출 전 은행에 확인하세요.</p>
+<h2>청약 가점</h2>
+<p>주택공급에 관한 규칙 제28조·별표 1의 가점제(84점 만점)입니다. 무주택기간은 1년 미만 2점에서 1년마다 2점씩 15년 이상 32점(만 30세부터, 그 전에 혼인했으면 혼인신고일부터 세고 유주택자와 만 30세 미만 미혼 무주택자는 0점), 부양가족은 0명 5점에서 1명마다 5점씩 6명 이상 35점, 청약통장 가입기간은 6개월 미만 1점·6개월 이상 2점·1년 이상 3점에서 1년마다 1점씩 15년 이상 17점입니다. 페이지의 합계는 세 점수를 더한 값이고, 부양가족 인정(배우자, 3년 이상 같은 등본의 직계존속, 만 30세 미만 미혼 직계비속 등)과 무주택 판정은 청약홈 기준을 따릅니다. 가점제·추첨제 적용 비율은 지역과 면적별로 다릅니다.</p>
+<h2>육아휴직 급여</h2>
+<p>고용보험법 시행령(2025년 1월 1일 시행) 기준입니다. 일반 육아휴직은 1~3개월 통상임금의 100%(월 상한 250만원), 4~6개월 100%(상한 200만원), 7개월부터 80%(상한 160만원), 하한 월 70만원이며 2025년부터 사후지급금 없이 휴직 중 전액 지급합니다. 6+6 부모육아휴직제(생후 18개월 이내 자녀, 부모 모두 사용)는 각자 첫 6개월 100%에 상한 250·250·300·350·400·450만원, 7개월째부터 일반 규정입니다. 한부모는 1~3개월 100%(상한 300만원), 이후 일반과 같습니다. 통상임금은 기본급과 고정수당을 더한 월액(성과급·연장수당 제외)이고 급여는 비과세입니다. 기간은 자녀당 부모 각각 12개월, 부모 모두 3개월 이상 쓰면 각각 18개월(2025년 2월 23일부터)입니다.</p>
+<h2>출산·양육 지원금</h2>
+<p>2025년 전국 공통 지원만 넣었습니다. 첫만남이용권 첫째 200만원·둘째부터 300만원(바우처, 출생 후 1년 안에 사용), 부모급여 0~11개월 월 100만원·12~23개월 월 50만원(어린이집 이용 시 보육료를 뺀 차액), 아동수당 0~95개월 월 10만원, 양육수당 가정양육 24~86개월 월 10만원, 임신·출산 진료비 바우처 단태아 100만원·다태아 태아당 100만원입니다. "만 2세까지 총액"은 첫만남이용권 + 부모급여 24개월 + 아동수당 24개월이고, 개월 수는 생년월일 기준 만 개월입니다. 지역 출산장려금은 지자체별로 달라 넣지 않았습니다.</p>
+<h2>전기요금</h2>
+<p>한국전력 주택용 전기요금표(${EL.ELECTRIC_ASOF}) 기준입니다. 저압은 기본요금 910·1,600·7,300원, 전력량요금 kWh당 120.0·214.6·307.3원, 고압은 730·1,260·6,060원과 105.0·174.0·242.3원이고, 구간은 기타계절(1~6월·9~12월) 200·400kWh, 하계(7~8월) 300·450kWh입니다. 하계와 동계(12~2월)에 1,000kWh를 넘는 사용량은 슈퍼유저 요금(저압 736.2원·고압 601.3원)입니다. 전기요금계 = 기본요금 + 전력량요금 + 기후환경요금(9원/kWh) + 연료비조정요금(+5원/kWh)이고, 청구액은 여기에 부가가치세 10%(원 단위 반올림)와 전력산업기반기금 2.7%(2025년 7월부터, 10원 미만 절사)를 더해 10원 미만을 절사한 값입니다. 필수사용량 보장공제(2024년 폐지), 복지할인·대가족할인, TV수신료 2,500원(2023년 7월부터 분리 고지)은 넣지 않았습니다.</p>
 <h2>대출 한도 (DSR)</h2>
 <p>DSR 40% = 모든 대출의 연간 원리금 상환액 ÷ 연소득 ≤ 40%. 월 상환 여력 = 연소득 × 40% ÷ 12이고, 그 여력으로 갚을 수 있는 원리금균등 원금을 한도로 봅니다. 스트레스 DSR은 실제 금리에 가산금리(수도권 주담대 1.5%p)를 더해 계산합니다.</p>
 <h2>연봉 순위</h2>
@@ -630,7 +647,7 @@ ${table(['항목', `${PREV}년`, `${YEAR}년`, '비고'], [
 <h2>나이대 비교</h2>
 <p>통계청 「${AGE.year}년 임금근로일자리 소득(보수) 결과」의 연령대별 월평균 소득과 소득구간 분포(10구간)를 씁니다. ${AGE.year}년 12월 한 달 동안 사회보험에 신고된 임금근로일자리의 세전 보수라서 연말정산 연봉 통계(연봉 순위)와 대상·기준이 다릅니다. "그 나이대에서 내 위치"는 연봉 ÷ 12를 소득구간 안에서 선형 보간해 구하고, 1,000만원 이상 구간은 3,000만원까지 고르게 퍼져 있다고 가정합니다.</p>
 <h2>출처</h2>
-<ul><li>통계청 ${AGE.year}년 임금근로일자리 소득(보수) 결과 (연령대별·성별 평균소득, 소득구간 분포)</li><li>국세청 근로소득 간이세액표 (소득세법 시행령 별표 2), 국세통계 근로소득 연말정산 신고 현황</li><li>국민연금공단·국민건강보험공단 보험료율 고시</li><li>고용노동부 최저임금 고시, 근로기준법 시행령(주휴·퇴직금), 고용보험법(구직급여)</li><li>주택임대차보호법(전월세전환율), 소득세법(이자소득세)</li></ul>
+<ul><li>통계청 ${AGE.year}년 임금근로일자리 소득(보수) 결과 (연령대별·성별 평균소득, 소득구간 분포)</li><li>국세청 근로소득 간이세액표 (소득세법 시행령 별표 2), 국세통계 근로소득 연말정산 신고 현황</li><li>국민연금공단·국민건강보험공단 보험료율 고시</li><li>고용노동부 최저임금 고시, 근로기준법 시행령(주휴·퇴직금), 고용보험법(구직급여)</li><li>주택임대차보호법(전월세전환율), 소득세법(이자소득세)</li><li>주택공급에 관한 규칙 별표 1(청약 가점), 고용보험법 시행령(육아휴직 급여, 2025.1.1 시행), 보건복지부 부모급여·아동수당·첫만남이용권 안내, 한국전력 전기요금표(주택용 저압·고압)</li></ul>
 </div>`;
   write('/method/', shell({ url: '/method/', title: '계산 기준과 요율 — 돈표', desc: '돈표의 실수령액·대출·퇴직금·알바 월급 계산 방식과 연도별 4대보험 요율, 출처를 정리했습니다.', body: method }));
 
@@ -2145,6 +2162,297 @@ ${LTV_NOTE}`;
   write('/ltv/', shell({ url: '/ltv/', title: `LTV 주택담보대출 한도표 — 집값·지역·생애최초별 (${LV.LTV_ASOF})`, desc: '3억원부터 30억원까지 집값별 주택담보대출 LTV 한도를 규제지역 40%, 수도권 비규제 70%, 지방 70%, 생애최초 70~80%와 6억·4억·2억 한도로 계산했습니다.', body, nav: 'loan' }));
 }
 
+/* ---------- 청약 가점 ---------- */
+const SUB_H = Array.from({ length: 16 }, (_, i) => i);   /* 무주택 0 = 1년 미만 … 15 = 15년 이상 */
+const SUB_F = [0, 1, 2, 3, 4, 5, 6];                       /* 부양가족 6 = 6명 이상 */
+const subUrl = (h, f) => `/subscription/${h}-${f}/`;
+const hText = (h) => h === 0 ? '무주택 1년 미만' : h === 15 ? '무주택 15년 이상' : `무주택 ${h}년`;
+const hRange = (h) => h === 0 ? '1년 미만' : h === 15 ? '15년 이상' : `${h}년 이상 ${h + 1}년 미만`;
+const fText = (f) => f === 6 ? '부양가족 6명 이상' : `부양가족 ${f}명`;
+const fShort = (f) => f === 6 ? '6명 이상' : `${f}명`;
+const subTotal = (h, f, a = SB.SUB_MAX.account) => SB.homelessScore(h) + SB.familyScore(f) + a;
+const SUB_NOTE = `<p class="note">주택공급에 관한 규칙 제28조·별표 1(가점제) 기준입니다. 무주택기간과 부양가족은 세대 구성·주민등록을 보고 청약홈이 최종 판정하며, 가점제·추첨제 비율과 당첨 커트라인은 지역·면적·단지마다 다릅니다. 참고용이며 실제 청약은 입주자모집공고를 확인하세요. <a href="/method/">계산 기준 보기</a></p>`;
+const SUB_TIPS = `<div class="doc">
+<p><b>무주택기간은 만 30세부터 셉니다.</b> 만 30세가 되는 날부터 무주택 기간을 세고, 그 전에 혼인했다면 혼인신고일부터입니다. 집을 가졌다가 판 사람은 무주택이 된 날부터 다시 셉니다. 만 30세 미만 미혼 무주택자와 유주택자는 0점입니다. 세대원 전원이 무주택이어야 하고, 60세 이상 직계존속이 가진 집은 무주택으로 봅니다(그 존속은 부양가족에서 빠집니다).</p>
+<p><b>부양가족은 등본이 기준입니다.</b> 배우자(따로 살아도 인정), 3년 이상 같은 주민등록에 있는 직계존속(배우자의 부모 포함, 집을 가진 존속은 제외), 만 30세 미만 미혼 직계비속(30세 이상은 1년 이상 같은 등본)이 부양가족입니다. 본인은 들어가지 않습니다.</p>
+<p><b>통장은 최초 가입일 기준입니다.</b> 청약통장 가입기간은 처음 가입한 날부터 세고, 미성년 때 가입한 기간은 최대 2년만 인정하다가 2024년부터 5년까지 인정합니다. 6개월 미만 1점에서 15년 이상 17점입니다.</p>
+<p><b>가점제 비율은 지역·면적별로 다릅니다.</b> 규제지역(투기과열지구) 전용 60㎡ 이하는 가점 40%·추첨 60%, 60~85㎡는 가점 70%·추첨 30%, 85㎡ 초과는 가점 80%·추첨 20%이고, 비규제지역은 85㎡ 이하 가점 40%·추첨 60%, 85㎡ 초과는 100% 추첨입니다(2023년 4월 개정). 가점이 낮으면 추첨 물량이 많은 단지와 면적을 고릅니다.</p>
+<p><b>최대 가점은 가족 수가 정합니다.</b> 무주택 15년·통장 15년을 다 채워도 4인 가족(부양가족 3명) 69점, 3인 64점, 2인 59점, 1인 54점이 최대입니다. 수도권 인기 단지 당첨 커트라인은 60점대 후반이 흔해 3인 가구 이하는 만점을 받아도 어려운 곳이 있습니다. 커트라인은 단지마다 다르니 청약홈의 과거 당첨 가점을 확인하세요.</p>
+</div>`;
+
+function subPage(h, f) {
+  const hs = SB.homelessScore(h), fs = SB.familyScore(f), max = subTotal(h, f), min = subTotal(h, f, 1), url = subUrl(h, f);
+  const g = SB.subGrade(max);
+  const title = `${hText(h)} · ${fText(f)} 청약 가점 — 통장 기간별 합계 (최대 ${max}점)`;
+  const desc = `무주택기간 ${hRange(h)} ${hs}점 + 부양가족 ${fShort(f)} ${fs}점에 청약통장 가입기간 점수(6개월 미만 1점 ~ 15년 이상 17점)를 더하면 청약 가점은 ${min}~${max}점입니다. 통장 기간별 합계표와 84점 만점 계산 기준.`;
+  const accRows = SB.ACCOUNT_TABLE.map((a) => ({ cls: a.score === SB.SUB_MAX.account ? 'on' : '', cells: [a.label, `${a.score}점`, `${hs + fs + a.score}점`] }));
+  const body = `
+${crumb([['/subscription/', '청약 가점'], [null, `${hText(h)} · ${fText(f)}`]])}
+<h1 class="title">${hText(h)} · ${fText(f)}이면 청약 가점은</h1>
+<p class="meta">주택공급에 관한 규칙 별표 1 · 84점 만점 (무주택기간 32 + 부양가족 35 + 통장 가입기간 17)</p>
+${lead(`무주택기간 ${hRange(h)}은 ${hs}점, ${fText(f)}은 ${fs}점입니다. 여기에 청약통장 가입기간 점수를 더하면 통장 6개월 미만일 때 ${min}점, 15년 이상이면 ${max}점입니다. ${g.text}`)}
+${hero({ label: '청약 가점 합계 (통장 15년 이상일 때)', value: max, unit: '점', sub: `무주택 ${hs}점 + 부양가족 ${fs}점 + 통장 17점 · 84점 만점의 ${pct(max / 84, 0)} · ${g.label}` })}
+${tiles([{ label: '무주택기간 점수', value: hs }, { label: '부양가족 점수', value: fs }, { label: '통장 가입기간 (최대)', value: SB.SUB_MAX.account }])}
+${section('통장 가입기간별 합계', `무주택 ${hs}점 + 부양가족 ${fs}점에 통장 점수를 더한 값`, table(['청약통장 가입기간', '통장 점수', '합계'], accRows))}
+${section('무주택 기간이 바뀌면', `${fText(f)} · 통장 15년 이상 기준`, chips(neighbors(SUB_H, h, 2).map((x) => ({ label: hText(x), value: subTotal(x, f), href: subUrl(x, f), on: x === h }))))}
+${section('부양가족이 바뀌면', `${hText(h)} · 통장 15년 이상 기준`, chips(neighbors(SUB_F, f, 2).map((x) => ({ label: fText(x), value: subTotal(h, x), href: subUrl(h, x), on: x === f }))))}
+${ad()}
+${section('알아두면 좋은 것', null, SUB_TIPS)}
+${section('이어서 계산하기', null, list([{ href: '/subscription/', title: '청약 가점 계산기', sub: '무주택 기간·부양가족·통장 기간을 직접 넣기' }, { href: '/ltv/', title: 'LTV 대출 한도', sub: '당첨되면 얼마까지 빌릴 수 있나' }, { href: '/loan/', title: '대출 상환액', sub: '중도금·잔금 대출 월 상환액' }, { href: '/acquisition-tax/', title: '주택 취득세', sub: '입주할 때 내는 세금' }]))}
+${SUB_NOTE}`;
+  write(url, shell({ url, title, desc, body }));
+}
+
+function subIndex() {
+  const url = '/subscription/';
+  const inp = (id, label, value) => `<label class="ye-f"><span>${label}</span><input id="${id}" type="text" inputmode="numeric" value="${value}"></label>`;
+  const ex = SB.subscriptionScore({ homelessYears: 10, family: 2, accountMonths: 180 });
+  const gridRows = SUB_H.map((h) => ({ cells: [`${hRange(h)}<br><small>${SB.homelessScore(h)}점</small>`].concat(SUB_F.map((f) => `<a href="${subUrl(h, f)}">${subTotal(h, f)}</a>`)) }));
+  const body = `
+${crumb([['/', '홈'], [null, '청약 가점']])}
+<h1 class="title">청약 가점 계산기 — 무주택기간·부양가족·통장 가입기간</h1>
+<p class="meta">주택공급에 관한 규칙 별표 1 · 84점 만점 · 입력값은 이 기기 밖으로 나가지 않습니다</p>
+${lead(`청약 가점은 무주택기간(최대 32점), 부양가족 수(최대 35점), 청약통장 가입기간(최대 17점)을 더한 84점 만점입니다. 무주택 10년·부양가족 2명·통장 15년이면 ${ex.homeless} + ${ex.family} + ${ex.account} = ${ex.total}점입니다. 4인 가족이 모든 항목을 채우면 69점, 1인 가구는 54점이 최대라 가족 수가 점수 상한을 정합니다.`)}
+<form class="quick ye-form" id="sb-form">
+<div class="ye-grid">
+${inp('sb-years', '무주택 기간 (년)', 10)}
+${inp('sb-family', '부양가족 수 (본인 제외)', 2)}
+${inp('sb-acc-y', '청약통장 가입 (년)', 15)}
+${inp('sb-acc-m', '+ 개월', 0)}
+</div>
+<div class="ye-checks"><label><input type="checkbox" id="sb-under30"> 만 30세 미만 미혼 (무주택 0점)</label><label><input type="checkbox" id="sb-owner"> 지금 주택 소유 (무주택 0점)</label></div>
+</form>
+<div class="hero"><div class="hero-label">청약 가점 합계</div><div class="hero-num"><span class="num" id="sb-total">0</span><span class="unit">점</span></div><div class="hero-sub" id="sb-sub">계산 중</div></div>
+<div class="tiles"><div class="tile"><small>무주택기간 (32점)</small><span class="num" id="sb-h">0</span></div><div class="tile"><small>부양가족 (35점)</small><span class="num" id="sb-f">0</span></div><div class="tile"><small>통장 가입기간 (17점)</small><span class="num" id="sb-a">0</span></div></div>
+<div id="sb-grade"></div>
+<p class="sub" style="margin-top:8px"><a id="sb-link" href="${subUrl(10, 2)}">무주택 10년 · 부양가족 2명 표로 →</a></p>
+${section('무주택기간 점수', '만 30세(그 전에 혼인했으면 혼인신고일)부터 · 최대 32점', table(['무주택기간', '점수'], SB.HOMELESS_TABLE.map((r) => ({ cells: [r.label, `${r.score}점`] }))))}
+${section('부양가족 점수', '배우자 · 3년 이상 같은 등본의 직계존속 · 만 30세 미만 미혼 직계비속 · 최대 35점', table(['부양가족', '점수'], SB.FAMILY_TABLE.map((r) => ({ cells: [r.label, `${r.score}점`] }))))}
+${section('청약통장 가입기간 점수', '최초 가입일 기준 · 최대 17점', table(['가입기간', '점수'], SB.ACCOUNT_TABLE.map((r) => ({ cells: [r.label, `${r.score}점`] }))))}
+${ad()}
+${section('무주택 × 부양가족 합계표', '통장 15년 이상(17점) 기준 · 칸을 누르면 통장 기간별 합계', table(['무주택기간'].concat(SUB_F.map((f) => `부양가족<br>${fShort(f)}`)), gridRows))}
+${section('가구원 수별 최대 가점', '무주택 15년 · 통장 15년을 다 채웠을 때', table(['가구', '부양가족', '최대 가점'], [1, 2, 3, 4, 5, 6, 7].map((p) => ({ cells: [p === 7 ? '7인 이상' : `${p}인`, fShort(Math.min(6, p - 1)), `${SB.maxForFamily(p - 1)}점`] }))))}
+${section('자주 묻는 것', null, `<div class="doc">
+<p><b>만 30세 미만인데 무주택 점수가 0점인가요?</b> 미혼이면 그렇습니다. 만 30세가 되는 날부터 기간이 쌓이고, 30세 전에 혼인신고를 했다면 그날부터 셉니다.</p>
+<p><b>부모님을 모시면 부양가족인가요?</b> 3년 이상 같은 주민등록에 계속 올라 있어야 하고, 부모님이 집을 가지고 있으면 인정되지 않습니다. 배우자의 부모도 같습니다.</p>
+<p><b>통장을 오래전에 만들고 납입을 안 했으면?</b> 가입기간 점수는 납입 횟수가 아니라 가입일 기준입니다. 다만 1순위 요건(가입 기간·납입 횟수·예치금)은 따로 갖춰야 합니다.</p>
+<p><b>가점이 낮으면 방법이 없나요?</b> 추첨제 물량(규제지역 60㎡ 이하 60%, 비규제지역 85㎡ 초과 100%)과 생애최초·신혼부부·다자녀 특별공급을 노립니다. 특별공급은 소득·자산 요건이 있고 가점이 아닌 별도 기준으로 뽑습니다.</p>
+</div>`)}
+${section('알아두면 좋은 것', null, SUB_TIPS)}
+${section('이어서 계산하기', null, list([{ href: '/ltv/', title: 'LTV 대출 한도', sub: '당첨되면 얼마까지 빌릴 수 있나' }, { href: '/dsr/', title: '연봉별 DSR 한도', sub: '내 연봉으로는 얼마까지' }, { href: '/acquisition-tax/', title: '주택 취득세', sub: '입주할 때 내는 세금' }]))}
+${SUB_NOTE}`;
+  write(url, shell({ url, title: `청약 가점 계산기 — 무주택기간·부양가족·통장 가입기간 84점 만점 (${YEAR}년)`, desc: '무주택 기간, 부양가족 수, 청약통장 가입기간을 넣으면 주택청약 가점(84점 만점)을 바로 계산합니다. 항목별 점수표, 무주택×부양가족 합계표, 가구원 수별 최대 가점과 부양가족 인정 기준.', body, scripts: ['/js/engine.js', '/js/subscription.js'] }));
+}
+
+/* ---------- 육아휴직 급여 ---------- */
+const PL_WAGES = []; for (let m = 150; m <= 700; m += 50) PL_WAGES.push(m);
+const plUrl = (m) => `/parental-leave/${m}/`;
+const PL_NOTE = `<p class="note">2025년 1월 1일 시행 고용보험법 시행령(제95조·제95조의3) 기준입니다. 통상임금은 휴직 시작일 기준으로 회사가 신고한 금액으로 확정되고, 휴직 중 회사가 임금을 주면 급여가 조정될 수 있습니다. 참고용이며 정확한 금액은 고용24 모의계산과 관할 고용센터에서 확인하세요. <a href="/method/">계산 기준 보기</a></p>`;
+const PL_TIPS = `<div class="doc">
+<p><b>통상임금은 기본급에 고정수당을 더한 금액입니다.</b> 정기적·일률적·고정적으로 받는 기본급·직책수당·고정 식대 등이 들어가고, 성과급·연장수당·실비 변상은 빠집니다. 휴직 시작일 기준으로 회사가 고용보험에 신고한 금액이 기준입니다.</p>
+<p><b>2025년부터 휴직 중에 전액 받습니다.</b> 급여의 25%를 복직 6개월 뒤에 주던 사후지급금 제도가 폐지되어, 매달 신청한 금액을 그대로 받습니다. 급여는 비과세라 소득세를 떼지 않습니다.</p>
+<p><b>신청은 고용24에서.</b> 휴직 시작 1개월 뒤부터 매달(또는 한꺼번에) 고용24(고용보험) 누리집이나 고용센터에 신청하고, 회사가 육아휴직 확인서를 먼저 제출해야 합니다. 휴직이 끝난 날부터 12개월 안에 신청하지 않으면 받지 못합니다.</p>
+<p><b>기간은 최대 18개월.</b> 자녀 1명당 부모 각각 12개월이 기본이고, 부모가 모두 3개월 이상 쓰면(2025년 2월 23일부터) 각각 18개월까지 쓸 수 있습니다. 나눠 쓸 수도 있습니다(분할 횟수 제한 있음).</p>
+<p><b>6+6은 생후 18개월 안에.</b> 아이가 생후 18개월 이내일 때 부모가 모두(순서대로 또는 동시에) 육아휴직을 쓰면 각자 첫 6개월에 높은 상한이 적용됩니다. 두 번째로 쓰는 사람의 급여가 확정될 때 먼저 쓴 사람의 차액도 정산됩니다.</p>
+<p><b>배우자 출산휴가는 20일.</b> 2025년 2월 23일부터 배우자 출산휴가가 10일에서 20일로 늘었고 통상임금 100%를 받습니다. 우선지원대상기업(중소기업)은 정부가 20일분을 지원하되 상한이 있습니다.</p>
+<p><b>휴직 중 보험료.</b> 국민연금은 납부 예외를 신청할 수 있고, 건강보험료는 휴직 기간 동안 고지가 유예됐다가 복직 후 경감된 금액으로 정산됩니다.</p>
+</div>`;
+
+function plPage(w) {
+  const W = w * 10000, url = plUrl(w);
+  const r = PL.parentalLeave({ wage: W, months: 12 }), r18 = PL.parentalLeave({ wage: W, months: 18 });
+  const b = PL.parentalLeave({ wage: W, months: 6, mode: 'both' }), bt = PL.bothTotal(W);
+  const s = PL.parentalLeave({ wage: W, months: 12, mode: 'single' });
+  const p1 = r.rows[0].pay, p4 = r.rows[3].pay, p7 = r.rows[6].pay;
+  const title = `통상임금 ${manwon(W)} 육아휴직 급여 — 1~3개월 ${short(p1)} · 4~6개월 ${short(p4)} · 7개월~ ${short(p7)} (1년 ${manwon(r.total)})`;
+  const desc = `통상임금 월 ${manwon(W)}이면 육아휴직 급여는 1~3개월 ${won(p1)}, 4~6개월 ${won(p4)}, 7개월부터 ${won(p7)}으로 12개월 합계 ${won(r.total)}입니다. 6+6 부모육아휴직제로 부모가 6개월씩 쓰면 두 사람 합계 ${won(bt.total)}, 한부모는 12개월 ${won(s.total)}. 2025년 기준 월별 표.`;
+  const why = (x) => x.capped ? '상한액' : x.floored ? '하한 70만원' : `통상임금 × ${pct(x.rate, 0)}`;
+  const normRows = r.rows.map((x) => ({ cells: [`${x.month}개월째`, pct(x.rate, 0), num(x.cap), num(x.pay), why(x)] }));
+  normRows.push({ cells: ['13~18개월째<br><small>부모 모두 3개월 이상 사용 시</small>', pct(r18.rows[12].rate, 0), num(r18.rows[12].cap), num(r18.rows[12].pay), why(r18.rows[12])] });
+  normRows.push({ cls: 'sum', cells: ['12개월 합계', '', '', num(r.total), `18개월이면 ${num(r18.total)}`] });
+  const bothRows = b.rows.map((x) => ({ cells: [`${x.month}개월째`, num(x.cap), num(x.pay), num(x.pay * 2)] }));
+  bothRows.push({ cls: 'sum', cells: ['6개월 합계', '', num(b.total), num(bt.total)] });
+  const singleRows = [[1, 3], [4, 6], [7, 12]].map(([a, z]) => { const x = s.rows[a - 1]; return { cells: [`${a}~${z}개월째`, pct(x.rate, 0), num(x.cap), num(x.pay), num(x.pay * (z - a + 1))] }; });
+  singleRows.push({ cls: 'sum', cells: ['12개월 합계', '', '', '', num(s.total)] });
+  const body = `
+${crumb([['/parental-leave/', '육아휴직 급여'], [null, `통상임금 ${manwon(W)}`]])}
+<h1 class="title">통상임금 ${manwon(W)}이면 육아휴직 급여는</h1>
+<p class="meta">2025년 고용보험법 시행령 · 1~3개월 100% (상한 250만) · 4~6개월 100% (상한 200만) · 7개월부터 80% (상한 160만) · 사후지급금 없이 휴직 중 전액</p>
+${lead(`통상임금이 월 ${manwon(W)}이면 육아휴직 첫 3개월은 ${r.rows[0].capped ? '상한에 걸려' : '통상임금 전액인'} ${won(p1)}, 4~6개월은 ${won(p4)}, 7개월째부터는 ${won(p7)}을 받습니다. 12개월을 다 쓰면 ${won(r.total)}으로 같은 기간 통상임금 ${manwon(W * 12)}의 ${pct(r.total / (W * 12), 0)}입니다. 아이가 생후 18개월 안이고 부모가 모두 휴직하면 6+6 제도로 각자 첫 6개월에 ${won(b.total)}씩, 두 사람 합쳐 ${won(bt.total)}까지 받습니다. 급여는 비과세라 세금을 떼지 않습니다.`)}
+${hero({ label: '12개월 육아휴직 급여 합계', value: r.total, sub: `월평균 ${won(r.average)} · 통상임금 12개월분의 ${pct(r.total / (W * 12), 0)} · 소득세 없음` })}
+${tiles([{ label: '1~3개월 (월)', value: p1 }, { label: '4~6개월 (월)', value: p4 }, { label: '7개월부터 (월)', value: p7 }])}
+${section('월별 급여 (일반 육아휴직)', `통상임금 ${manwon(W)} · 원`, table(['개월', '비율', '상한', '급여', '적용'], normRows))}
+${section('6+6 부모육아휴직제 (부모 모두 사용)', '생후 18개월 안에 부모가 모두 휴직하면 각자 첫 6개월 100% · 상한 250→450만원 · 두 사람 통상임금이 같다고 가정', table(['개월', '상한', '한 사람', '두 사람 합계'], bothRows))}
+${section('한부모', '1~3개월 100% (상한 300만) · 4개월부터 일반과 동일', table(['개월', '비율', '상한', '월 급여', '구간 합계'], singleRows))}
+${section('통상임금이 바뀌면', '일반 육아휴직 12개월 합계', chips(neighbors(PL_WAGES, w, 3).map((x) => ({ label: short(x * 10000), value: PL.parentalLeave({ wage: x * 10000, months: 12 }).total, href: plUrl(x), on: x === w }))))}
+${ad()}
+${section('알아두면 좋은 것', null, PL_TIPS)}
+${section('이어서 계산하기', null, list([{ href: '/parental-leave/', title: '육아휴직 급여 계산기', sub: '통상임금·개월·유형을 직접 넣기' }, { href: '/baby-benefit/', title: '출산·양육 지원금 총정리', sub: '첫만남이용권·부모급여·아동수당은 얼마' }, { href: monthlyUrl(nearest(MONTHLIES, w)), title: `월급 ${manwon(nearest(MONTHLIES, w) * 10000)} 실수령액`, sub: '복직하면 손에 쥐는 돈' }]))}
+${PL_NOTE}`;
+  write(url, shell({ url, title, desc, body }));
+}
+
+function plIndex() {
+  const url = '/parental-leave/';
+  const inp = (id, label, value) => `<label class="ye-f"><span>${label}</span><input id="${id}" type="text" inputmode="numeric" value="${value}"></label>`;
+  const rows = PL_WAGES.map((w) => { const W = w * 10000, r = PL.parentalLeave({ wage: W, months: 12 }); return { cells: [`<a href="${plUrl(w)}">${manwon(W)}</a>`, num(r.rows[0].pay), num(r.rows[3].pay), num(r.rows[6].pay), num(r.total), num(PL.bothTotal(W).total)] }; });
+  const ex = PL.parentalLeave({ wage: 3000000, months: 12 });
+  const body = `
+${crumb([['/', '홈'], [null, '육아휴직 급여']])}
+<h1 class="title">육아휴직 급여 계산기 — 통상임금별 월 급여와 12개월 총액</h1>
+<p class="meta">2025년 1월 1일 시행 고용보험법 시행령 · 일반 · 6+6 부모육아휴직제 · 한부모 · 입력값은 이 기기 밖으로 나가지 않습니다</p>
+${lead(`육아휴직 급여는 통상임금의 100%(1~3개월 상한 250만원, 4~6개월 상한 200만원), 7개월째부터 80%(상한 160만원)이고 하한은 월 70만원입니다. 통상임금 300만원이면 12개월에 ${won(ex.total)}, 부모가 모두 6개월씩 쓰는 6+6 제도로는 두 사람 합쳐 ${won(PL.bothTotal(3000000).total)}입니다. 2025년부터 사후지급금이 없어져 휴직 중에 전액 받고, 급여는 비과세입니다.`)}
+<form class="quick ye-form" id="pl-form">
+<div class="ye-grid">
+${inp('pl-wage', '월 통상임금 (만원)', 300)}
+${inp('pl-months', '사용 개월 (1~18)', 12)}
+<label class="ye-f"><span>유형</span><select id="pl-mode"><option value="normal">일반 육아휴직</option><option value="both">6+6 부모 함께 (생후 18개월 이내)</option><option value="single">한부모</option></select></label>
+</div>
+</form>
+<div class="hero"><div class="hero-label">육아휴직 급여 합계</div><div class="hero-num"><span class="num" id="pl-total">0</span><span class="unit">원</span></div><div class="hero-sub" id="pl-sub">계산 중</div></div>
+<div class="tiles"><div class="tile"><small>첫 달</small><span class="num" id="pl-first">0</span></div><div class="tile"><small>마지막 달</small><span class="num" id="pl-last">0</span></div><div class="tile"><small>6+6 두 사람 합계</small><span class="num" id="pl-both">0</span></div></div>
+<div id="pl-tips"></div>
+<div class="ledger"><div class="lg-head"><h2>월별 급여</h2><span>원</span></div><div id="pl-rows"></div></div>
+${section('통상임금별 급여표', '원 · 금액을 누르면 월별 표와 6+6·한부모 계산', table(['통상임금', '1~3개월 (월)', '4~6개월 (월)', '7개월~ (월)', '12개월 합계', '6+6 두 사람 합계'], rows))}
+${ad()}
+${section('상한액 한눈에', '2025년 1월 1일 시행', table(['유형', '기간', '비율', '월 상한'], [
+  { cells: ['일반', '1~3개월', '100%', '2,500,000'] }, { cells: ['일반', '4~6개월', '100%', '2,000,000'] }, { cells: ['일반', '7개월부터', '80%', '1,600,000'] },
+  { cells: ['6+6 부모 함께', '1~2개월', '100%', '2,500,000'] }, { cells: ['6+6 부모 함께', '3개월', '100%', '3,000,000'] }, { cells: ['6+6 부모 함께', '4개월', '100%', '3,500,000'] }, { cells: ['6+6 부모 함께', '5개월', '100%', '4,000,000'] }, { cells: ['6+6 부모 함께', '6개월', '100%', '4,500,000'] },
+  { cells: ['한부모', '1~3개월', '100%', '3,000,000'] }, { cells: ['한부모', '4개월부터', '일반과 동일', '2,000,000 → 1,600,000'] },
+  { cells: ['하한', '전 기간', '—', '700,000'] },
+]))}
+${section('자주 묻는 것', null, `<div class="doc">
+<p><b>통상임금이 뭔가요?</b> 기본급과 정기적·일률적·고정적으로 받는 수당(직책수당·고정 식대 등)을 더한 월액입니다. 성과급·연장수당·실비는 빠집니다. 회사 급여명세서의 '통상임금'이나 인사팀에 확인하세요.</p>
+<p><b>급여에서 세금을 떼나요?</b> 아닙니다. 육아휴직 급여는 소득세법상 비과세라 세금이 없고, 회사 급여가 아니라 고용보험에서 나옵니다.</p>
+<p><b>부부가 같이 써야만 18개월인가요?</b> 기본은 각각 12개월입니다. 부모가 모두 3개월 이상 쓰면 각각 18개월까지 늘어나고, 한부모와 중증 장애아동 부모도 18개월입니다.</p>
+<p><b>배우자 출산휴가는요?</b> 2025년 2월 23일부터 20일이며 통상임금 100%입니다. 중소기업은 정부가 20일분을 지원합니다(상한 있음). 출산 후 120일 안에 써야 하고 나눠 쓸 수 있습니다.</p>
+</div>`)}
+${section('알아두면 좋은 것', null, PL_TIPS)}
+${section('이어서 계산하기', null, list([{ href: '/baby-benefit/', title: '출산·양육 지원금 총정리', sub: '첫만남이용권·부모급여·아동수당은 얼마' }, { href: '/monthly/', title: '월급 실수령액표', sub: '복직하면 손에 쥐는 돈' }, { href: '/unemployment/', title: '실업급여표', sub: '같은 고용보험에서 나오는 구직급여' }]))}
+${PL_NOTE}`;
+  write(url, shell({ url, title: `육아휴직 급여 계산기 — 통상임금별 월 급여·12개월 총액·6+6 부모육아휴직제 (2025년)`, desc: '통상임금과 사용 개월을 넣으면 육아휴직 급여를 월별로 계산합니다. 1~3개월 상한 250만, 4~6개월 200만, 7개월부터 80% 160만, 6+6 부모육아휴직제 상한 450만, 한부모 300만, 하한 70만원. 2025년 시행령 기준.', body, scripts: ['/js/engine.js', '/js/parental.js'] }));
+}
+
+function babyPage() {
+  const url = '/baby-benefit/';
+  const first = PL.babyBenefits('2025-01-01', 1, '2025-01-01'), second = PL.babyBenefits('2025-01-01', 2, '2025-01-01');
+  const body = `
+${crumb([['/', '홈'], [null, '출산·양육 지원금']])}
+<h1 class="title">출산·양육 지원금 총정리 — 첫만남이용권·부모급여·아동수당</h1>
+<p class="meta">2025년 전국 공통 지원 · 아기 생년월일을 넣으면 이번 달 받는 것과 만 2세까지 총액 · 입력값은 이 기기 밖으로 나가지 않습니다</p>
+${lead(`아이가 태어나면 첫만남이용권 200만원(둘째부터 300만원)을 바우처로 받고, 0세에는 부모급여 월 100만원과 아동수당 월 10만원, 1세에는 부모급여 월 50만원과 아동수당 10만원을 현금으로 받습니다. 첫째 기준 만 2세까지 ${won(first.total24)}, 둘째는 ${won(second.total24)}입니다. 아동수당은 만 8세 전까지 이어지고, 어린이집·유치원에 다니지 않으면 24개월부터 양육수당 월 10만원이 더 붙습니다. 지역 출산장려금은 여기에 별도입니다.`)}
+<form class="quick ye-form" id="bb-form">
+<div class="ye-grid">
+<label class="ye-f"><span>아기 생년월일 (출산 예정일도 가능)</span><input id="bb-birth" type="date" value="${BUILD_ISO}"></label>
+<label class="ye-f"><span>출생 순위</span><select id="bb-order"><option value="1">첫째</option><option value="2">둘째 이상</option></select></label>
+</div>
+</form>
+<div class="hero"><div class="hero-label">이번 달 받는 현금 지원</div><div class="hero-num"><span class="num" id="bb-monthly">0</span><span class="unit">원</span></div><div class="hero-sub" id="bb-sub">계산 중</div></div>
+<div class="tiles tiles-wide"><div class="tile"><small>첫만남이용권 (한 번)</small><span class="num" id="bb-first">0</span></div><div class="tile"><small>만 2세까지 총액</small><span class="num" id="bb-total24">0</span></div><div class="tile"><small>앞으로 남은 것 (만 2세까지)</small><span class="num" id="bb-remaining">0</span></div></div>
+<div class="tbl"><table><thead><tr><th>시기</th><th>기간</th><th>월 지급</th><th>구간 합계</th></tr></thead><tbody id="bb-timeline"></tbody></table></div>
+<p class="sub" style="margin-top:8px">현금 지원(부모급여 + 아동수당)만 더한 값입니다. 첫만남이용권·양육수당·지역 출산장려금은 별도.</p>
+${section('지원금 총정리', '2025년 · 소득 조건 없이 전국 공통', table(['항목', '금액', '기간', '신청처'], PL.BENEFITS.map((b) => ({ cells: [`<b>${b.name}</b><br><small>${b.note}</small>`, b.amount, b.when, b.where] }))))}
+${ad()}
+${section('만 2세까지 얼마나 받나', '첫만남이용권 + 부모급여 24개월 + 아동수당 24개월', table(['항목', '첫째', '둘째 이상'], [
+  { cells: ['첫만남이용권', num(first.firstMeeting), num(second.firstMeeting)] },
+  { cells: ['부모급여 0세 (100만 × 12)', num(PL.PARENT_PAY.age0 * 12), num(PL.PARENT_PAY.age0 * 12)] },
+  { cells: ['부모급여 1세 (50만 × 12)', num(PL.PARENT_PAY.age1 * 12), num(PL.PARENT_PAY.age1 * 12)] },
+  { cells: ['아동수당 (10만 × 24)', num(first.childTo24), num(second.childTo24)] },
+  { cls: 'sum', cells: ['만 2세까지 합계', num(first.total24), num(second.total24)] },
+  { cells: ['만 8세까지 아동수당 포함', num(first.total96), num(second.total96)] },
+]))}
+${section('자주 묻는 것', null, `<div class="doc">
+<p><b>어린이집에 보내면 부모급여를 못 받나요?</b> 받습니다. 다만 보육료 바우처(0세반 기준 월 54만원 안팎)를 먼저 빼고 차액을 현금으로 줍니다. 0세는 100만원 − 보육료, 1세는 50만원 − 보육료가 남으면 그만큼 받습니다.</p>
+<p><b>언제까지 신청해야 하나요?</b> 부모급여·아동수당은 출생 후 60일 안에 신청하면 출생월부터 소급됩니다. 60일이 지나면 신청한 달부터입니다. 출생신고 때 주민센터의 '행복출산 원스톱 서비스'로 한 번에 신청할 수 있습니다.</p>
+<p><b>첫만남이용권은 현금인가요?</b> 국민행복카드에 들어오는 바우처(포인트)입니다. 출생 후 1년 안에 써야 하고 유흥·사행업종 외에는 대부분 쓸 수 있습니다.</p>
+<p><b>지역 출산장려금은 얼마인가요?</b> 지자체마다 다릅니다. 첫째 수십만원부터 셋째 이상 수천만원까지 있고, 거주 기간 조건이 붙는 곳이 많습니다. 정부24에서 '출산지원금'으로 검색하거나 주민센터에 물어보세요.</p>
+<p><b>양육수당과 아동수당은 다른가요?</b> 아동수당은 만 8세 전까지 모든 아동에게, 양육수당은 어린이집·유치원에 다니지 않는 24~86개월 아동에게 주는 것입니다. 둘 다 받을 수 있습니다.</p>
+</div>`)}
+${section('이어서 계산하기', null, list([{ href: '/parental-leave/', title: '육아휴직 급여 계산기', sub: '통상임금별 월 급여와 6+6 부모육아휴직제' }, { href: '/yearend/', title: '연말정산 미리보기', sub: '자녀세액공제까지 넣어 환급 예상' }, { href: '/goal/', title: '목돈 모으기', sub: '지원금을 모으면 언제 1,000만원' }]))}
+<p class="note">2025년 기준이며 지자체 지원(출산장려금·산후조리비 등)은 별도입니다. 부모급여·아동수당 금액과 첫만남이용권은 보건복지부 고시로 해마다 바뀔 수 있고, 어린이집 이용 시 부모급여는 보육료를 뺀 차액만 현금으로 받습니다. 참고용이며 신청과 확정 금액은 복지로·주민센터에서 확인하세요. <a href="/method/">계산 기준 보기</a></p>`;
+  write(url, shell({ url, title: `출산·양육 지원금 총정리 — 첫만남이용권·부모급여·아동수당 만 2세까지 ${manwon(first.total24)} (2025년)`, desc: `아기 생년월일을 넣으면 이번 달 받는 부모급여·아동수당과 만 2세까지 총액을 계산합니다. 첫만남이용권 200만(둘째 300만), 부모급여 0세 월 100만·1세 월 50만, 아동수당 월 10만, 양육수당, 임신·출산 진료비 바우처까지 금액·기간·신청처 한 표.`, body, scripts: ['/js/engine.js', '/js/parental.js'] }));
+}
+
+/* ---------- 전기요금 ---------- */
+const EL_KWH = []; for (let k = 100; k <= 1000; k += 50) EL_KWH.push(k);
+const elUrl = (k) => `/electric/${k}/`;
+const EL_NOTE = `<p class="note">한국전력 주택용 전기요금표(저압·고압, ${EL.ELECTRIC_ASOF}) 기준입니다. 기후환경요금 9원/kWh, 연료비조정요금 +5원/kWh, 부가가치세 10%, 전력산업기반기금 2.7%(2025년 7월부터)를 반영했고 복지할인·대가족할인·출산가구할인, TV수신료 2,500원, 검침일에 따른 계절 안분은 넣지 않았습니다. 참고용이며 실제 고지서와 다를 수 있습니다. <a href="/method/">계산 기준 보기</a></p>`;
+const tierCell = (b, t) => { const r = b.rows.find((x) => x.tier === t); return r ? `${num(r.kwh)}kWh · ${num(r.amount)}` : '—'; };
+const elBreakdown = (o, s) => {
+  const rows = [{ cells: ['기본요금', `${o.tier}단계 · ${num(o.base)}`, `${s.tier}단계 · ${num(s.base)}`] }];
+  for (const t of [1, 2, 3, 4]) if (o.rows.some((x) => x.tier === t) || s.rows.some((x) => x.tier === t)) rows.push({ cells: [t === 4 ? '슈퍼유저 (1,000kWh 초과분)' : `${t}단계 전력량요금`, tierCell(o, t), tierCell(s, t)] });
+  rows.push({ cells: ['기후환경요금 (9원/kWh)', num(o.climate), num(s.climate)] }, { cells: ['연료비조정요금 (5원/kWh)', num(o.fuel), num(s.fuel)] }, { cls: 'sum', cells: ['전기요금계', num(o.subtotal), num(s.subtotal)] }, { cells: ['부가가치세 10%', num(o.vat), num(s.vat)] }, { cells: ['전력산업기반기금 2.7%', num(o.fund), num(s.fund)] }, { cls: 'sum', cells: ['청구액 (10원 미만 절사)', num(o.total), num(s.total)] });
+  return rows;
+};
+const perKwhAll = (rate) => Math.round((rate + EL.CLIMATE + EL.FUEL) * (1 + EL.VAT + EL.FUND));   /* 부가세·기금까지 얹은 kWh당 어림 */
+
+function elPage(k) {
+  const o = EL.electricBill(k), s = EL.electricBill(k, { season: 'summer' }), ho = EL.electricBill(k, { voltage: 'high' }), hs = EL.electricBill(k, { season: 'summer', voltage: 'high' }), url = elUrl(k);
+  const title = `전기요금 ${num(k)}kWh 얼마? — 기타계절 ${won(o.total)} · 여름(7~8월) ${won(s.total)} (주택용 저압 누진제)`;
+  const desc = `한 달 ${num(k)}kWh를 쓰면 주택용 저압 전기요금은 기타계절(1~6월·9~12월) ${won(o.total)}, 여름(7~8월) ${won(s.total)}입니다. 기본요금·누진 단계별 전력량요금·기후환경요금·연료비조정요금에 부가세 10%와 전력산업기반기금 2.7%를 더한 청구액과 계산 흐름, 고압 요금.`;
+  const same = o.total === s.total;
+  const usage = [['벽걸이 에어컨 (0.7kW)', 0.7], ['스탠드 에어컨 (1.8kW)', 1.8], ['전기히터 (1.5kW)', 1.5], ['데스크톱 PC (0.15kW)', 0.15]].map(([name, kw]) => { const h = k / kw; return { cells: [name, `${num(h)}시간`, h / 30 <= 24 ? `하루 ${(Math.round(h / 3) / 10).toString().replace(/\.0$/, '')}시간씩 한 달` : '한 달 내내 켜 두어도 남음'] }; });
+  const body = `
+${crumb([['/electric/', '전기요금'], [null, `${num(k)}kWh`]])}
+<h1 class="title">한 달 ${num(k)}kWh 쓰면 전기요금은</h1>
+<p class="meta">주택용 저압 · 누진 3단계 · 부가세 10% · 전력산업기반기금 2.7% 포함 · ${EL.ELECTRIC_ASOF} 한전 요금표</p>
+${lead(`${num(k)}kWh는 기타계절(1~6월·9~12월) 기준 ${o.tier}단계라 기본요금 ${won(o.base)}에 전력량요금 ${won(o.energy)}, 기후환경요금 ${won(o.climate)}, 연료비조정요금 ${won(o.fuel)}을 더한 전기요금계가 ${won(o.subtotal)}이고, 부가세 ${won(o.vat)}과 기금 ${won(o.fund)}을 얹은 청구액은 ${won(o.total)}입니다. ${same ? `여름(7~8월)에도 1단계 안이라 요금은 같은 ${won(s.total)}입니다.` : `여름(7~8월)에는 구간이 300·450kWh로 넓어져 ${s.tier}단계가 되고 청구액은 ${won(s.total)}으로 ${won(o.total - s.total)} 줄어듭니다.`} kWh당 평균 ${won(o.perKwh)}입니다.`)}
+${hero({ label: '청구액 (기타계절 · 1~6월, 9~12월)', value: o.total, sub: `${o.tier}단계 · kWh당 평균 ${won(o.perKwh)} · 여름(7~8월)에는 ${won(s.total)}` })}
+${tiles([{ label: '여름 (7~8월)', value: s.total }, { label: '누진 단계 (기타 / 여름)', value: `${o.tier} / ${s.tier}` }, { label: 'kWh당 평균', value: o.perKwh }])}
+${section('계산 흐름', `${num(k)}kWh · 주택용 저압 · 원`, table(['항목', '기타계절', '여름 (7~8월)'], elBreakdown(o, s)))}
+${section('주택용 고압이면', '아파트 단지 고압 계약 (관리비에 포함되는 경우)', tiles([{ label: '기타계절', value: ho.total }, { label: '여름 (7~8월)', value: hs.total }, { label: '저압과 차이 (기타계절)', value: o.total - ho.total }]))}
+${section('이만큼은 어떤 사용량?', '정격 소비전력 기준 어림 · 실제는 설정 온도·인버터·절전 모드에 따라 절반 이하로 줄기도 합니다', table(['기기', `${num(k)}kWh로 켤 수 있는 시간`, '어림'], usage))}
+${section('사용량이 바뀌면', '기타계절 청구액', chips(neighbors(EL_KWH, k, 3).map((x) => ({ label: `${num(x)}kWh`, value: EL.electricBill(x).total, href: elUrl(x), on: x === k }))))}
+${ad()}
+${section('알아두면 좋은 것', null, `<div class="doc">
+<p><b>3단계에 들어가면 kWh당 약 ${won(perKwhAll(EL.PLANS.low.energy[2]))}.</b> 기타계절 400kWh(여름 450kWh)를 넘는 사용량은 kWh당 307.3원에 기후환경 9원·연료비 5원이 붙어 321.3원, 부가세와 기금까지 더하면 약 ${won(perKwhAll(EL.PLANS.low.energy[2]))}입니다. 1단계의 약 ${won(perKwhAll(EL.PLANS.low.energy[0]))}보다 ${(perKwhAll(EL.PLANS.low.energy[2]) / perKwhAll(EL.PLANS.low.energy[0])).toFixed(1)}배라 마지막 몇십 kWh를 줄이는 효과가 가장 큽니다.</p>
+<p><b>여름엔 구간이 넓어집니다.</b> 7~8월은 1단계 300kWh·2단계 450kWh까지로 완화됩니다. ${same ? `${num(k)}kWh는 두 계절 모두 1단계라 차이가 없지만, 사용량이 200kWh를 넘으면 여름 요금이 더 쌉니다.` : `같은 ${num(k)}kWh라도 여름 요금이 ${won(s.total)}으로 기타계절보다 ${won(o.total - s.total)} 적습니다.`} 1,000kWh를 넘으면 여름·겨울에는 초과분에 슈퍼유저 요금 736.2원이 붙습니다.</p>
+<p><b>검침일에 따라 달라집니다.</b> 한전은 검침일부터 다음 검침일 전날까지를 한 달로 봅니다. 여름 요금은 7월 1일~8월 31일 사용분에만 적용되어 검침 기간이 걸쳐 있으면 일수로 나눠 계산합니다.</p>
+<p><b>복지할인과 TV수신료는 별도.</b> 장애인·기초생활수급자·다자녀(3자녀 이상)·대가족(5인 이상)·출산가구(3년 이내)는 한전에 신청하면 정액 또는 30% 할인을 받습니다(월 한도 있음). TV수신료 2,500원은 2023년 7월부터 전기요금과 따로 고지되어 이 계산에 넣지 않았습니다. 필수사용량 보장공제는 2024년에 없어졌습니다.</p>
+</div>`)}
+${section('이어서 계산하기', null, list([{ href: '/electric/', title: '전기요금 계산기', sub: '사용량·계절·저압/고압을 직접 넣기' }, { href: '/time/', title: '내 시간으로 사는 물건', sub: '전기요금은 몇 시간 일한 값인가' }, { href: '/monthly/', title: '월급 실수령액표', sub: '한 달 손에 쥐는 돈' }]))}
+${EL_NOTE}`;
+  write(url, shell({ url, title, desc, body }));
+}
+
+function elIndex() {
+  const url = '/electric/';
+  const rows = EL_KWH.map((k) => { const o = EL.electricBill(k), s = EL.electricBill(k, { season: 'summer' }); return { cells: [`<a href="${elUrl(k)}">${num(k)}kWh</a>`, num(o.total), num(s.total), `${o.tier} / ${s.tier}`, num(o.perKwh)] }; });
+  const L = EL.PLANS.low, H = EL.PLANS.high;
+  const rateRows = [0, 1, 2].map((i) => ({ cells: [`${i + 1}단계`, i === 0 ? '0~200 / 0~300' : i === 1 ? '201~400 / 301~450' : '401~ / 451~', num(L.base[i]), L.energy[i].toFixed(1), num(H.base[i]), H.energy[i].toFixed(1)] }));
+  rateRows.push({ cells: ['슈퍼유저', '1,000 초과분 (여름·겨울)', '—', L.superUser.toFixed(1), '—', H.superUser.toFixed(1)] });
+  const body = `
+${crumb([['/', '홈'], [null, '전기요금']])}
+<h1 class="title">전기요금 계산기 — 주택용 누진제 kWh별 청구액</h1>
+<p class="meta">한국전력 주택용 저압·고압 요금표 (${EL.ELECTRIC_ASOF}) · 기타계절·여름·겨울 구간 · 부가세·전력산업기반기금 포함 · 입력값은 이 기기 밖으로 나가지 않습니다</p>
+${lead(`주택용 전기요금은 쓸수록 kWh당 단가가 오르는 3단계 누진제입니다. 기타계절은 200kWh까지 120원, 400kWh까지 214.6원, 그 위로 307.3원이고 여름(7~8월)에는 구간이 300·450kWh로 넓어집니다. 한 달 300kWh면 ${won(EL.electricBill(300).total)}, 400kWh면 ${won(EL.electricBill(400).total)}, 500kWh면 ${won(EL.electricBill(500).total)}(여름 ${won(EL.electricBill(500, { season: 'summer' }).total)})입니다. 여기에 기후환경요금 9원과 연료비조정요금 5원이 kWh마다 붙고, 부가세 10%와 전력산업기반기금 2.7%가 더해집니다.`)}
+<form class="quick ye-form" id="el-form">
+<div class="ye-grid">
+<label class="ye-f"><span>한 달 사용량 (kWh)</span><input id="el-kwh" type="text" inputmode="numeric" value="300"></label>
+<label class="ye-f"><span>계절</span><select id="el-season"><option value="other">기타계절 (1~6월 · 9~12월)</option><option value="summer">여름 (7~8월)</option><option value="winter">겨울 (12~2월)</option></select></label>
+<label class="ye-f"><span>계약</span><select id="el-voltage"><option value="low">주택용 저압 (일반 주택 · 대부분)</option><option value="high">주택용 고압 (아파트 단지 계약)</option></select></label>
+</div>
+</form>
+<div class="hero"><div class="hero-label">청구액</div><div class="hero-num"><span class="num" id="el-total">0</span><span class="unit">원</span></div><div class="hero-sub" id="el-sub">계산 중</div></div>
+<div class="tiles"><div class="tile"><small>누진 단계</small><span class="num" id="el-tier">-</span></div><div class="tile"><small>kWh당 평균</small><span class="num" id="el-per">0</span></div><div class="tile"><small id="el-other-label">여름이면</small><span class="num" id="el-other">0</span></div></div>
+<div class="ledger"><div class="lg-head"><h2>계산 흐름</h2><span>원</span></div><div id="el-rows"></div></div>
+<p class="sub" style="margin-top:8px"><a id="el-link" href="${elUrl(300)}">300kWh 페이지로 →</a></p>
+${section('사용량별 청구액', '주택용 저압 · 원 · 사용량을 누르면 계산 흐름과 고압 요금', table(['사용량', '기타계절', '여름 (7~8월)', '단계 (기타 / 여름)', 'kWh당 (기타)'], rows))}
+${ad()}
+${section('요금표', `${EL.ELECTRIC_ASOF} 주택용 · 기본요금 원/호 · 전력량요금 원/kWh · 구간은 기타계절 / 여름`, table(['단계', '구간 (kWh)', '저압 기본', '저압 전력량', '고압 기본', '고압 전력량'], rateRows))}
+<p class="sub" style="margin-top:8px">모든 사용량에 기후환경요금 9.0원/kWh와 연료비조정요금 +5.0원/kWh가 더해집니다.</p>
+${section('자주 묻는 것', null, `<div class="doc">
+<p><b>누진제는 왜 있나요?</b> 주택용에만 있는 제도로, 많이 쓸수록 kWh당 단가를 올려 절약을 유도합니다. 2016년 6단계에서 3단계로 줄었고, 여름에는 구간을 넓혀 부담을 줄입니다.</p>
+<p><b>여름 요금이 더 싼 건가요?</b> 단가는 같고 구간이 넓어지는 것입니다. 같은 400kWh라도 기타계절은 2단계 끝(다음 kWh부터 3단계)이지만 여름은 2단계 안이라 기본요금이 낮고, 450kWh를 넘어야 3단계입니다.</p>
+<p><b>1,000kWh 넘게 쓰면?</b> 여름(7~8월)과 겨울(12~2월)에는 1,000kWh 초과분에 슈퍼유저 요금 736.2원/kWh가 붙습니다. 3단계 307.3원의 2.4배입니다.</p>
+<p><b>고지서 금액과 다른데요?</b> 검침일이 월초가 아니면 두 달의 요금이 일수로 섞이고, 복지할인·TV수신료·연체료가 더해지거나 빠집니다. 아파트는 단지 전체가 고압으로 계약해 관리비에 나눠 담기도 합니다.</p>
+<p><b>저압과 고압 중 뭐가 내 집인가요?</b> 단독·다세대·빌라 대부분은 저압입니다. 아파트는 단지가 한전과 고압으로 계약하고 관리사무소가 세대별로 나누는 곳이 많습니다. 관리비 고지서의 '전기요금' 항목에 계약 종별이 적혀 있습니다.</p>
+</div>`)}
+${section('이어서 계산하기', null, list([{ href: '/time/', title: '내 시간으로 사는 물건', sub: '전기요금은 몇 시간 일한 값인가' }, { href: '/monthly/', title: '월급 실수령액표', sub: '한 달 손에 쥐는 돈' }, { href: '/savings/', title: '적금 세후 이자', sub: '아낀 전기요금을 모으면' }]))}
+${EL_NOTE}`;
+  write(url, shell({ url, title: `전기요금 계산기 — 주택용 누진제 100~1,000kWh 청구액 (여름·기타계절, ${EL.ELECTRIC_ASOF})`, desc: '한 달 사용량(kWh)과 계절, 저압·고압을 넣으면 기본요금·누진 단계별 전력량요금·기후환경요금·연료비조정요금·부가세·전력산업기반기금까지 계산해 청구액을 보여줍니다. 100~1,000kWh 요금표.', body, scripts: ['/js/engine.js', '/js/electric.js'] }));
+}
+
 /* ---------- 빌드 ---------- */
 fs.rmSync(OUT, { recursive: true, force: true });
 fs.mkdirSync(OUT, { recursive: true });
@@ -2185,6 +2493,9 @@ incIndex(); INC.forEach(incPage);
 propIndex(); PROP.forEach(propPage);
 carTaxIndex(); carTaxEvPage(); CARS.forEach(carTaxPage);
 ltvIndex(); LTV_P.forEach(ltvPage);
+subIndex(); SUB_H.forEach((h) => SUB_F.forEach((f) => subPage(h, f)));
+plIndex(); PL_WAGES.forEach(plPage); babyPage();
+elIndex(); EL_KWH.forEach(elPage);
 fs.writeFileSync(path.join(OUT, 'js', 'engine.js'), makeBundle(NT));
 docs();
 

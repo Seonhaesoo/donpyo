@@ -37,6 +37,24 @@
     if (rate == null) { var r2 = t.match(/금리\s*(\d+(?:\.\d+)?)/) || t.match(/(?:^|\s)(\d{1,2}\.\d+)(?!\s*(?:억|천|만|년|개월|시간|%))/); if (r2) rate = parseFloat(r2[1]); }
     /* 단위 없이 큰 숫자(35000000)만 원으로 보고 만원으로 바꿈 — "10억"처럼 단위가 붙은 값은 그대로 */
     var man = function (v) { return (firstTok && firstTok.unit === '' && v >= 100000) ? Math.round(v / 10000) : v; };
+    if (/청약|가점|무주택/.test(t)) {
+      var sh = pick(t, /무주택\s*(\d+)/), sf = pick(t, /부양(?:가족)?\s*(\d+)/);
+      if (sh == null && sf == null) return { href: '/subscription/', label: '청약 가점 계산기' };
+      sh = Math.max(0, Math.min(15, sh == null ? 0 : Math.round(sh))); sf = Math.max(0, Math.min(6, sf == null ? 0 : Math.round(sf)));
+      return { href: '/subscription/' + sh + '-' + sf + '/', label: '무주택 ' + (sh === 0 ? '1년 미만' : sh === 15 ? '15년 이상' : sh + '년') + ' · 부양가족 ' + (sf === 6 ? '6명 이상' : sf + '명') + ' 청약 가점' };
+    }
+    if (/부모급여|첫만남|아동수당|양육수당|출산\s*(?:지원|장려|축하)|출생|아기|신생아/.test(t)) return { href: '/baby-benefit/', label: '출산·양육 지원금 총정리' };
+    if (/육아|휴직|통상임금|출산휴가/.test(t) && !/연장|야근|야간|휴일|수당|연차/.test(t)) {
+      if (!first) return { href: '/parental-leave/', label: '육아휴직 급여 계산기' };
+      var pw = nearest(G.leave || [first], man(first));
+      return { href: '/parental-leave/' + pw + '/', label: '통상임금 ' + fmtMan(pw) + '원 육아휴직 급여' };
+    }
+    if (/전기|누진|kwh/.test(t) && !/자동차|전기차|수소/.test(t)) {
+      var ek = pick(t, /(\d+)\s*kwh/) || (first != null && first <= 5000 ? first : null);
+      if (!ek) return { href: '/electric/', label: '전기요금 계산기' };
+      var en = nearest(G.elec || [ek], ek);
+      return { href: '/electric/' + en + '/', label: en.toLocaleString('ko-KR') + 'kWh 전기요금' };
+    }
     if (/상속/.test(t)) {
       var two = /자녀\s*2|둘|두\s*명/.test(t), three = /자녀\s*3|셋|세\s*명/.test(t);
       var ic = /배우자|아내|남편|부부/.test(t) ? (three ? 'spouse3' : two ? 'spouse2' : 'spouse1') : (two ? 'child2' : 'child1');

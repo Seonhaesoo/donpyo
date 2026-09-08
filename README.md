@@ -18,6 +18,9 @@
 - `engine/ltv.mjs` — LTV 한도(규제지역 40%·비규제 70%·생애최초·6억/4억/2억 한도, `LTV_ASOF` 표기) → `/ltv/`
 - `engine/deposit.mjs` — 예금 이자(단리·월복리·월 이자 지급식) → `/deposit/`
 - `engine/yearend.mjs` — 연말정산 미리보기(근로소득공제·카드·세액공제·표준세액공제, `/yearend/`에서 브라우저 계산)
+- `engine/subscription.mjs` — 청약 가점(무주택기간 32·부양가족 35·통장 가입기간 17, 84점 만점, 주택공급에 관한 규칙 별표 1) → `/subscription/{무주택 년}-{부양가족 수}/` 112장 + `/subscription/` 계산기
+- `engine/parental.mjs` — 육아휴직 급여(2025 시행령: 일반 250/200/160만 상한·6+6 부모육아휴직제·한부모, 하한 70만) → `/parental-leave/{통상임금 만원}/`, 출산·양육 지원금(첫만남이용권·부모급여·아동수당·양육수당) → `/baby-benefit/`
+- `engine/electric.mjs` — 주택용 전기요금 누진제(저압·고압, 기타계절·하계·동계 구간, 슈퍼유저, 기후환경·연료비조정, 부가세·전력산업기반기금 2.7%) → `/electric/{kWh}/`
 - `tools/build.mjs` — 페이지 생성기 (`node tools/build.mjs`), `tools/test.mjs` — 엔진 검증
 - `tools/bundle.mjs` — engine/*.mjs를 브라우저용 `dist/js/engine.js`로 묶음 (슬라이더·커플 링크·연말정산·임베드 위젯이 사용)
 - `/embed/` — 블로그에 붙이는 iframe 위젯(`/embed/salary/`, `/embed/loan/`, 헤더·푸터·광고 없는 bare 셸)
@@ -39,6 +42,7 @@ node server.js   # http://localhost:8326
 - 7월: 국민연금 기준소득월액 상·하한, 다음 해 최저임금 확정 → 다음 해 페이지 선점
 - 12월: 국세청 근로소득 연말정산 통계(engine/rank.mjs STAT), 2월: 통계청 임금근로일자리 소득(data/age-income.mjs)
 - 수시: 한국은행 기준금리(전월세전환율 상한)
+- 1월: 육아휴직 급여 상한(고용보험법 시행령), 부모급여·아동수당·첫만남이용권 금액(보건복지부), 한전 주택용 전기요금표·기후환경요금·연료비조정요금·전력산업기반기금 요율(분기별 확인), 청약 가점 규칙 개정 여부
 
 ## 갱신 자동화
 

@@ -3,7 +3,7 @@
 import * as L from '../engine/loan.mjs';
 import * as R from '../engine/retire.mjs';
 import { netPay, insurance, incomeTax, grossForNet } from '../engine/tax.mjs';
-import { YEAR, MONTH_HOURS } from '../data/rates.mjs';
+import { YEAR, MONTH_HOURS, RATES } from '../data/rates.mjs';
 import * as YE from '../engine/yearend.mjs';
 import * as GT from '../engine/gift.mjs';
 import * as RE from '../engine/realty.mjs';
@@ -126,7 +126,7 @@ ok(L.annuityPayment(12000000, 0, 12) === 1000000, '무이자');
   ok(LB.ordinaryHourly(3500000) === 16746, '통상시급 350만 → 16,746', LB.ordinaryHourly(3500000));
   ok(LB.overtime(3500000).ext === Math.round(3500000 / 209 * 1.5), '연장 1.5배');
   ok(LB.leaveDays(0.5) === 6 && LB.leaveDays(1) === 15 && LB.leaveDays(3) === 16 && LB.leaveDays(21) === 25 && LB.leaveDays(30) === 25, '연차 발생 일수');
-  ok(LB.leavePay(3500000, 5) === Math.round(3500000 / 209 * 8) * 5, '연차수당 5일');
+  ok(LB.leavePay(3500000, 5) === Math.round(3500000 / 209) * 8 * 5 && LB.leaveDaily(3000000) === 114832, '연차수당 5일 — 시간급을 원 단위로 반올림한 뒤 8시간 (연차 페이지와 동일)');
   ok(MIN_WAGE_HISTORY[YEAR] * MONTH_HOURS === 2156880, '2026 최저임금 월급 2,156,880', MIN_WAGE_HISTORY[YEAR] * MONTH_HOURS);
   const s = LB.freelanceSettlement(36000000, 0.6, 1188000);   /* 월 300만 × 12, 경비율 60% */
   ok(s.base === 36000000 * 0.4 - 1500000 && s.due < 0, '종소세 정산 예시(환급)', s.due);
@@ -424,16 +424,16 @@ ok(EI.childCredit(10000000, 'single').raw === 0 && EI.eitc({ type: 'single', wag
 /* 건강보험료 — 국민건강보험법 §69~§73 (2025년 기준) */
 {
   const e = NH.employee(3000000);
-  ok(e.health === 212700 && e.healthEmployee === 106350 && e.care === 27540 && e.careEmployee === 13770 && e.employee === 120120, '보수월액 300만 — 건강 212,700(근로자 106,350) · 장기요양 27,540(13,770) · 근로자 120,120', JSON.stringify([e.health, e.care, e.employee]));
-  ok(e.employee + e.employer === e.total && e.annualEmployee === 1441440, '근로자 + 사업주 = 총액 · 연 144.144만', e.annualEmployee);
-  ok(NH.employee(15000000).base === NH.WAGE_MAX && NH.employee(100000).base === NH.WAGE_MIN && NH.employee(15000000).health === 901840, '보수월액 상한 1,272만 · 하한 279,300', JSON.stringify([NH.employee(15000000).base, NH.employee(100000).base]));
-  ok(NH.longTerm(212700) === 27540 && near(NH.CARE_RATE, 0.1295, 1e-12) && near(NH.HEALTH_RATE, 0.0709, 1e-12), '장기요양 = 건강보험료 × 12.95% · 요율 7.09%');
+  ok(e.health === 215700 && e.healthEmployee === 107850 && e.care === 28340 && e.careEmployee === 14170 && e.employee === 122020, '보수월액 300만 — 건강 215,700(근로자 107,850) · 장기요양 28,340(14,170) · 근로자 122,020 (2026년 요율 7.19%)', JSON.stringify([e.health, e.care, e.employee]));
+  ok(e.employee + e.employer === e.total && e.annualEmployee === 1464240, '근로자 + 사업주 = 총액 · 연 146.424만', e.annualEmployee);
+  ok(NH.employee(15000000).base === NH.WAGE_MAX && NH.employee(100000).base === NH.WAGE_MIN && NH.employee(15000000).health === 914560, '보수월액 상한 1,272만 · 하한 279,300', JSON.stringify([NH.employee(15000000).base, NH.employee(100000).base]));
+  ok(NH.longTerm(215700) === 28340 && near(NH.CARE_RATE, RATES[YEAR].care, 1e-12) && near(NH.HEALTH_RATE, RATES[YEAR].health * 2, 1e-9), '장기요양·건강 요율은 data/rates.mjs 를 따른다 (연봉 페이지와 동일)');
   const l = NH.local({ income: 30000000 });
-  ok(l.incomePart === 177250 && l.propertyPart === 0 && l.health === 177250 && l.care === 22950 && l.total === 200200, '지역 연소득 3,000만 재산 없음 — 소득 177,250 + 장기요양 22,950 = 200,200', JSON.stringify([l.incomePart, l.care, l.total]));
-  ok(NH.local({ income: 3000000 }).minimum && NH.local({ income: 3000000 }).incomePart === NH.LOCAL_MIN && NH.local({ income: 0 }).total === 22340, '연소득 336만 이하 최저보험료 19,780원', NH.local({ income: 0 }).total);
+  ok(l.incomePart === 179750 && l.propertyPart === 0 && l.health === 179750 && l.care === 23610 && l.total === 203360, '지역 연소득 3,000만 재산 없음 — 소득 179,750 + 장기요양 23,610 = 203,360', JSON.stringify([l.incomePart, l.care, l.total]));
+  ok(NH.local({ income: 3000000 }).minimum && NH.local({ income: 3000000 }).incomePart === NH.LOCAL_MIN && NH.local({ income: 0 }).total === 22370, '연소득 336만 이하 최저보험료 19,780원', NH.local({ income: 0 }).total);
   ok([0, 100000000, 100000001, 250000000, 400000000, 600000000, 900000000, 1500000000].map(NH.propertyPoints).join() === '0,0,22,60,100,150,200,250', '재산 점수 근사표 6단계 (공제 1억 후)', [0, 100000000, 120000000, 1500000000].map(NH.propertyPoints).join());
   const lp = NH.local({ income: 50000000, property: 300000000 });
-  ok(lp.points === 100 && lp.propertyPart === 20840 && lp.health === 316250 && lp.total === 357200 && lp.approx, '지역 연소득 5,000만 · 재산과표 3억 — 100점 × 208.4 = 20,840 · 월 357,200', JSON.stringify([lp.points, lp.propertyPart, lp.total]));
+  ok(lp.points === 100 && lp.propertyPart === 20840 && lp.health === 320420 && lp.total === 362520 && lp.approx, '지역 연소득 5,000만 · 재산과표 3억 — 100점 × 208.4 = 20,840 · 월 362,520', JSON.stringify([lp.points, lp.propertyPart, lp.total]));
   ok(NH.POINT_VALUE === 208.4 && NH.LOCAL_MIN === 19780 && NH.PROPERTY_DEDUCTION === 100000000 && NH.WAGE_MAX === 12720000 && NH.WAGE_MIN === 279300, '2025년 부과 기준값 (부과점수당 208.4원·최저 19,780원·기본공제 1억·상한 1,272만·하한 279,300)');
 }
 
@@ -462,7 +462,7 @@ ok(EI.childCredit(10000000, 'single').raw === 0 && EI.eitc({ type: 'single', wag
   ok(B.capitalGains({ sale: 1500000000, cost: 900000000, expense: 30000000, holdYears: 5, liveYears: 5, oneHouse: true }).total === 11061600 && B.carCost({ price: 30000000 }).monthly === 873520 && B.carTax(1598).total === 290836, '번들 capitalGains · carCost · carTax');
   ok(B.annualDays(5) === 17 && B.annualPay(3000000, 10).total === AN.annualPay(3000000, 10).total && B.prorated('2025-07-01').days1 === 7.6 && B.annualByFiscal('2024-07-01', 2028).days === 16, '번들 annualDays · annualPay · prorated');
   ok(B.withholding(3000000).net === FR.withholding(3000000).net && B.withholding(3000000, 'other').net === 2736000 && B.grossUp(2901000).gross === 3000000 && Object.keys(B.FREE_TYPES).join() === 'business,other' && Object.keys(B.TYPES).join() === 'single,one,dual', '번들 withholding · grossUp — 기타소득 TYPES 가 근로장려금 TYPES 를 덮지 않음');
-  ok(B.nhisEmployee(3000000).employee === NH.employee(3000000).employee && B.nhisLocal({ income: 30000000 }).total === 200200 && B.propertyPoints(300000000) === 100 && B.POINT_VALUE === 208.4, '번들 nhisEmployee · nhisLocal · propertyPoints');
+  ok(B.nhisEmployee(3000000).employee === NH.employee(3000000).employee && B.nhisLocal({ income: 30000000 }).total === 203360 && B.propertyPoints(300000000) === 100 && B.POINT_VALUE === 208.4, '번들 nhisEmployee · nhisLocal · propertyPoints');
 }
 
 console.log(`test: ${pass} pass, ${fail} fail`);

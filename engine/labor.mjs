@@ -24,7 +24,7 @@ export function leaveDays(years) {
   if (years < 1) return Math.min(11, Math.floor(years * 12));
   return Math.min(25, 15 + Math.floor((years - 1) / 2));
 }
-export const leaveDaily = (monthly) => Math.round(monthly / MONTH_HOURS * 8);
+export const leaveDaily = (monthly) => Math.round(monthly / MONTH_HOURS) * 8;   /* 시간급을 원 단위로 반올림한 뒤 8시간 — 연차 페이지와 같은 순서 */
 export const leavePay = (monthly, days) => leaveDaily(monthly) * days;
 
 /* 사업소득 원천징수 3.3% = 소득세 3% + 지방소득세 0.3%, 각 10원 미만 절사 */

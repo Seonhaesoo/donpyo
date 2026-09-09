@@ -1,3 +1,4 @@
+import { RATES, YEAR } from '../data/rates.mjs';
 /* 건강보험료 — 국민건강보험법 제69조~제73조·시행령 제32조·제42조, 노인장기요양보험법 제9조 (2025년 기준)
  *
  * 직장가입자
@@ -20,11 +21,11 @@
  * 미반영: 소득월액보험료(보수 외 소득 연 2,000만원 초과 직장가입자), 피부양자 자격,
  *   임의계속가입, 섬·벽지·농어촌·저소득 경감, 연말정산 정산분, 지역가입자 보험료 상한. */
 
-export const NHIS_ASOF = '2025년 기준';
 export const NHIS_URL = 'https://www.nhis.or.kr';
-export const HEALTH_RATE = 0.0709;             /* 건강보험료율 (직장·지역 공통) */
-export const HALF_RATE = 0.03545;              /* 직장가입자 근로자·사업주 각각 */
-export const CARE_RATE = 0.1295;               /* 장기요양보험료 = 건강보험료 × 12.95% */
+/* 요율은 사이트 공통 data/rates.mjs 를 따른다 — 연봉·월급 페이지와 같은 값이어야 한다 */
+export const HALF_RATE = RATES[YEAR].health;                 /* 직장가입자 근로자·사업주 각각 */
+export const HEALTH_RATE = Math.round(HALF_RATE * 2 * 100000) / 100000;   /* 직장·지역 공통 */
+export const CARE_RATE = RATES[YEAR].care;                   /* 장기요양보험료 = 건강보험료 × 이 비율 */
 export const WAGE_MAX = 12720000;              /* 보수월액 상한 */
 export const WAGE_MIN = 279300;                /* 보수월액 하한 */
 export const POINT_VALUE = 208.4;              /* 지역가입자 부과점수당 금액 (2025년) */
@@ -94,3 +95,9 @@ export function local(i = {}) {
     approx: points > 0,        /* 재산 점수를 쓴 계산은 근사 */
   };
 }
+
+/* 표기용 — 실제 적용 요율에서 만든다 */
+export const NHIS_ASOF = `${YEAR}년 요율 기준 (지역가입자 부과점수 단가·최저보험료는 2025년 고시값)`;
+export const HEALTH_PCT = `${(HEALTH_RATE * 100).toFixed(2)}%`;      /* 예: 7.19% */
+export const HALF_PCT = `${(HALF_RATE * 100).toFixed(3)}%`;          /* 예: 3.595% */
+export const CARE_PCT = `${(CARE_RATE * 100).toFixed(2)}%`;          /* 예: 13.14% */

@@ -18,7 +18,7 @@
     $('sb-a').textContent = r.account;
     $('sb-sub').textContent = '84점 만점 · 무주택 ' + r.homeless + ' + 부양가족 ' + r.family + ' + 통장 ' + r.account + ' · ' + g.label;
     var why = [];
-    if (owner) why.push('주택을 소유하고 있어 무주택기간 점수가 0점입니다.');
+    if (owner) why.push('집이 있어 무주택기간 점수가 0점입니다.');
     else if (under30) why.push('만 30세 미만 미혼은 무주택기간을 0점으로 봅니다. 만 30세가 되는 날부터 기간이 쌓입니다.');
     if (fam >= 6) why.push('부양가족은 6명 이상이면 35점으로 같습니다.');
     if (months >= 180) why.push('통장 가입기간은 15년 이상이면 17점으로 같습니다.');

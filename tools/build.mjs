@@ -694,7 +694,7 @@ ${crumb([['/', '홈'], [null, '이용약관']])}
 <h1 class="title">이용약관</h1>
 <div class="doc">
 <p>돈표의 모든 계산 결과는 공개된 요율과 산식에 따른 참고용 정보이며, 급여·세무·금융에 관한 전문 상담이나 법적 판단을 대신하지 않습니다. 실제 급여명세서, 대출 계약, 퇴직금 정산은 회사·은행·관계 기관의 계산이 우선합니다.</p>
-<p>이용자는 계산 결과를 근거로 한 결정에 대해 스스로 책임지며, 돈표는 결과의 오류나 지연 갱신으로 생긴 손해에 대해 책임지지 않습니다. 사이트의 글과 표는 출처를 밝히고 인용할 수 있습니다.</p>
+<p>계산 결과를 보고 내린 결정은 이용자 본인의 책임이며, 돈표는 결과가 틀리거나 요율 갱신이 늦어 생긴 손해를 책임지지 않습니다. 사이트의 글과 표는 출처를 밝히고 인용할 수 있습니다.</p>
 </div>`;
   write('/terms/', shell({ url: '/terms/', title: '이용약관 — 돈표', desc: '돈표 이용약관', body: terms, noindex: true }));
 
@@ -702,8 +702,8 @@ ${crumb([['/', '홈'], [null, '이용약관']])}
 ${crumb([['/', '홈'], [null, '개인정보처리방침']])}
 <h1 class="title">개인정보처리방침</h1>
 <div class="doc">
-<h2>1. 수집하는 정보</h2><p>돈표는 회원 가입이나 개인정보 입력을 요구하지 않습니다. 검색창에 넣는 금액은 페이지 이동에만 쓰이고 서버로 전송되거나 저장되지 않습니다.</p>
-<h2>2. 쿠키와 분석</h2><p>Google Analytics로 방문 통계(페이지 조회, 기기 종류 등)를 익명으로 수집하며, Google AdSense가 광고 게재를 위해 쿠키를 사용할 수 있습니다. 브라우저 설정에서 쿠키를 차단할 수 있습니다.</p>
+<h2>1. 수집하는 정보</h2><p>돈표는 회원 가입이나 개인정보 입력을 요구하지 않습니다. 검색창에 넣는 금액은 페이지를 옮기는 데만 쓰고 서버로 보내거나 저장하지 않습니다.</p>
+<h2>2. 쿠키와 분석</h2><p>Google Analytics로 방문 통계(페이지 조회, 기기 종류 등)를 익명으로 수집하며, Google AdSense는 광고를 띄우려고 쿠키를 쓸 수 있습니다. 브라우저 설정에서 쿠키를 차단할 수 있습니다.</p>
 <h2>3. 제3자 제공</h2><p>수집한 정보를 제3자에게 판매·제공하지 않습니다.</p>
 <h2>4. 문의</h2><p>개인정보 관련 문의는 인스타그램 <a href="https://www.instagram.com/sajucheop/" target="_blank" rel="noopener">@sajucheop</a> 다이렉트 메시지로 보내 주세요.</p>
 </div>`;
@@ -1337,7 +1337,7 @@ ${crumb([['/', '홈'], [null, '서재']])}
 ${section('급여', null, list(GUIDES.filter((g) => g.kind === 'salary').map((g) => ({ href: guideUrl(g.slug), title: gtitle(g), sub: g.desc }))))}
 ${section('대출·주거', null, list(GUIDES.filter((g) => ['loan', 'jeonse'].includes(g.kind)).map((g) => ({ href: guideUrl(g.slug), title: gtitle(g), sub: g.desc }))))}
 ${section('퇴직·실업·알바', null, list(GUIDES.filter((g) => ['retire', 'unemployment', 'hourly'].includes(g.kind)).map((g) => ({ href: guideUrl(g.slug), title: gtitle(g), sub: g.desc }))))}
-<p class="note">글의 예시 숫자는 이 사이트의 계산 엔진으로 빌드 때마다 다시 계산되어 요율이 바뀌면 함께 바뀝니다. <a href="/method/">계산 기준 보기</a></p>`;
+<p class="note">글에 나오는 예시 숫자는 이 사이트의 계산 엔진이 빌드할 때마다 다시 계산하므로 요율이 바뀌면 함께 바뀝니다. <a href="/method/">계산 기준 보기</a></p>`;
   write('/guide/', shell({ url: '/guide/', title: '돈표 서재 — 실수령액·대출·퇴직금·실업급여 계산 규칙 설명', desc: `연봉 실수령액이 정해지는 순서, 간이세액표 읽는 법, 4대보험 요율, 대출 상환 방식과 DSR, 퇴직소득세, 실업급여, 주휴수당, 전월세전환율을 예시와 함께 설명한 글 ${GUIDES.length}편.`, body, nav: 'guide' }));
 }
 
@@ -1386,7 +1386,7 @@ function timePage(m) {
   const body = `
 ${crumb([['/time/', '내 시간으로 사는 물건'], [null, `연봉 ${manwon(annual)}`]])}
 <h1 class="title">연봉 ${manwon(annual)} — 내 한 시간은 ${won(Math.round(hn))}</h1>
-<p class="meta">세후 시급 = 월 실수령 ${won(p.net)} ÷ ${MONTH_HOURS}시간 · 세전 시급 ${won(Math.round(hg))} · 물건값은 ${PRICES_ASOF} 대략적인 시세</p>
+<p class="meta">세후 시급 = 월 실수령 ${won(p.net)} ÷ ${MONTH_HOURS}시간 · 세전 시급 ${won(Math.round(hg))} · 물건값은 ${PRICES_ASOF} 어림 시세</p>
 ${lead(`연봉 ${manwon(annual)}이면 세금과 4대보험을 뺀 한 시간 값이 ${won(Math.round(hn))}입니다. 치킨 한 마리는 ${hoursText(chicken.price / hn)}, 아이폰 한 대는 ${hoursText(phone.price / hn)}, 서울 아파트 한 채는 한 푼도 안 쓰고 ${hoursText(apt.price / hn)}을 일해야 합니다.`)}
 ${hero({ label: '세후 시급', value: Math.round(hn), sub: `하루 8시간이면 ${won(Math.round(hn * 8))} · 한 달 ${MONTH_HOURS}시간이면 ${won(p.net)}` })}
 <button class="btn btn-share" type="button" data-share-card data-l1="연봉 ${manwon(annual)}의 한 시간" data-l2="${num(Math.round(hn))}" data-l3="세후 시급 · ${YEAR}년" data-l4="치킨 ${hoursText(chicken.price / hn)} · 아이폰 ${hoursText(phone.price / hn)} · 아파트 ${hoursText(apt.price / hn)}">시급 카드 저장</button>
@@ -1394,7 +1394,7 @@ ${section('물건을 시간으로 바꾸면', '세후 시급 기준이 진짜 �
 ${ad()}
 ${section('연봉이 바뀌면', '세후 시급', chips(neighbors(SALARIES, m, 3).map((v) => ({ label: short(v * 10000), value: Math.round(netPay({ annual: v * 10000, nontax: NT }).net / MONTH_HOURS), href: timeUrl(v), on: v === m }))))}
 ${section('이어서 보기', null, list([{ href: salaryUrl(m), title: `연봉 ${manwon(annual)} 실수령액`, sub: '공제 내역과 부양가족별 표' }, { href: `/goal/10000/${nearest(SAVE_M, Math.round(p.net * 0.3 / 10000))}/`, title: '1억 모으기 시계', sub: '실수령의 30%를 저축하면' }]))}
-<p class="note">가격은 크기 감각을 위한 대략값이며 지역·브랜드에 따라 다릅니다. 시간은 월 ${MONTH_HOURS}시간(주 40시간 + 주휴) 기준입니다.</p>`;
+<p class="note">가격은 규모를 가늠해 보라고 넣은 어림값이라 지역·브랜드에 따라 다릅니다. 시간은 월 ${MONTH_HOURS}시간(주 40시간 + 주휴) 기준입니다.</p>`;
   write(url, shell({ url, title, desc, body, nav: 'salary' }));
 }
 function timeIndex() {
@@ -1403,7 +1403,7 @@ function timeIndex() {
   const body = `
 ${crumb([['/', '홈'], [null, '내 시간으로 사는 물건']])}
 <h1 class="title">내 시간으로 사는 물건</h1>
-<p class="meta">연봉을 세후 시급으로 바꾸고, 물건값을 "몇 시간 일해야 하나"로 환산 · 물건값은 ${PRICES_ASOF} 대략적인 시세</p>
+<p class="meta">연봉을 세후 시급으로 바꾸고, 물건값을 "몇 시간 일해야 하나"로 환산 · 물건값은 ${PRICES_ASOF} 어림 시세</p>
 <form class="quick" data-quick="time" data-step="100" data-min="2000" data-max="30000"><label for="q-time">연봉</label><div class="quick-row"><div class="quick-in"><input id="q-time" type="text" inputmode="numeric" placeholder="4200"><span>만원</span></div><button class="btn" type="submit">내 시간으로 보기</button></div></form>
 ${section('연봉별', null, table(['연봉', '세후 시급'].concat(picks.map((it) => it.label.replace(/ 한 \S+$/, ''))), rows))}`;
   write('/time/', shell({ url: '/time/', title: '내 시간으로 사는 물건 — 연봉별 세후 시급으로 환산한 물건값', desc: '연봉별 세후 시급을 구해 아메리카노·치킨·아이폰·자동차·아파트를 사려면 몇 시간을 일해야 하는지 환산했습니다.', body, nav: 'salary' }));
@@ -1471,7 +1471,7 @@ function goalPage(g, mm) {
   const body = `
 ${crumb([['/goal/', '1억 모으기 시계'], [null, `${manwon(target)} · 월 ${manwon(monthly)}`]])}
 <h1 class="title">월 ${manwon(monthly)}씩 모아 ${manwon(target)}</h1>
-<p class="meta">매달 같은 금액을 세후 이율로 굴리는 가정 · 물가 2%면 목표 금액도 해마다 커지는 것으로 계산</p>
+<p class="meta">매달 같은 금액을 세후 이율로 굴리는 가정 · 물가 2%면 목표 금액도 해마다 커진다고 보고 계산</p>
 ${lead(`매달 ${manwon(monthly)}을 저축하면 ${manwon(target)}까지 이자 없이 ${GO.fmtMonths(GO.monthsToGoal(target, monthly, 0))}, 연 3%면 ${GO.fmtMonths(n3)} 걸립니다. 물가가 연 2% 오르는 것을 감안하면 같은 값어치의 돈을 모으는 데 ${GO.fmtMonths(GO.monthsToGoal(target, monthly, 0.03, 0.02))}이 필요합니다.`)}
 ${hero({ label: `${manwon(target)}까지 (연 3%)`, value: n3, sub: `원금 ${won(monthly * n3)} + 이자 ${won(GO.balanceAfter(monthly, n3, 0.03) - monthly * n3)}`, bars: null }).replace(/<span class="num">[\d,]+<\/span><span class="unit">원<\/span>/, `<span class="num">${GO.fmtMonths(n3)}</span>`)}
 ${section('금리에 따라', null, table(['세후 이율', '기간', '원금', '이자', '물가 2% 감안'], rows))}
@@ -1505,7 +1505,7 @@ function negotiatePage(m) {
   const pensionLoss = netPay({ annual, nontax: NT, year: PREV }).net - p.net;
   const g30 = AGE.groups[2], g40 = AGE.groups[3];
   const scen = [3, 5, 7, 10].map((r) => { const a2 = Math.round(annual * (1 + r / 100) / 10000) * 10000; const q = netPay({ annual: a2, nontax: NT }); return { cells: [`+${r}%`, num(a2), num(q.net), num(q.net - p.net)] }; });
-  const text = `현재 연봉 ${manwon(annual)}은 국세청 통계 기준 근로소득자 상위 ${rk.topPct}%이고, 30대 평균 월소득(${manwon(g30.mean)})과 비교하면 월 ${p.gross >= g30.mean ? won(p.gross - g30.mean) + ' 많은' : won(g30.mean - p.gross) + ' 적은'} 수준입니다. ${cpiY}년 물가상승률 ${pct(cpi)}와 ${YEAR}년 최저임금 인상률 ${pct(mwUp)}을 감안하면 실질 가치를 유지하는 연봉은 ${manwon(keep)}이며, 올해 국민연금·건강보험 요율 인상으로 같은 연봉의 실수령이 월 ${won(pensionLoss)} 줄었습니다. 이를 근거로 ${scen[2].cells[1]}원(7% 인상)을 요청드립니다.`;
+  const text = `현재 연봉 ${manwon(annual)}은 국세청 통계 기준 근로소득자 상위 ${rk.topPct}%이고, 30대 평균 월소득(${manwon(g30.mean)})과 비교하면 월 ${p.gross >= g30.mean ? won(p.gross - g30.mean) + ' 많은' : won(g30.mean - p.gross) + ' 적은'} 수준입니다. ${cpiY}년 물가상승률 ${pct(cpi)}와 ${YEAR}년 최저임금 인상률 ${pct(mwUp)}를 감안하면 실질 가치를 유지하는 연봉은 ${manwon(keep)}이며, 올해 국민연금·건강보험 요율 인상으로 같은 연봉의 실수령이 월 ${won(pensionLoss)} 줄었습니다. 이를 근거로 ${scen[2].cells[1]}원(7% 인상)을 요청드립니다.`;
   const title = `연봉 ${manwon(annual)} 협상 근거 — 상위 ${rk.topPct}%, 물가 ${pct(cpi)}, 실질 유지선 ${manwon(keep)}`;
   const desc = `연봉 ${manwon(annual)}의 위치(상위 ${rk.topPct}%), 나이대 평균과의 차이, 물가상승률과 최저임금 인상률로 본 실질 유지선, 인상률별 실수령 변화를 한 장으로 정리하고 협상에 쓸 문장을 만들었습니다.`;
   const body = `
@@ -1779,7 +1779,7 @@ function bokbiPage(m) {
 ${crumb([['/bokbi/', '복비'], [null, manwon(P)]])}
 <h1 class="title">${manwon(P)} 부동산 복비 — 매매·전세·월세</h1>
 <p class="meta">주택 중개보수 상한요율(${YEAR}년) · 매도인과 매수인이 각각 · 부가세 10% 별도</p>
-${lead(`${manwon(P)}짜리 집을 사고팔 때 중개보수는 상한요율 ${pct(s.rate, 1)}을 적용해 최대 ${won(s.fee)}${s.cap && s.fee === s.cap ? ` (요율로는 ${won(Math.floor(P * s.rate))}이지만 한도 ${won(s.cap)})` : ''}이고, 부가세를 더하면 ${won(s.total)}입니다. 같은 금액을 전세로 계약하면 ${pct(r.rate, 1)}로 ${won(r.fee)}. 이 숫자는 '상한'이라 그 아래로 협의할 수 있습니다.`)}
+${lead(`${manwon(P)}짜리 집을 사고팔 때 중개보수는 상한요율 ${pct(s.rate, 1)}를 적용해 최대 ${won(s.fee)}${s.cap && s.fee === s.cap ? ` (요율로는 ${won(Math.floor(P * s.rate))}이지만 한도 ${won(s.cap)})` : ''}이고, 부가세를 더하면 ${won(s.total)}입니다. 같은 금액을 전세로 계약하면 ${pct(r.rate, 1)}로 ${won(r.fee)}. 이 숫자는 '상한'이라 그 아래로 협의할 수 있습니다.`)}
 ${hero({ label: '매매 중개보수 (상한)', value: s.fee, sub: `요율 ${pct(s.rate, 1)}${s.cap ? ` · 한도 ${won(s.cap)}` : ''} · 부가세 포함 ${won(s.total)} · 사는 쪽과 파는 쪽 각각` })}
 ${tiles([{ label: '매매 (부가세 포함)', value: s.total }, { label: '전세 (부가세 포함)', value: r.total }, { label: '오피스텔 매매 0.5% (부가세 포함)', value: ofv }])}
 ${section('매매', `${manwon(P)} 기준`, table(['구분', '상한요율', '복비', '부가세 포함'], [
@@ -1836,12 +1836,12 @@ function acqPage(m) {
   const a3 = RE.acquisitionTax(P, { homes: 3, regulated: true }), a3L = RE.acquisitionTax(P, { homes: 3, regulated: true, large: true });
   const a3n = RE.acquisitionTax(P, { homes: 3 });
   const title = `${manwon(P)} 주택 취득세 — ${won(a.total)} (1주택 ${rateTxt(a.rate)} + 교육세, ${YEAR}년)`;
-  const desc = `${manwon(P)} 아파트를 1주택으로 사면 취득세 ${rateTxt(a.rate)} ${won(a.tax)}에 지방교육세 ${won(a.educ)}를 더해 ${won(a.total)}입니다. 85㎡ 초과면 농어촌특별세 0.2%가 붙어 ${won(aL.total)}.${aF.cut ? ` 생애최초 감면을 받으면 ${won(aF.total)}.` : ''}`;
+  const desc = `${manwon(P)} 아파트를 1주택으로 사면 취득세 ${rateTxt(a.rate)} ${won(a.tax)}에 지방교육세 ${won(a.educ)}을 더해 ${won(a.total)}입니다. 85㎡ 초과면 농어촌특별세 0.2%가 붙어 ${won(aL.total)}.${aF.cut ? ` 생애최초 감면을 받으면 ${won(aF.total)}.` : ''}`;
   const body = `
 ${crumb([['/acquisition-tax/', '취득세'], [null, manwon(P)]])}
 <h1 class="title">${manwon(P)} 주택 취득세</h1>
 <p class="meta">유상 취득(매매) · 1주택 · ${YEAR}년 지방세법 · 취득일부터 60일 안에 신고·납부</p>
-${lead(`${manwon(P)}짜리 집을 사면 취득세는 ${rateTxt(a.rate)}${a.rate > 0.01 && a.rate < 0.03 ? ' (6억 초과 9억 이하 사잇값)' : ''}로 ${won(a.tax)}, 지방교육세 ${rateTxt(a.educRate)} ${won(a.educ)}를 더해 ${won(a.total)}입니다. 전용면적 85㎡를 넘으면 농어촌특별세 0.2% ${won(aL.rural)}이 더 붙어 ${won(aL.total)}이 되고, ${aF.cut ? `생애최초로 집을 사는 사람은 취득세에서 최대 200만원을 빼 ${won(aF.total)}만 냅니다.` : '취득가액이 12억원을 넘어 생애최초 감면은 받지 못합니다.'}`)}
+${lead(`${manwon(P)}짜리 집을 사면 취득세율은 ${rateTxt(a.rate)}${a.rate > 0.01 && a.rate < 0.03 ? '(6억 초과 9억 이하 사잇값)' : ''}이고 취득세는 ${won(a.tax)}, 여기에 지방교육세 ${rateTxt(a.educRate)} ${won(a.educ)}을 더해 ${won(a.total)}입니다. 전용면적 85㎡를 넘으면 농어촌특별세 0.2% ${won(aL.rural)}이 더 붙어 ${won(aL.total)}이 되고, ${aF.cut ? `생애최초로 집을 사는 사람은 취득세에서 최대 200만원을 빼 ${won(aF.total)}만 냅니다.` : '취득가액이 12억원을 넘어 생애최초 감면은 받지 못합니다.'}`)}
 ${hero({ label: '취득세 합계 (1주택 · 85㎡ 이하)', value: a.total, sub: `취득세 ${rateTxt(a.rate)} + 지방교육세 ${rateTxt(a.educRate)} = ${rateTxt(a.totalRate)} · 85㎡ 초과 ${won(aL.total)}` })}
 ${led('계산 흐름', '원', [['취득가액', num(P)], [`취득세 ${rateTxt(a.rate)}`, num(a.tax), a.rate > 0.01 && a.rate < 0.03 ? `(${short(P)} × 2/3억 − 3)%` : ''], [`지방교육세 ${rateTxt(a.educRate)}`, '+' + num(a.educ), '취득세율의 1/10'], ['농어촌특별세 (85㎡ 이하)', '0', '85㎡ 초과면 0.2% = ' + won(aL.rural)], ['합계', num(a.total)]].concat(aF.cut ? [['생애최초 감면 시', num(aF.total), `취득세 −${won(aF.cut)} (12억원 이하)`]] : []))}
 ${section('주택 수·지역·면적별', `${manwon(P)} 기준 · 세율은 취득세 + 지방교육세 + 농어촌특별세 합계`, table(['조건', '85㎡ 이하', '85㎡ 초과'], [
@@ -1956,7 +1956,7 @@ function inhPage(c, m) {
   const r = IH.inheritTax(E, C);
   const f = IH.inheritTax(E, { ...C, financial: Math.round(E * 0.3) });
   const title = `상속재산 ${manwon(E)} 상속세 — ${C.label} ${r.tax ? won(r.tax) : '0원'} (${YEAR}년)`;
-  const desc = `${C.label}이 ${manwon(E)}을 상속받으면 ${r.lumpType === 'lump' ? '일괄공제 5억원' : `기초·자녀공제 ${manwon(r.lump)}`}${C.spouse ? `과 배우자상속공제 ${manwon(r.spouseDed)}` : ''}를 뺀 과세표준 ${manwon(r.base)}에 ${r.rate ? pct(r.rate, 0) : '—'} 세율, 신고세액공제 3%를 반영한 상속세는 ${won(r.tax)}입니다. 가족 구성별·금액별 표와 절세 방법.`;
+  const desc = `${C.label}이 ${manwon(E)}을 상속받으면 ${r.lumpType === 'lump' ? '일괄공제 5억원' : `기초·자녀공제 ${manwon(r.lump)}`}${C.spouse ? `과 배우자상속공제 ${manwon(r.spouseDed)}` : ''}을 뺀 과세표준 ${manwon(r.base)}에 ${r.rate ? pct(r.rate, 0) : '—'} 세율, 신고세액공제 3%를 반영한 상속세는 ${won(r.tax)}입니다. 가족 구성별·금액별 표와 절세 방법.`;
   const rows = [['상속재산 (시가)', num(E)], [r.lumpType === 'lump' ? '일괄공제' : '기초공제 + 자녀공제', neg(r.lump), r.lumpType === 'lump' ? `기초 2억 + 자녀 ${C.children}명 × 5천만 = ${manwon(r.personal)}보다 큰 5억` : `자녀 ${C.children}명이라 일괄공제 5억보다 큼`]];
   if (C.spouse) rows.push(['배우자상속공제', neg(r.spouseDed), `법정상속분 ${pct(r.share, 1)} · 최소 5억 · 최대 30억`]);
   rows.push(['과세표준', num(r.base)], ['산출세액', num(r.calc), r.rate ? `${pct(r.rate, 0)}${r.progressiveDeduct ? ` − 누진공제 ${manwon(r.progressiveDeduct)}` : ''}` : '과세표준 없음'], ['신고세액공제 3%', neg(r.credit), '6개월 안 자진 신고'], ['납부할 상속세', num(r.tax)], ['상속인들 손에', num(r.net)]);
@@ -2016,7 +2016,7 @@ ${section('공제 한눈에', null, table(['공제', '금액', '조건'], [
 ]))}
 ${section('세율', '과세표준 = 상속재산 − 공제', table(['과세표준', '세율', '누진공제'], GT.GIFT_BRACKETS.map(([lim, r, d], i) => ({ cells: [i === 0 ? '1억원 이하' : lim === Infinity ? '30억원 초과' : `${manwon(GT.GIFT_BRACKETS[i - 1][0])} 초과 ${manwon(lim)} 이하`, pct(r, 0), d ? manwon(d) : '—'] }))))}
 ${section('자주 묻는 것', null, `<div class="doc">
-<p><b>정말 10억원까지 세금이 없나요?</b> 배우자와 자녀가 있으면 일괄공제 5억 + 배우자공제 최소 5억 = 10억원까지는 어떤 경우에도 없습니다. 자녀만 있으면 5억원까지입니다. 아파트 한 채가 10억원을 넘는 집이 많아진 지금은 미리 계산해 둘 필요가 있습니다.</p>
+<p><b>정말 10억원까지 세금이 없나요?</b> 배우자와 자녀가 있으면 일괄공제 5억 + 배우자공제 최소 5억 = 10억원까지는 어떤 경우에도 없습니다. 자녀만 있으면 5억원까지입니다. 아파트 한 채가 10억원을 넘는 집이 많아진 지금은 미리 계산해 두는 편이 좋습니다.</p>
 <p><b>상속재산은 어떻게 평가하나요?</b> 시가가 원칙입니다. 아파트는 사망일 전후 6개월 안의 유사한 매매사례가액, 없으면 공시가격·감정가액이고, 예금은 잔액, 주식은 사망일 전후 2개월 평균 종가입니다. 사망 전 1~2년 안에 인출한 현금이 크면(1년 2억·2년 5억 이상) 사용처를 밝혀야 합니다.</p>
 <p><b>증여와 상속, 어느 쪽이 유리한가요?</b> 공제는 상속이 훨씬 크지만(10억 vs 자녀 5천만), 재산이 공제를 크게 넘으면 10년 단위로 미리 증여해 세율 구간을 나누는 쪽이 유리할 수 있습니다. 사망 전 10년 안의 증여는 합산되니 일찍 시작해야 효과가 있습니다.</p>
 <p><b>상속받은 집도 취득세를 내나요?</b> 네, 상속 취득세 2.8%(무주택자가 1주택을 상속하면 0.8%)와 지방교육세·농특세를 6개월 안에 냅니다. <a href="/acquisition-tax/">취득세 계산표</a></p>
@@ -2090,12 +2090,12 @@ const PROP_NOTE = `<p class="note">지방세법의 주택분 재산세 기준입
 function propPage(m) {
   const P = m * 10000, a = PT.propertyTax(P), b2 = PT.propertyTax(P, { oneHome: false }), url = propUrl(m);
   const title = `공시가격 ${manwon(P)} 주택 재산세 — 1주택 연 ${won(a.total)} · 다주택 ${won(b2.total)} (${YEAR}년)`;
-  const desc = `공시가격 ${manwon(P)} 주택의 재산세는 1세대 1주택이면 과세표준 ${manwon(a.base)}(${pct(a.ratio, 0)})에 ${a.special ? '특례세율' : '표준세율'}을 적용한 ${won(a.tax)}에 도시지역분 ${won(a.urban)}, 지방교육세 ${won(a.educ)}를 더해 연 ${won(a.total)}, 7월·9월에 ${won(a.july)}·${won(a.september)}씩 냅니다. 다주택이면 ${won(b2.total)}.`;
+  const desc = `공시가격 ${manwon(P)} 주택의 재산세는 1세대 1주택이면 과세표준 ${manwon(a.base)}(${pct(a.ratio, 0)})에 ${a.special ? '특례세율' : '표준세율'}을 적용한 ${won(a.tax)}에 도시지역분 ${won(a.urban)}, 지방교육세 ${won(a.educ)}을 더해 연 ${won(a.total)}, 7월·9월에 ${won(a.july)}·${won(a.september)}씩 냅니다. 다주택이면 ${won(b2.total)}.`;
   const body = `
 ${crumb([['/property-tax/', '재산세'], [null, `공시가 ${manwon(P)}`]])}
 <h1 class="title">공시가격 ${manwon(P)} 주택 재산세</h1>
 <p class="meta">주택분 · 도시지역분·지방교육세 포함 · 과세기준일 6월 1일 · 7월·9월 절반씩 납부</p>
-${lead(`공시가격 ${manwon(P)}인 집을 1세대 1주택으로 갖고 있으면 과세표준은 공시가격의 ${pct(a.ratio, 0)}인 ${manwon(a.base)}이고, ${a.special ? '9억원 이하 특례세율' : '표준세율'}로 재산세 ${won(a.tax)}에 도시지역분 ${won(a.urban)}, 지방교육세 ${won(a.educ)}가 붙어 1년에 ${won(a.total)}입니다. 7월에 ${won(a.july)}, 9월에 ${won(a.september)}이 고지됩니다. 2주택 이상이면 비율 60%와 표준세율이 적용되어 ${won(b2.total)}으로 ${b2.total > a.total ? `${pct(b2.total / a.total - 1, 0)} 더` : '같게'} 냅니다.`)}
+${lead(`공시가격 ${manwon(P)}인 집을 1세대 1주택으로 갖고 있으면 과세표준은 공시가격의 ${pct(a.ratio, 0)}인 ${manwon(a.base)}이고, ${a.special ? '9억원 이하 특례세율' : '표준세율'}로 재산세 ${won(a.tax)}에 도시지역분 ${won(a.urban)}, 지방교육세 ${won(a.educ)}이 붙어 1년에 ${won(a.total)}입니다. 7월에 ${won(a.july)}, 9월에 ${won(a.september)}이 고지됩니다. 2주택 이상이면 비율 60%와 표준세율이 적용되어 ${won(b2.total)}으로 ${b2.total > a.total ? `${pct(b2.total / a.total - 1, 0)} 더` : '같게'} 냅니다.`)}
 ${hero({ label: '1세대 1주택 연간 재산세 (도시지역분·교육세 포함)', value: a.total, sub: `7월 ${won(a.july)} + 9월 ${won(a.september)} · 공시가격의 ${pct(a.effective, 3)}` })}
 ${led('계산 흐름 (1주택)', '원', [['공시가격', num(P)], [`공정시장가액비율 ${pct(a.ratio, 0)}`, '', '1세대 1주택 특례 (일반 60%)'], ['과세표준', num(a.base)], [`재산세 (${a.special ? '특례세율' : '표준세율'})`, num(a.tax), a.special ? '9억 이하 1주택 · 구간별 0.05%p 인하' : '0.1~0.4% 누진'], ['도시지역분 0.14%', '+' + num(a.urban), '과세표준 기준'], ['지방교육세 20%', '+' + num(a.educ), '재산세 기준'], ['합계', num(a.total)]])}
 ${section('1주택 vs 다주택', `공시가격 ${manwon(P)}`, table(['구분', '1세대 1주택', '2주택 이상'], [
@@ -2129,7 +2129,7 @@ ${section('세율표', '주택분 · 과세표준 기준', table(['과세표준'
 ]))}
 ${section('자주 묻는 것', null, `<div class="doc">
 <p><b>왜 두 번 나오나요?</b> 주택분 재산세는 7월과 9월에 절반씩 나눠 고지합니다(본세 20만원 이하는 7월 한 번). 건물과 토지를 따로 매기던 방식의 흔적입니다.</p>
-<p><b>1주택 특례는 계속되나요?</b> 공정시장가액비율 43~45%와 특례세율은 법·시행령으로 해마다 정합니다. 최근 몇 년은 연장되어 왔지만 올해 고지서로 확인하는 것이 안전합니다.</p>
+<p><b>1주택 특례는 계속되나요?</b> 공정시장가액비율 43~45%와 특례세율은 법·시행령으로 해마다 정합니다. 최근 몇 년은 계속 연장됐지만 올해 고지서로 확인하는 편이 안전합니다.</p>
 <p><b>재산세와 종부세는 다른가요?</b> 재산세는 지방세로 모든 주택에, 종합부동산세는 국세로 공시가격 12억원(1주택) 초과분에만 12월에 따로 부과됩니다.</p>
 </div>`)}
 ${PROP_NOTE}`;
@@ -2151,7 +2151,7 @@ function carTaxPage(cc) {
 ${crumb([['/car-tax/', '자동차세'], [null, `${num(cc)}cc`]])}
 <h1 class="title">${num(cc)}cc 자동차세${CAR_EX[cc] ? ` — ${CAR_EX[cc]}` : ''}</h1>
 <p class="meta">비영업용 승용차 · cc당 ${t.unit}원 · 지방교육세 30% 포함 · 6월·12월 절반씩 또는 1월 연납</p>
-${lead(`배기량 ${num(cc)}cc는 cc당 ${t.unit}원 구간이라 자동차세 ${won(t.tax)}에 지방교육세 ${won(t.educ)}를 더해 1년에 ${won(t.total)}입니다. 6월과 12월에 ${won(t.half)}씩 나오고, 1월에 한 번에 내면 ${pct(t.rate, 0)}(2~12월분)를 깎아 ${won(t.prepaid)}만 냅니다. 등록 3년차부터 해마다 5%씩 줄어 5년차에는 ${won(t5.total)}, 12년차부터는 절반인 ${won(t12.total)}입니다.`)}
+${lead(`배기량 ${num(cc)}cc는 cc당 ${t.unit}원 구간이라 자동차세 ${won(t.tax)}에 지방교육세 ${won(t.educ)}을 더해 1년에 ${won(t.total)}입니다. 6월과 12월에 ${won(t.half)}씩 나오고, 1월에 한 번에 내면 ${pct(t.rate, 0)}(2~12월분)를 깎아 ${won(t.prepaid)}만 냅니다. 등록 3년차부터 해마다 5%씩 줄어 5년차에는 ${won(t5.total)}, 12년차부터는 절반인 ${won(t12.total)}입니다.`)}
 ${hero({ label: '연간 자동차세 (1~2년차 · 교육세 포함)', value: t.total, sub: `자동차세 ${won(t.tax)} + 지방교육세 ${won(t.educ)} · 6월·12월 각 ${won(t.half)}` })}
 ${led('계산 흐름', '원 · 1년', [[`배기량 × cc당 세액`, num(t.gross), `${num(cc)}cc × ${t.unit}원`], ['차령 경감', neg(t.gross - t.tax), '1~2년차 없음 · 3년차부터 5%씩'], ['자동차세', num(t.tax)], ['지방교육세 30%', '+' + num(t.educ)], ['합계', num(t.total)], [`1월 연납 시 (${pct(t.rate, 0)} × 11/12 공제)`, num(t.prepaid), `−${won(t.prepay)}`]])}
 ${section('연식별 자동차세', `${num(cc)}cc · 최초 등록 후 몇 년째인지 기준`, table(['차령', '경감', '자동차세', '교육세', '합계', '연납 시'], carAgeRows(cc)))}
@@ -2162,7 +2162,7 @@ ${section('알아두면 좋은 것', null, `<div class="doc">
 <p><b>연납 할인은 줄어드는 중.</b> 1월 연납 공제율이 2023년 7%, 2024·2025년 5%, ${YEAR}년 ${pct(CT.ANNUAL_DISCOUNT[YEAR] || 0, 0)}로 낮아졌고 2027년 폐지 예정입니다. 그래도 위택스에서 1월 16~31일에 신청하면 두 번 낼 것을 한 번에 끝냅니다. 3월·6월·9월 연납도 남은 기간만큼 공제됩니다.</p>
 <p><b>중고차를 사면 일할 계산.</b> 소유권 이전일을 기준으로 전 주인과 나눠 내고, 차령은 최초 등록일부터 셉니다. 폐차·양도하면 남은 기간분은 환급됩니다.</p>
 <p><b>전기차는 13만원.</b> 배기량이 없는 전기·수소차는 자동차세 10만원 + 교육세 3만원 정액입니다. <a href="/car-tax/ev/">전기차 자동차세</a></p>
-<p><b>배기량 경계에 유의.</b> 1,600cc를 1cc라도 넘으면 cc당 140원이 200원이 되어 세금이 40% 넘게 뜁니다. 1,598cc 차와 1,999cc 차의 차이가 그것입니다.</p>
+<p><b>배기량 경계에 유의.</b> 1,600cc를 1cc라도 넘으면 cc당 140원이 200원이 되어 세금이 40% 넘게 뜁니다. 1,598cc 차와 1,999cc 차가 갈리는 지점도 여기입니다.</p>
 </div>`)}
 ${section('이어서 계산하기', null, list([{ href: '/car-tax/', title: '배기량별 자동차세표', sub: '998cc부터 5,000cc까지' }, { href: '/car-loan/', title: '자동차 할부', sub: '차값·개월별 월 납입액' }, { href: '/time/', title: '내 시간으로 사는 물건', sub: '자동차는 몇 시간 일해야 하나' }]))}
 ${CAR_NOTE}`;
@@ -2331,7 +2331,7 @@ ${section('무주택 × 부양가족 합계표', '통장 15년 이상(17점) 기
 ${section('가구원 수별 최대 가점', '무주택 15년 · 통장 15년을 다 채웠을 때', table(['가구', '부양가족', '최대 가점'], [1, 2, 3, 4, 5, 6, 7].map((p) => ({ cells: [p === 7 ? '7인 이상' : `${p}인`, fShort(Math.min(6, p - 1)), `${SB.maxForFamily(p - 1)}점`] }))))}
 ${section('자주 묻는 것', null, `<div class="doc">
 <p><b>만 30세 미만인데 무주택 점수가 0점인가요?</b> 미혼이면 그렇습니다. 만 30세가 되는 날부터 기간이 쌓이고, 30세 전에 혼인신고를 했다면 그날부터 셉니다.</p>
-<p><b>부모님을 모시면 부양가족인가요?</b> 3년 이상 같은 주민등록에 계속 올라 있어야 하고, 부모님이 집을 가지고 있으면 인정되지 않습니다. 배우자의 부모도 같습니다.</p>
+<p><b>부모님을 모시면 부양가족인가요?</b> 3년 이상 같은 주민등록에 계속 올라 있어야 하고, 부모님에게 집이 있으면 인정되지 않습니다. 배우자의 부모도 같습니다.</p>
 <p><b>통장을 오래전에 만들고 납입을 안 했으면?</b> 가입기간 점수는 납입 횟수가 아니라 가입일 기준입니다. 다만 1순위 요건(가입 기간·납입 횟수·예치금)은 따로 갖춰야 합니다.</p>
 <p><b>가점이 낮으면 방법이 없나요?</b> 추첨제 물량(규제지역 60㎡ 이하 60%, 비규제지역 85㎡ 초과 100%)과 생애최초·신혼부부·다자녀 특별공급을 노립니다. 특별공급은 소득·자산 요건이 있고 가점이 아닌 별도 기준으로 뽑습니다.</p>
 </div>`)}
@@ -2463,7 +2463,7 @@ ${section('자주 묻는 것', null, `<div class="doc">
 <p><b>언제까지 신청해야 하나요?</b> 부모급여·아동수당은 출생 후 60일 안에 신청하면 출생월부터 소급됩니다. 60일이 지나면 신청한 달부터입니다. 출생신고 때 주민센터의 '행복출산 원스톱 서비스'로 한 번에 신청할 수 있습니다.</p>
 <p><b>첫만남이용권은 현금인가요?</b> 국민행복카드에 들어오는 바우처(포인트)입니다. 출생 후 1년 안에 써야 하고 유흥·사행업종 외에는 대부분 쓸 수 있습니다.</p>
 <p><b>지역 출산장려금은 얼마인가요?</b> 지자체마다 다릅니다. 첫째 수십만원부터 셋째 이상 수천만원까지 있고, 거주 기간 조건이 붙는 곳이 많습니다. 정부24에서 '출산지원금'으로 검색하거나 주민센터에 물어보세요.</p>
-<p><b>양육수당과 아동수당은 다른가요?</b> 아동수당은 만 8세 전까지 모든 아동에게, 양육수당은 어린이집·유치원에 다니지 않는 24~86개월 아동에게 주는 것입니다. 둘 다 받을 수 있습니다.</p>
+<p><b>양육수당과 아동수당은 다른가요?</b> 아동수당은 만 8세 전까지 모든 아동에게, 양육수당은 어린이집·유치원에 다니지 않는 24~86개월 아동에게 줍니다. 둘 다 받을 수 있습니다.</p>
 </div>`)}
 ${section('이어서 계산하기', null, list([{ href: '/parental-leave/', title: '육아휴직 급여 계산기', sub: '통상임금별 월 급여와 6+6 부모육아휴직제' }, { href: '/yearend/', title: '연말정산 미리보기', sub: '자녀세액공제까지 넣어 환급 예상' }, { href: '/goal/', title: '목돈 모으기', sub: '지원금을 모으면 언제 1,000만원' }]))}
 <p class="note">2025년 기준이며 지자체 지원(출산장려금·산후조리비 등)은 별도입니다. 부모급여·아동수당 금액과 첫만남이용권은 보건복지부 고시로 해마다 바뀔 수 있고, 어린이집 이용 시 부모급여는 보육료를 뺀 차액만 현금으로 받습니다. 참고용이며 신청과 확정 금액은 복지로·주민센터에서 확인하세요. <a href="/method/">계산 기준 보기</a></p>`;
@@ -2540,7 +2540,7 @@ ${section('요금표', `${EL.ELECTRIC_ASOF} 주택용 · 기본요금 원/호 ·
 <p class="sub" style="margin-top:8px">모든 사용량에 기후환경요금 9.0원/kWh와 연료비조정요금 +5.0원/kWh가 더해집니다.</p>
 ${section('자주 묻는 것', null, `<div class="doc">
 <p><b>누진제는 왜 있나요?</b> 주택용에만 있는 제도로, 많이 쓸수록 kWh당 단가를 올려 절약을 유도합니다. 2016년 6단계에서 3단계로 줄었고, 여름에는 구간을 넓혀 부담을 줄입니다.</p>
-<p><b>여름 요금이 더 싼 건가요?</b> 단가는 같고 구간이 넓어지는 것입니다. 같은 400kWh라도 기타계절은 2단계 끝(다음 kWh부터 3단계)이지만 여름은 2단계 안이라 기본요금이 낮고, 450kWh를 넘어야 3단계입니다.</p>
+<p><b>여름 요금이 더 싼 건가요?</b> 단가는 같고 구간만 넓어집니다. 같은 400kWh라도 기타계절은 2단계 끝(다음 kWh부터 3단계)이지만 여름은 2단계 안이라 기본요금이 낮고, 450kWh를 넘어야 3단계입니다.</p>
 <p><b>1,000kWh 넘게 쓰면?</b> 여름(7~8월)과 겨울(12~2월)에는 1,000kWh 초과분에 슈퍼유저 요금 736.2원/kWh가 붙습니다. 3단계 307.3원의 2.4배입니다.</p>
 <p><b>고지서 금액과 다른데요?</b> 검침일이 월초가 아니면 두 달의 요금이 일수로 섞이고, 복지할인·TV수신료·연체료가 더해지거나 빠집니다. 아파트는 단지 전체가 고압으로 계약해 관리비에 나눠 담기도 합니다.</p>
 <p><b>저압과 고압 중 뭐가 내 집인가요?</b> 단독·다세대·빌라 대부분은 저압입니다. 아파트는 단지가 한전과 고압으로 계약하고 관리사무소가 세대별로 나누는 곳이 많습니다. 관리비 고지서의 '전기요금' 항목에 계약 종별이 적혀 있습니다.</p>
@@ -2634,7 +2634,7 @@ ${section('다른 가구 유형', null, list(EITC_TYPES.filter((t) => t !== type
 ${section('요건 한눈에', EI.EITC_ASOF, table(['항목', '기준'], eitcReqRows(T)))}
 ${section('알아두면 좋은 것', null, EITC_TIPS)}
 ${EITC_NOTE}`;
-  write(url, shell({ url, title: `${T.label} 근로장려금 지급액표 — 총급여 ${manwon(EITC_WAGES[type][0] * 10000)}~${manwon(EITC_WAGES[type][EITC_WAGES[type].length - 1] * 10000)} 예상액 (2025년 신청)`, desc: `${T.label}(${T.who})의 근로장려금을 총급여별로 미리 계산했습니다. 최대 ${manwon(T.max)}, ${manwon(T.limit)} 미만까지. ${isSingle ? '재산 감액 기준' : '자녀장려금 포함 합계'}와 산정 구간, 신청·지급 일정.`, body, nav: 'salary' }));
+  write(url, shell({ url, title: `${T.label} 근로장려금 지급액표 — 총급여 ${manwon(EITC_WAGES[type][0] * 10000)}~${manwon(EITC_WAGES[type][EITC_WAGES[type].length - 1] * 10000)} 예상액 (2025년 신청)`, desc: `${T.label}(${T.who})의 근로장려금을 총급여별로 미리 계산했습니다. 최대 ${manwon(T.max)}, ${manwon(T.limit)} 미만까지. ${isSingle ? '재산 감액 기준' : '자녀장려금 포함 합계'}, 산정 구간, 신청·지급 일정.`, body, nav: 'salary' }));
 }
 
 function eitcIndex() {
@@ -2713,7 +2713,7 @@ function penPage(im, y) {
 ${crumb([['/pension/', '국민연금 예상 수령액'], [null, `월 ${manwon(I)} · ${y}년`]])}
 <h1 class="title">월 소득 ${manwon(I)}으로 ${y}년 가입하면 국민연금은</h1>
 <p class="meta">${YEAR}년 기준 어림 · 비례상수 ${NP.DEFAULT_CONST} (소득대체율 43%) · A값 ${won(NP.A_VALUE)} · 65세 개시 (1969년생 이후) · 물가 연동·부양가족연금 미반영</p>
-${lead(`가입기간 평균 소득월액이 ${manwon(I)}이고 ${y}년을 채우면, 기본연금액 산식 ${NP.DEFAULT_CONST} × (A값 ${won(NP.A_VALUE)} + 본인 소득 ${won(I)}) × 가입기간 계수(${p.mult.toFixed(2)})로 계산하면 연 ${won(p.annual)}, 월 ${won(p.monthly)}을 65세부터 받습니다. 소득의 ${pct(p.replacement, 1)}입니다. 30년이면 월 ${won(p30.monthly)}, 40년이면 ${won(p40.monthly)}으로 가입기간 1년마다 5%씩 늘어납니다. ${y}년 동안 낸 보험료는 요율 9% 기준 ${won(p.paidTotal)}(직장 가입자 본인 부담 ${won(p.paidSelf)})이라 본인 부담분은 ${Math.floor(p.monthsSelf / 12)}년 ${p.monthsSelf % 12 ? `${p.monthsSelf % 12}개월` : ''}이면 돌려받습니다. 60세부터 조기 수령하면 30% 줄어 월 ${won(early.monthly)}, 70세로 늦추면 36% 늘어 월 ${won(late.monthly)}입니다.`)}
+${lead(`가입기간 평균 소득월액이 ${manwon(I)}이고 ${y}년을 채우면, 기본연금액 산식 ${NP.DEFAULT_CONST} × (A값 ${won(NP.A_VALUE)} + 본인 소득 ${won(I)}) × 가입기간 계수(${p.mult.toFixed(2)})로 계산하면 연 ${won(p.annual)}, 월 ${won(p.monthly)}을 65세부터 받습니다. 소득의 ${pct(p.replacement, 1)}입니다. 30년이면 월 ${won(p30.monthly)}, 40년이면 ${won(p40.monthly)}으로 가입기간 1년마다 5%씩 늘어납니다. ${y}년 동안 낸 보험료는 요율 9% 기준 ${won(p.paidTotal)}(직장 가입자 본인 부담 ${won(p.paidSelf)})이라 본인 부담분은 ${Math.floor(p.monthsSelf / 12)}년${p.monthsSelf % 12 ? ` ${p.monthsSelf % 12}개월` : ''}이면 돌려받습니다. 60세부터 조기 수령하면 30% 줄어 월 ${won(early.monthly)}, 70세로 늦추면 36% 늘어 월 ${won(late.monthly)}입니다.`)}
 ${hero({ label: '월 예상 수령액 (65세 개시)', value: p.monthly, sub: `연 ${won(p.annual)} · 소득의 ${pct(p.replacement, 1)} · ${y}년 가입 · 지금 돈 기준 어림` })}
 ${tiles([{ label: '60세 조기 수령 (−30%)', value: early.monthly }, { label: '70세 연기 수령 (+36%)', value: late.monthly }, { label: `${y}년 낸 보험료 (9% 기준)`, value: p.paidTotal }])}
 ${led('계산 흐름', '원', [['A값 (전체 가입자 3년 평균 소득월액)', num(NP.A_VALUE), `${NP.PENSION_ASOF} 적용`], ['B값 (본인 가입기간 평균 소득월액)', num(I), `하한 ${manwon(NP.B_MIN)} · 상한 ${manwon(NP.B_MAX)}`], ['(A + B) × 비례상수', num(Math.round(NP.DEFAULT_CONST * (NP.A_VALUE + I))), `${num(NP.A_VALUE + I)} × ${NP.DEFAULT_CONST}`], [`× 가입기간 계수 (1 + 0.05 × (${y} − 20))`, p.mult.toFixed(2), '10년 0.5 · 20년 1.0 · 40년 2.0'], ['기본연금액 (연)', num(p.base)], ['÷ 12 → 월 수령액 (10원 미만 절사)', num(p.monthly)]])}
@@ -2809,7 +2809,7 @@ const CAP_TIPS = `<div class="doc">
 <p><b>1세대 1주택 비과세 요건.</b> 양도일 현재 1세대가 국내에 주택 1채를 2년 이상 보유했으면 양도가액 12억원까지 비과세입니다. 2017년 8월 3일 이후 조정대상지역에서 취득한 주택은 보유 중 2년 이상 거주도 해야 합니다. 12억원을 넘는 고가주택은 양도차익 가운데 (양도가액 − 12억) ÷ 양도가액 비율만큼만 과세합니다.</p>
 <p><b>장기보유특별공제는 두 가지 표.</b> 1세대 1주택(2년 이상 거주)은 보유기간 연 4%(3년부터, 최대 40%)와 거주기간 연 4%(최대 40%)를 더해 최대 80%까지 빼 줍니다. 그 밖의 주택은 보유 3년부터 연 2%, 15년 이상 30%가 최대입니다. 중과 대상 다주택은 공제가 없습니다.</p>
 <p><b>필요경비를 챙기면 세금이 줄어듭니다.</b> 취득 때 낸 취득세·등록면허세, 법무사 비용, 중개수수료, 양도 때 중개수수료·신고 대행 수수료, 발코니 확장·새시·보일러 교체 같은 자본적 지출이 필요경비입니다. 도배·장판·싱크대 교체 같은 수리비(수익적 지출)는 인정되지 않습니다. 영수증과 이체 기록을 남겨 두세요.</p>
-<p><b>다주택 중과는 ${CG.SURCHARGE_UNTIL}까지 유예.</b> 조정대상지역 2주택 +20%p, 3주택 이상 +30%p 중과와 장기보유특별공제 배제는 2022년 5월 10일부터 한시적으로 적용하지 않고 있습니다. 그 뒤에 팔 계획이면 연장 여부를 확인하세요.</p>
+<p><b>다주택 중과는 ${CG.SURCHARGE_UNTIL}까지 유예.</b> 조정대상지역 2주택 +20%p, 3주택 이상 +30%p 중과와 장기보유특별공제 배제는 2022년 5월 10일부터 한시적으로 적용하지 않습니다. 그 뒤에 팔 계획이면 연장 여부를 확인하세요.</p>
 <p><b>신고는 양도일이 속한 달의 말일부터 2개월 안에.</b> 홈택스 '양도소득세 예정신고'로 신고·납부하고, 세액이 1,000만원을 넘으면 2개월 안에 나눠 낼 수 있습니다. 같은 해에 두 건 이상 양도했으면 다음 해 5월 확정신고로 합산합니다. 지방소득세(10%)는 위택스에 따로 신고합니다.</p>
 <p><b>보유 2년을 못 채우면 세금이 큽니다.</b> 1년 미만 70%, 2년 미만 60%의 단일세율이 과세표준 전체에 붙고 장기보유특별공제도 없습니다. 이사 계획이 있다면 취득일(잔금일·등기접수일 중 빠른 날)부터 2년을 확인하세요.</p>
 </div>`;
@@ -2999,7 +2999,7 @@ const annualPayUrl = (m) => `/annual/pay/${m}/`;
 const ANNUAL_NOTE = `<p class="note">근로기준법 제60조(연차 유급휴가)·제61조(연차 유급휴가의 사용 촉진)와 제49조(임금채권 소멸시효 3년)의 기준으로 계산했습니다. 1일 통상임금은 월급 전부가 통상임금이라고 보고 209시간으로 나눈 값이라 고정 상여·수당이 있으면 실제 통상임금이 더 큽니다. 출근율 80% 미만, 회계연도 기준을 쓰는 회사, 상시 근로자 5인 미만 사업장(연차 규정 적용 제외)은 결과가 다릅니다. 참고용이며 정확한 일수와 금액은 회사 취업규칙과 고용노동부 고객상담센터(1350)에서 확인하세요. <a href="/method/">계산 기준 보기</a></p>`;
 const ANNUAL_TIPS = `<div class="doc">
 <p><b>연차는 언제 생기나.</b> 입사 1년 미만일 때는 한 달을 개근할 때마다 1일씩, 최대 11일이 생깁니다. 1년을 채우고 그 기간 80% 이상 출근했으면 15일이 한꺼번에 생기고, 3년째부터는 2년마다 1일씩 늘어 최대 25일에서 멈춥니다. 1년 미만에 받은 11일과 1년째의 15일은 따로여서 입사 2년 차까지 최대 26일을 쓸 수 있습니다.</p>
-<p><b>사용 촉진을 하면 수당이 없어질 수 있습니다.</b> 근로기준법 제61조에 따라 회사가 연차 소멸 6개월 전에 남은 일수를 서면으로 알리고, 근로자가 사용 시기를 정해 통보하지 않으면 회사가 시기를 지정해 다시 서면으로 통보하는 절차를 모두 지켰는데도 쓰지 않았다면 미사용 연차수당을 주지 않아도 됩니다. 구두 통보나 메신저 공지만으로는 촉진 효력이 없다는 것이 고용노동부 해석입니다.</p>
+<p><b>회사가 사용을 촉진하면 수당이 없어질 수 있습니다.</b> 근로기준법 제61조에 따라 회사가 연차 소멸 6개월 전에 남은 일수를 서면으로 알리고, 근로자가 사용 시기를 정해 통보하지 않으면 회사가 시기를 지정해 다시 서면으로 통보하는 절차를 모두 지켰는데도 쓰지 않았다면 미사용 연차수당을 주지 않아도 됩니다. 구두 통보나 메신저 공지만으로는 촉진 효력이 없다는 것이 고용노동부 해석입니다.</p>
 <p><b>못 받은 연차수당은 3년 안에 청구.</b> 연차수당은 임금이라 근로기준법 제49조의 소멸시효 3년이 적용됩니다. 연차가 소멸한 다음 날부터 3년 안에 청구해야 하고, 회사가 주지 않으면 고용노동부에 임금체불로 진정할 수 있습니다.</p>
 <p><b>언제 받나.</b> 연차가 소멸한 다음 달 임금 지급일에 미사용 일수만큼 받는 것이 보통입니다. 퇴사할 때는 남은 연차를 모두 수당으로 정산해야 하고, 퇴직일부터 14일 안에 지급해야 합니다.</p>
 <p><b>회계연도 기준을 쓰는 회사.</b> 법의 원칙은 입사일 기준이지만 관리 편의로 1월 1일을 기준으로 삼는 회사가 많습니다. 이때 입사 다음 해 1월 1일에 15일 × (입사일부터 12월 31일까지 일수 ÷ 365)의 비례연차를 줍니다. 다만 퇴직할 때 입사일 기준으로 계산한 연차보다 적으면 그 차액을 채워 줘야 합니다.</p>
@@ -3290,7 +3290,7 @@ ${section('지역가입자 재산 점수 (근사)', `재산과세표준에서 �
 <div class="callout"><b>공단 모의계산이 정확합니다.</b> 특히 지역가입자 재산 점수는 60등급표를 그대로 적용해야 해서 이 사이트의 근사와 차이가 납니다. <a href="${NH.NHIS_URL}" target="_blank" rel="noopener">국민건강보험공단(nhis.or.kr)</a>의 '보험료 모의계산'이나 고객센터 1577-1000에서 확인하세요.</div>
 ${section('자주 묻는 것', null, `<div class="doc">
 <p><b>급여명세서의 건강보험료가 왜 이 값과 다른가요?</b> 보수월액은 월급 전체가 아니라 비과세(식대 등)를 뺀 과세 급여입니다. 식대 20만원이 비과세라면 보수월액은 월급보다 20만원 적습니다. 또 매년 4월에 전년도 실제 보수로 정산해 추가 납부나 환급이 생깁니다.</p>
-<p><b>보수 외 소득이 있으면?</b> 직장가입자라도 이자·배당·임대 등 보수 외 소득이 연 2,000만원을 넘으면 초과분에 대해 소득월액보험료를 따로 냅니다. 이 계산기에는 넣지 않았습니다.</p>
+<p><b>보수 외 소득이 있으면?</b> 직장가입자라도 이자·배당·임대 등 보수 외 소득이 연 2,000만원을 넘으면 초과분에 소득월액보험료를 따로 냅니다. 이 계산기에는 넣지 않았습니다.</p>
 <p><b>지역가입자 보험료가 너무 많이 나옵니다.</b> 소득이 줄었다면 공단에 '조정 신청'을 할 수 있습니다. 폐업·퇴직·소득 감소를 증빙하면 다음 달부터 조정됩니다.</p>
 <p><b>장기요양보험료는 뭔가요?</b> 노인장기요양보험의 재원으로, 건강보험료에 ${pct(NH.CARE_RATE, 2)}를 곱해 함께 걷습니다. 직장가입자는 이것도 회사와 반씩 냅니다.</p>
 </div>`)}

@@ -37,6 +37,15 @@
     if (rate == null) { var r2 = t.match(/금리\s*(\d+(?:\.\d+)?)/) || t.match(/(?:^|\s)(\d{1,2}\.\d+)(?!\s*(?:억|천|만|년|개월|시간|%))/); if (r2) rate = parseFloat(r2[1]); }
     /* 단위 없이 큰 숫자(35000000)만 원으로 보고 만원으로 바꿈 — "10억"처럼 단위가 붙은 값은 그대로 */
     var man = function (v) { return (firstTok && firstTok.unit === '' && v >= 100000) ? Math.round(v / 10000) : v; };
+    /* 단위가 붙었거나 100 이상인 금액만 — "3.3%", "8.8%" 같은 요율 숫자를 금액으로 읽지 않게 */
+    var bigFirst = big.length ? man(big[0].man) : null;
+    if (/건강보험|지역가입자|보수월액|장기요양|직장가입자/.test(t)) {
+      var nhLocal = /지역|연소득|재산|프리|자영|퇴직|피부양/.test(t);
+      if (bigFirst == null) return { href: '/nhis/' + (nhLocal ? '?t=local' : ''), label: nhLocal ? '지역가입자 건강보험료 계산기' : '건강보험료 계산기' };
+      if (nhLocal) { var nhL = nearest(G.nhisL || [bigFirst], bigFirst); return { href: '/nhis/local/' + nhL + '/', label: '연소득 ' + fmtMan(nhL) + '원 지역가입자 건강보험료' }; }
+      var nhE = nearest(G.nhisE || [bigFirst], bigFirst);
+      return { href: '/nhis/employee/' + nhE + '/', label: '보수월액 ' + fmtMan(nhE) + '원 건강보험료' };
+    }
     if (/장려금/.test(t)) {
       var et = /맞벌이/.test(t) ? 'dual' : /홑벌이|외벌이|배우자|자녀|아이|부양/.test(t) ? 'one' : 'single';
       var etLabel = { single: '단독', one: '홑벌이', dual: '맞벌이' }[et];
@@ -146,12 +155,18 @@
       var cp = nearest(G.carP || [first], man(first)), cn = nearest(G.carN || [60], months || (years ? years * 12 : 60));
       return { href: '/car-loan/' + cp + '/' + cn + '/', label: '차값 ' + fmtMan(cp) + '원 · ' + cn + '개월 할부' };
     }
-    if (/프리|3\.3|사업소득/.test(t)) {
-      if (!first) return { href: '/freelance/', label: '프리랜서 3.3% 실수령' };
-      var fm = nearest(G.free || [first], man(first));
-      return { href: '/freelance/' + fm + '/', label: '월 ' + fmtMan(fm) + '원 프리랜서 실수령' };
+    if (/프리|3\.3|8\.8|사업소득|기타소득|원천징수/.test(t)) {
+      var frOther = /기타소득|8\.8|강연|원고|자문/.test(t);
+      if (bigFirst == null) return { href: '/freelance/' + (frOther ? '?t=other' : ''), label: frOther ? '기타소득 8.8% 계산기' : '프리랜서 3.3% 계산기' };
+      var fm = nearest(G.free || [bigFirst], bigFirst);
+      return { href: '/freelance/' + fm + '/', label: fmtMan(fm) + '원 ' + (frOther ? '기타소득 8.8%' : '프리랜서 3.3%') + ' 실수령' };
     }
-    if (/연차/.test(t)) { if (!first) return { href: '/leave/', label: '연차수당표' }; var lv = nearest(G.ot || [first], man(first)); return { href: '/leave/' + lv + '/', label: '월급 ' + fmtMan(lv) + '원 연차수당' }; }
+    if (/연차|근속/.test(t)) {
+      var ay = pick(t, /(\d+)\s*년/);
+      if (ay != null) { var an = nearest(G.annualY || [1], Math.max(1, Math.min(25, Math.round(ay)))); return { href: '/annual/' + an + '/', label: '근속 ' + an + '년 연차 일수와 수당' }; }
+      if (bigFirst != null) { var ap = nearest(G.annualP || [bigFirst], bigFirst); return { href: '/annual/pay/' + ap + '/', label: '월 통상임금 ' + fmtMan(ap) + '원 연차수당' }; }
+      return { href: '/annual/', label: '연차·연차수당 계산기' };
+    }
     if (/연장|야근|야간|휴일|수당/.test(t)) { if (!first) return { href: '/overtime/', label: '연장·야간·휴일수당표' }; var ov = nearest(G.ot || [first], man(first)); return { href: '/overtime/' + ov + '/', label: '월급 ' + fmtMan(ov) + '원 연장수당' }; }
     if (/dsr|한도|얼마까지|빌릴/.test(t)) { if (!first) return { href: '/dsr/', label: '대출 한도표' }; var dm = nearest(G.salary || [first], man(first)); return { href: '/dsr/' + dm + '/', label: '연봉 ' + fmtMan(dm) + '원 대출 한도' }; }
     var loanish = /대출|억|금리|상환|갚/.test(t) || rate != null || (first && first >= 3000 && years && years >= 10 && !/연봉|월급|실수령/.test(t));

@@ -3,7 +3,7 @@
 import * as L from '../engine/loan.mjs';
 import * as R from '../engine/retire.mjs';
 import { netPay, insurance, incomeTax, grossForNet } from '../engine/tax.mjs';
-import { YEAR } from '../data/rates.mjs';
+import { YEAR, MONTH_HOURS } from '../data/rates.mjs';
 import * as YE from '../engine/yearend.mjs';
 import * as GT from '../engine/gift.mjs';
 import * as RE from '../engine/realty.mjs';
@@ -20,6 +20,10 @@ import * as EI from '../engine/eitc.mjs';
 import * as NP from '../engine/pension.mjs';
 import * as CG from '../engine/capgain.mjs';
 import * as CC from '../engine/carcost.mjs';
+import * as AN from '../engine/annual.mjs';
+import * as FR from '../engine/freelance.mjs';
+import * as NH from '../engine/nhis.mjs';
+import * as LBX from '../engine/labor.mjs';
 
 let pass = 0, fail = 0;
 function ok(cond, name, detail = '') { if (cond) pass++; else { fail++; console.log('FAIL', name, detail); } }
@@ -380,6 +384,59 @@ ok(EI.childCredit(10000000, 'single').raw === 0 && EI.eitc({ type: 'single', wag
   ok(near(c.items.reduce((a, r) => a + r.share, 0), 1, 1e-9) && c.items.find((r) => r.key === 'depreciation').share > 0.5, '항목 비중 합 100% · 첫해는 감가가 절반 이상');
 }
 
+/* 연차휴가·연차수당 — 근로기준법 §60·§61 */
+{
+  ok([1, 2, 3, 4, 5, 6, 7, 10, 20, 21, 25, 40].map(AN.annualDays).join() === '15,15,16,16,17,17,18,19,24,25,25,25', '근속별 연차 15 → 3년 16 → 5년 17 → 21년 이상 25일', [1, 3, 5, 7, 21, 30].map(AN.annualDays).join());
+  ok(AN.annualDays(0.5) === 0 && AN.annualDays(0) === 0, '1년 미만은 annualDays 0 (underOneYear 로 계산)');
+  ok([0, 1, 5, 11, 12, 24].map(AN.underOneYear).join() === '0,1,5,11,11,11', '1년 미만 1개월 개근 1일 · 최대 11일', [0, 1, 11, 12].map(AN.underOneYear).join());
+  const p = AN.annualPay(3000000, 10);
+  ok(p.hourly === 14354 && p.daily === 114832 && p.total === 1148320, '월 통상임금 300만 — 통상시급 14,354 · 1일 114,832 · 10일 1,148,320', JSON.stringify([p.hourly, p.daily, p.total]));
+  ok(AN.annualPay(3000000, 15).total === 1722480 && AN.annualPay(6000000, 25).total === 5741600, '300만 15일 172.248만 · 600만 25일 574.16만', JSON.stringify([AN.annualPay(3000000, 15).total, AN.annualPay(6000000, 25).total]));
+  ok(AN.ANNUAL_HOURS === MONTH_HOURS && AN.DAY_HOURS === 8, '월 소정근로 209시간 = data/rates.mjs MONTH_HOURS');
+  const pr = AN.prorated('2025-07-01');
+  ok(pr.days === 184 && pr.days1 === 7.6 && pr.ceil === 8 && pr.year === 2026, '7월 1일 입사 — 184일 × 15 ÷ 365 = 7.6일 (절상 8일)', JSON.stringify([pr.days, pr.days1]));
+  ok(AN.prorated('2025-01-01').days === 365 && AN.prorated('2025-01-01').raw === 15 && AN.prorated('2024-01-01').raw === 15, '1월 1일 입사는 15일 · 윤년이어도 15일을 넘지 않음', AN.prorated('2024-01-01').raw);
+  ok(AN.prorated('2025-12-31').days === 1 && AN.prorated('2025-10-01').days1 === 3.8, '12월 31일 입사 1일 · 10월 1일 입사 3.8일', AN.prorated('2025-10-01').days1);
+  const bh = AN.byHire('2020-03-15', '2026-09-09');
+  ok(bh.months === 77 && bh.years === 6 && bh.days === 17 && !bh.under, '2020-03-15 입사 · 2026-09-09 기준 — 근속 6년 17일', JSON.stringify([bh.months, bh.years, bh.days]));
+  ok(AN.byHire('2026-03-15', '2026-09-09').days === 5 && AN.byHire('2026-03-15', '2026-09-09').under, '입사 1년 미만 6개월 — 개근 5개월치 5일');
+  ok(AN.byFiscal('2024-07-01', 2025).kind === 'prorated' && AN.byFiscal('2024-07-01', 2026).days === 15 && AN.byFiscal('2024-07-01', 2028).days === 16, '회계연도 기준 — 다음 해 비례 · 그다음 15일 · 3년차 16일', JSON.stringify([AN.byFiscal('2024-07-01', 2026).days, AN.byFiscal('2024-07-01', 2028).days]));
+  ok(AN.toDate('2025-13-01') === null && AN.toDate('2025-02-30') === null && AN.toDate('') === null, '잘못된 날짜는 null');
+}
+
+/* 프리랜서 원천징수 — 소득세법 §127·§129·§84 */
+{
+  const b = FR.withholding(3000000);
+  ok(b.tax === 90000 && b.local === 9000 && b.total === 99000 && b.net === 2901000, '사업소득 300만 — 소득세 9만 · 지방세 9,000 · 실수령 290.1만', JSON.stringify([b.tax, b.local, b.net]));
+  ok(near(b.rate, 0.033, 1e-9) && FR.withholding(10000000).net === 9670000, '3.3% · 1,000만 실수령 967만', FR.withholding(10000000).net);
+  const o = FR.withholding(3000000, 'other');
+  ok(o.expense === 1800000 && o.base === 1200000 && o.tax === 240000 && o.local === 24000 && o.net === 2736000 && near(o.rate, 0.088, 1e-9), '기타소득 300만 — 필요경비 60% 후 22% = 총액의 8.8% · 실수령 273.6만', JSON.stringify([o.base, o.total, o.net]));
+  ok(FR.withholding(125000, 'other').exempt && FR.withholding(125000, 'other').total === 0 && !FR.withholding(130000, 'other').exempt, '기타소득 건당 12만 5천원 이하 과세최저한');
+  ok(FR.grossUp(2901000).gross === 3000000 && FR.grossUp(2736000, 'other').gross === 3000000, '역산 — 실수령 290.1만 → 300만 · 기타소득 273.6만 → 300만', JSON.stringify([FR.grossUp(2901000).gross, FR.grossUp(2736000, 'other').gross]));
+  let backOk = true;
+  for (const v of [500000, 1234000, 3000000, 7770000, 10000000]) for (const t of ['business', 'other']) if (FR.withholding(FR.grossUp(v, t).gross, t).net !== v) backOk = false;
+  ok(backOk, '역산 왕복 — grossUp 한 금액에서 다시 떼면 원래 실수령');
+  const y = FR.yearly(3000000);
+  ok(y.gross === 36000000 && y.total === 1188000 && y.net === 34812000, '월 300만 × 12 — 연 원천징수 118.8만 · 연 실수령 3,481.2만', JSON.stringify([y.total, y.net]));
+  ok(FR.withholding(3000000).net === LBX.freelance(3000000).net && FR.withholding(1250000).total === LBX.freelance(1250000).withheld, '사업소득 3.3% 는 기존 labor 엔진과 같은 값');
+}
+
+/* 건강보험료 — 국민건강보험법 §69~§73 (2025년 기준) */
+{
+  const e = NH.employee(3000000);
+  ok(e.health === 212700 && e.healthEmployee === 106350 && e.care === 27540 && e.careEmployee === 13770 && e.employee === 120120, '보수월액 300만 — 건강 212,700(근로자 106,350) · 장기요양 27,540(13,770) · 근로자 120,120', JSON.stringify([e.health, e.care, e.employee]));
+  ok(e.employee + e.employer === e.total && e.annualEmployee === 1441440, '근로자 + 사업주 = 총액 · 연 144.144만', e.annualEmployee);
+  ok(NH.employee(15000000).base === NH.WAGE_MAX && NH.employee(100000).base === NH.WAGE_MIN && NH.employee(15000000).health === 901840, '보수월액 상한 1,272만 · 하한 279,300', JSON.stringify([NH.employee(15000000).base, NH.employee(100000).base]));
+  ok(NH.longTerm(212700) === 27540 && near(NH.CARE_RATE, 0.1295, 1e-12) && near(NH.HEALTH_RATE, 0.0709, 1e-12), '장기요양 = 건강보험료 × 12.95% · 요율 7.09%');
+  const l = NH.local({ income: 30000000 });
+  ok(l.incomePart === 177250 && l.propertyPart === 0 && l.health === 177250 && l.care === 22950 && l.total === 200200, '지역 연소득 3,000만 재산 없음 — 소득 177,250 + 장기요양 22,950 = 200,200', JSON.stringify([l.incomePart, l.care, l.total]));
+  ok(NH.local({ income: 3000000 }).minimum && NH.local({ income: 3000000 }).incomePart === NH.LOCAL_MIN && NH.local({ income: 0 }).total === 22340, '연소득 336만 이하 최저보험료 19,780원', NH.local({ income: 0 }).total);
+  ok([0, 100000000, 100000001, 250000000, 400000000, 600000000, 900000000, 1500000000].map(NH.propertyPoints).join() === '0,0,22,60,100,150,200,250', '재산 점수 근사표 6단계 (공제 1억 후)', [0, 100000000, 120000000, 1500000000].map(NH.propertyPoints).join());
+  const lp = NH.local({ income: 50000000, property: 300000000 });
+  ok(lp.points === 100 && lp.propertyPart === 20840 && lp.health === 316250 && lp.total === 357200 && lp.approx, '지역 연소득 5,000만 · 재산과표 3억 — 100점 × 208.4 = 20,840 · 월 357,200', JSON.stringify([lp.points, lp.propertyPart, lp.total]));
+  ok(NH.POINT_VALUE === 208.4 && NH.LOCAL_MIN === 19780 && NH.PROPERTY_DEDUCTION === 100000000 && NH.WAGE_MAX === 12720000 && NH.WAGE_MIN === 279300, '2025년 부과 기준값 (부과점수당 208.4원·최저 19,780원·기본공제 1억·상한 1,272만·하한 279,300)');
+}
+
 /* 브라우저 엔진 묶음 = 서버 엔진 (같은 소스에서 생성되는지 확인) */
 {
   const vm = await import('node:vm');
@@ -403,6 +460,9 @@ ok(EI.childCredit(10000000, 'single').raw === 0 && EI.eitc({ type: 'single', wag
   ok(B.electricBill(300).total === EL.electricBill(300).total && B.electricBill(1100, { season: 'summer' }).total === 375870, '번들 electricBill');
   ok(B.eitc({ type: 'one', wage: 15000000, children: 1 }).total === 3691660 && B.pension({ avgIncome: 3000000, years: 20 }).monthly === 654570, '번들 eitc · pension');
   ok(B.capitalGains({ sale: 1500000000, cost: 900000000, expense: 30000000, holdYears: 5, liveYears: 5, oneHouse: true }).total === 11061600 && B.carCost({ price: 30000000 }).monthly === 873520 && B.carTax(1598).total === 290836, '번들 capitalGains · carCost · carTax');
+  ok(B.annualDays(5) === 17 && B.annualPay(3000000, 10).total === AN.annualPay(3000000, 10).total && B.prorated('2025-07-01').days1 === 7.6 && B.annualByFiscal('2024-07-01', 2028).days === 16, '번들 annualDays · annualPay · prorated');
+  ok(B.withholding(3000000).net === FR.withholding(3000000).net && B.withholding(3000000, 'other').net === 2736000 && B.grossUp(2901000).gross === 3000000 && Object.keys(B.FREE_TYPES).join() === 'business,other' && Object.keys(B.TYPES).join() === 'single,one,dual', '번들 withholding · grossUp — 기타소득 TYPES 가 근로장려금 TYPES 를 덮지 않음');
+  ok(B.nhisEmployee(3000000).employee === NH.employee(3000000).employee && B.nhisLocal({ income: 30000000 }).total === 200200 && B.propertyPoints(300000000) === 100 && B.POINT_VALUE === 208.4, '번들 nhisEmployee · nhisLocal · propertyPoints');
 }
 
 console.log(`test: ${pass} pass, ${fail} fail`);

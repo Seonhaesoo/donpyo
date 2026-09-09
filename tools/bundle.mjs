@@ -35,7 +35,10 @@ export function makeBundle(NT = 200000) {
     wrap('NP', strip(read('pension.mjs')), ['pension', 'shiftTable', 'premium', 'premiumTable', 'payback', 'startAge', 'yearsFactor', 'A_VALUE', 'B_MIN', 'B_MAX', 'DEFAULT_CONST', 'MIN_YEARS', 'RATE_SCHEDULE']),
     wrap('CG', strip(read('capgain.mjs')), ['capitalGains', 'longTermRate', 'bracketOf', 'EXEMPT_PRICE', 'BASIC_DEDUCTION', 'SURCHARGE_UNTIL', 'SURCHARGE']),
     wrap('CC', strip(read('cartax.mjs')) + '\n' + strip(read('carcost.mjs')), ['carTax', 'carCost', 'depreciationRate', 'FUELS', 'DEFAULTS', 'CARCOST_ASOF']),
-    `window.Donpyo = Object.assign({ YEAR, RATES, NT: ${NT} }, F, T, L, K, A, G, Y, S, P, E, EI, NP, CG, CC);`,
+    wrap('AN', strip(read('annual.mjs')), ['annualDays', 'underOneYear', 'prorated', 'annualPay', 'annualByHire: byHire', 'annualByFiscal: byFiscal', 'annualToDate: toDate', 'annualMonths: monthsBetween', 'bumpYears', 'ANNUAL_BASE', 'ANNUAL_MAX', 'UNDER_ONE_MAX', 'ANNUAL_HOURS', 'DAY_HOURS', 'ANNUAL_ASOF', 'PRESCRIPTION']),
+    wrap('FL', strip(read('freelance.mjs')), ['withholding', 'grossUp', 'freelanceYearly: yearly', 'FREE_TYPES: TYPES', 'BUSINESS_RATE', 'OTHER_RATE', 'OTHER_EXPENSE', 'OTHER_MIN', 'OTHER_SEPARATE', 'FREELANCE_ASOF']),
+    wrap('NH', strip(read('nhis.mjs')), ['nhisEmployee: employee', 'nhisLocal: local', 'longTerm', 'propertyPoints', 'PROPERTY_TABLE', 'HEALTH_RATE', 'HALF_RATE', 'CARE_RATE', 'WAGE_MAX', 'WAGE_MIN', 'POINT_VALUE', 'LOCAL_MIN', 'LOCAL_MIN_INCOME', 'PROPERTY_DEDUCTION', 'NHIS_ASOF', 'NHIS_URL']),
+    `window.Donpyo = Object.assign({ YEAR, RATES, NT: ${NT} }, F, T, L, K, A, G, Y, S, P, E, EI, NP, CG, CC, AN, FL, NH);`,
   ];
   return `/* 돈표 계산 엔진 — 브라우저용, 빌드 때 engine/*.mjs 에서 생성 */\n(function(){\n${parts.join('\n')}\n})();\n`;
 }

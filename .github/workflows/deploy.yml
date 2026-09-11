@@ -21,16 +21,22 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
       - name: Test engine
         run: node tools/test.mjs
       - name: Build site
         run: node tools/build.mjs
-      - uses: actions/upload-pages-artifact@v3
+      - name: 새 주소 목록 — 지금 떠 있는 사이트맵과 비교 (색인 알림용)
+        run: node tools/indexnow.mjs diff dist
+        continue-on-error: true
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: dist
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
+      - name: 색인 알림 — IndexNow 네이버·빙 (서버 워커와 이중화)
+        run: node tools/indexnow.mjs send
+        continue-on-error: true

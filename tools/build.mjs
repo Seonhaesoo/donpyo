@@ -22,6 +22,8 @@ import * as DP from '../engine/deposit.mjs';
 import * as IH from '../engine/inherit.mjs';
 import * as IC from '../engine/income.mjs';
 import * as PT from '../engine/property.mjs';
+import * as JB from '../engine/jongbu.mjs';
+import { buildJongbu, JONGBU } from './pages-jongbu.mjs';
 import * as CT from '../engine/cartax.mjs';
 import * as LV from '../engine/ltv.mjs';
 import * as SB from '../engine/subscription.mjs';
@@ -526,7 +528,7 @@ function home() {
   <p>연봉·월급·대출·퇴직금·알바 월급을 금액별로 미리 계산해 표로 묶어 두었습니다. 숫자만 고르면 바로 나옵니다.</p>
 </div>
 <form class="quick quick-smart" data-quick="smart"><label for="q-home">숫자로 바로 찾기 — 연봉·월급·대출·시급·퇴직금 무엇이든</label><div class="quick-row"><div class="quick-in"><input id="q-home" type="text" placeholder="연봉 4200 / 2억 30년 4.5% / 시급 12000 주20" autocomplete="off" autocapitalize="off"></div><button class="btn" type="submit">찾기</button></div><div class="quick-hint" data-hint aria-live="polite">예시를 누르거나 직접 적어 보세요</div><div class="quick-ex"><button type="button">연봉 4200</button><button type="button">월급 350</button><button type="button">실수령 300</button><button type="button">2억 30년 4.5%</button><button type="button">시급 12000 주 20시간</button><button type="button">퇴직금 350 5년</button><button type="button">전세 2억</button><button type="button">적금 50 3년</button><button type="button">증여 1억</button><button type="button">복비 5억</button><button type="button">예금 1억 1년</button><button type="button">상속 10억</button><button type="button">재산세 5억</button><button type="button">자동차세 1598cc</button><button type="button">전기요금 300kwh</button><button type="button">육아휴직 300만</button><button type="button">무주택 10년 부양가족 2명</button><button type="button">근로장려금 1500 홑벌이</button><button type="button">국민연금 300 20년</button><button type="button">양도세 15억 9억</button><button type="button">차 유지비 3000</button><button type="button">연차 5년</button><button type="button">프리랜서 300만</button><button type="button">보수월액 300만원 건강보험료</button></div><div class="quick-links"><a href="/salary/">연봉표</a><a href="/monthly/">월급표</a><a href="/net/">실수령으로 연봉 찾기</a><a href="/loan/">대출표</a></div></form>
-<script>window.DONPYO_GRID=${JSON.stringify({ salary: SALARIES, monthly: MONTHLIES, net: NETS, loanA: LOAN_AMOUNTS, loanY: LOAN_YEARS, loanR: LOAN_RATES.map(rateSlug), retireP: RETIRE_PAYS, retireY: RETIRE_YEARS, hourlyW: HOURLY_WAGES, hourlyH: HOURLY_HOURS, uiP: UI_PAYS, uiY: UI_YEARS, jeonse: JEONSE, savM: SAV_M, savN: SAV_N, free: FREE, ot: OT_PAYS, carP: CAR_PRICES, carN: CAR_MONTHS, goals: GOALS, saveM: SAVE_M, gift: GIFT_AMOUNTS, bokbi: BOKBI, acq: ACQ, depP: DEP_P, depN: DEP_N, inh: INH_AMOUNTS, inc: INC, prop: PROP, cars: CARS, ltv: LTV_P, subH: SUB_H, subF: SUB_F, leave: PL_WAGES, elec: EL_KWH, eitc: EITC_WAGES, penI: PEN_I, penY: PEN_Y, capS: CAP_SALES, carcost: CARCOST_P, annualY: ANNUAL_YEARS, annualP: ANNUAL_PAYS, nhisE: NHIS_E, nhisL: NHIS_L })}</script>
+<script>window.DONPYO_GRID=${JSON.stringify({ salary: SALARIES, monthly: MONTHLIES, net: NETS, loanA: LOAN_AMOUNTS, loanY: LOAN_YEARS, loanR: LOAN_RATES.map(rateSlug), retireP: RETIRE_PAYS, retireY: RETIRE_YEARS, hourlyW: HOURLY_WAGES, hourlyH: HOURLY_HOURS, uiP: UI_PAYS, uiY: UI_YEARS, jeonse: JEONSE, savM: SAV_M, savN: SAV_N, free: FREE, ot: OT_PAYS, carP: CAR_PRICES, carN: CAR_MONTHS, goals: GOALS, saveM: SAVE_M, gift: GIFT_AMOUNTS, bokbi: BOKBI, acq: ACQ, depP: DEP_P, depN: DEP_N, inh: INH_AMOUNTS, inc: INC, prop: PROP, jongbu: JONGBU, cars: CARS, ltv: LTV_P, subH: SUB_H, subF: SUB_F, leave: PL_WAGES, elec: EL_KWH, eitc: EITC_WAGES, penI: PEN_I, penY: PEN_Y, capS: CAP_SALES, carcost: CARCOST_P, annualY: ANNUAL_YEARS, annualP: ANNUAL_PAYS, nhisE: NHIS_E, nhisL: NHIS_L })}</script>
 <a class="feature" href="/yearend/"><span class="feature-mark">13</span><span class="feature-text"><b>연말정산, 돌려받을까 더 낼까</b><span>연봉·카드·의료비·연금저축만 넣으면 결정세액과 환급 예상액이 바로</span></span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5L10.5 8 6 12.5" stroke="#8A948E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></a>
 <a class="feature" href="/couple/"><span class="feature-mark">둘</span><span class="feature-text"><b>둘이 합쳐 얼마까지 빌릴 수 있을까</b><span>링크 하나 보내면 상대가 연봉만 넣고 끝 — 합산 대출 한도·전세 여력</span></span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5L10.5 8 6 12.5" stroke="#8A948E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></a>
 ${section('급여와 일', null, `<div class="dict">
@@ -567,6 +569,7 @@ ${section('세금·부동산', null, `<div class="dict">
 <a href="/inheritance-tax/"><b>상속세</b><span>10억 → 배우자·자녀 있으면 <span class="num">0</span>원 · 자녀만이면 <span class="num">${num(IH.inheritTax(1000000000, { spouse: false, children: 1 }).tax)}</span>원</span></a>
 <a href="/income-tax/"><b>종합소득세</b><span>소득금액 5,000만 → <span class="num">${num(IC.incomeTax(50000000).total)}</span>원 · 3.3% 정산은 얼마</span></a>
 <a href="/property-tax/"><b>주택 재산세</b><span>공시가 5억 1주택 → 연 <span class="num">${num(PT.propertyTax(500000000).total)}</span>원 (7월·9월 반씩)</span></a>
+<a href="/jongbu/"><b>종합부동산세</b><span>공시가 20억 1주택 → <span class="num">${num(JB.jongbu(2000000000).total)}</span>원 · 12억까지는 0원</span></a>
 <a href="/car-tax/"><b>자동차세</b><span>1,598cc → 연 <span class="num">${num(CT.carTax(1598).total)}</span>원 · 1월 연납 ${pct(CT.ANNUAL_DISCOUNT[YEAR] || 0, 0)} 할인</span></a>
 <a href="/ltv/"><b>LTV 대출 한도</b><span>10억 집 규제지역 → <span class="num">${num(LV.ltvLimit(1000000000).limit)}</span>원 · 비규제 <span class="num">${num(LV.ltvLimit(1000000000, 'metro').limit)}</span>원</span></a>
 <a href="/deposit/"><b>예금 이자</b><span>1억 1년 3% → 세후 <span class="num">${num(DP.deposit(100000000, 12, 0.03).net)}</span>원 · 매달 받으면 <span class="num">${num(DP.deposit(100000000, 12, 0.03).monthlyNet)}</span>원</span></a>
@@ -633,6 +636,8 @@ ${table(['항목', `${PREV}년`, `${YEAR}년`, '비고'], [
 <p>과세표준 = 종합소득금액(수입 − 필요경비) − 기본공제 150만원(본인). 산출세액은 기본세율(1,400만원 이하 6%, 5,000만원 이하 15%, 8,800만원 이하 24%, 1억 5,000만원 이하 35%, 3억원 이하 38%, 5억원 이하 40%, 10억원 이하 42%, 초과 45%)로 계산하고 표준세액공제 7만원을 뺍니다. 지방소득세는 소득세의 10%. 프리랜서 정산은 수입의 3%(소득세)와 0.3%(지방소득세)를 기납부로 보고 차이를 환급·추가 납부로 표시합니다. 다른 소득공제·세액공제, 근로소득 합산, 성실신고확인 대상 여부는 반영하지 않았습니다.</p>
 <h2>주택 재산세</h2>
 <p>과세표준 = 공시가격 × 공정시장가액비율(주택 60%, 1세대 1주택은 3억 이하 43%·6억 이하 44%·6억 초과 45% 특례). 세율은 과세표준 6,000만원 이하 0.1%, 1억 5,000만원 이하 0.15%, 3억원 이하 0.25%, 초과 0.4%의 누진세율이고, 1세대 1주택 공시가격 9억원 이하는 구간마다 0.05%p 낮은 특례세율을 씁니다. 여기에 도시지역분(과세표준 × 0.14%)과 지방교육세(재산세의 20%)를 더했습니다. 7월과 9월에 절반씩 내며 본세 20만원 이하면 7월에 한 번에 냅니다. 세부담상한(전년 대비 105~130%)·지역자원시설세·종합부동산세는 반영하지 않았습니다. 지방세법 제110~112조.</p>
+<h2>종합부동산세</h2>
+<p>주택분 종부세 = (공시가격 합계 − 공제) × 공정시장가액비율 60% × 세율 − 재산세 공제 − 세액공제이고, 여기에 농어촌특별세 20%를 더합니다. 공제는 1세대 1주택 12억원, 그 밖의 개인 9억원, 법인 0원입니다. 세율은 2주택 이하 0.5~2.7%(7단계 누진), 3주택 이상은 과세표준 12억원 초과분부터 2.0~5.0%, 법인은 2.7%·5.0% 단일세율입니다. 재산세 공제는 종부세 과세표준 × 재산세 공정시장가액비율(1세대 1주택 43~45%, 그 밖 60%) × 0.4%로, 재산세가 표준세율대로 부과됐다고 보고 계산합니다(시행령 제4조의3). 1세대 1주택 세액공제는 만 60세 20%·65세 30%·70세 40%와 보유 5년 20%·10년 40%·15년 50%를 더해 80%까지입니다. 세부담상한(전년 보유세의 150%)·합산배제·부부 공동명의 특례는 반영하지 않았고, 재정경제부 2026 세제개편안 문답자료의 현행 기준 사례(공시가격 15·20·35·50억원 등)와 원 단위까지 같게 맞췄습니다. 종합부동산세법 제8~10조, 농어촌특별세법 제5조.</p>
 <h2>자동차세</h2>
 <p>비영업용 승용차 연세액 = 배기량 × cc당 세액(1,000cc 이하 80원, 1,600cc 이하 140원, 초과 200원), 전기·수소차는 10만원 정액. 지방교육세 30%를 더합니다. 차령 3년차부터 해마다 5%씩 최대 50%까지 경감하고, 6월과 12월에 절반씩 냅니다. 1월 연납 공제율은 행정안전부 고시(2024·2025년 5%, ${YEAR}년 ${pct(CT.ANNUAL_DISCOUNT[YEAR] || 0, 0)})이며 2~12월분(11/12)에 적용합니다. 지방세법 제127조·제128조·제130조.</p>
 <h2>LTV 대출 한도</h2>
@@ -2085,7 +2090,7 @@ ${INC_NOTE}`;
 /* ---------- 주택 재산세 ---------- */
 const PROP = [10000, 15000, 20000, 25000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000, 120000, 150000, 200000, 300000];
 const propUrl = (m) => `/property-tax/${m}/`;
-const PROP_NOTE = `<p class="note">지방세법의 주택분 재산세 기준입니다. 1세대 1주택 공정시장가액비율 특례(43~45%)와 특례세율은 해마다 시행령·법 개정으로 정해지므로 올해 적용 여부를 고지서로 확인하세요. 세부담상한(전년 대비 105~130%), 지역자원시설세, 종합부동산세(1주택 공시가 12억 초과)는 반영하지 않았습니다. <a href="/method/">계산 기준 보기</a></p>`;
+const PROP_NOTE = `<p class="note">지방세법의 주택분 재산세 기준입니다. 1세대 1주택 공정시장가액비율 특례(43~45%)와 특례세율은 해마다 시행령·법 개정으로 정해지므로 올해 적용 여부를 고지서로 확인하세요. 세부담상한(전년 대비 105~130%), 지역자원시설세, 종합부동산세(1주택 공시가 12억 초과)는 <a href="/jongbu/">종부세 계산기</a>에서 따로 계산합니다. <a href="/method/">계산 기준 보기</a></p>`;
 
 function propPage(m) {
   const P = m * 10000, a = PT.propertyTax(P), b2 = PT.propertyTax(P, { oneHome: false }), url = propUrl(m);
@@ -2110,7 +2115,7 @@ ${section('알아두면 좋은 것', null, `<div class="doc">
 <p><b>많이 오른 해도 상한이 있습니다.</b> 공시가격이 급등해도 전년 세액의 105%(3억 이하)·110%(6억 이하)·130%(6억 초과)를 넘지 않게 세부담상한이 적용됩니다.</p>
 <p><b>12억원을 넘으면 종부세도.</b> 1세대 1주택자는 공시가격 12억원(다주택 합산 9억원) 초과분에 종합부동산세가 12월에 따로 나옵니다.</p>
 </div>`)}
-${section('이어서 계산하기', null, list([{ href: '/acquisition-tax/', title: '주택 취득세', sub: '살 때 한 번 내는 세금' }, { href: '/ltv/', title: 'LTV 대출 한도', sub: '이 집을 담보로 얼마까지' }, { href: '/bokbi/', title: '부동산 복비', sub: '사고팔 때 중개보수' }]))}
+${section('이어서 계산하기', null, list([{ href: '/jongbu/', title: '종합부동산세', sub: '1주택 공시가 12억 · 다주택 합산 9억 넘으면' }, { href: '/acquisition-tax/', title: '주택 취득세', sub: '살 때 한 번 내는 세금' }, { href: '/ltv/', title: 'LTV 대출 한도', sub: '이 집을 담보로 얼마까지' }, { href: '/bokbi/', title: '부동산 복비', sub: '사고팔 때 중개보수' }]))}
 ${PROP_NOTE}`;
   write(url, shell({ url, title, desc, body, nav: 'loan' }));
 }
@@ -3343,6 +3348,7 @@ depositIndex(); DEP_P.forEach((pm) => DEP_N.forEach((nm) => depositPage(pm, nm))
 inhIndex(); INH_CASES.forEach((c) => { inhCaseIndex(c); INH_AMOUNTS.forEach((m) => inhPage(c, m)); });
 incIndex(); INC.forEach(incPage);
 propIndex(); PROP.forEach(propPage);
+buildJongbu({ write, shell, crumb, lead, hero, section, table, tiles, chips, list, ad, led, neighbors, propUrl, PROP });
 carTaxIndex(); carTaxEvPage(); CARS.forEach(carTaxPage);
 ltvIndex(); LTV_P.forEach(ltvPage);
 subIndex(); SUB_H.forEach((h) => SUB_F.forEach((f) => subPage(h, f)));

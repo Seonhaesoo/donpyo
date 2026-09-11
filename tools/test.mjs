@@ -23,6 +23,7 @@ import * as CC from '../engine/carcost.mjs';
 import * as AN from '../engine/annual.mjs';
 import * as FR from '../engine/freelance.mjs';
 import * as NH from '../engine/nhis.mjs';
+import * as JB from '../engine/jongbu.mjs';
 import * as LBX from '../engine/labor.mjs';
 
 let pass = 0, fail = 0;
@@ -437,6 +438,23 @@ ok(EI.childCredit(10000000, 'single').raw === 0 && EI.eitc({ type: 'single', wag
   ok(NH.POINT_VALUE === 208.4 && NH.LOCAL_MIN === 19780 && NH.PROPERTY_DEDUCTION === 100000000 && NH.WAGE_MAX === 12720000 && NH.WAGE_MIN === 279300, '2025년 부과 기준값 (부과점수당 208.4원·최저 19,780원·기본공제 1억·상한 1,272만·하한 279,300)');
 }
 
+/* 종합부동산세 — 재정경제부 2026 세제개편안 문답자료의 현행 기준 사례(공시가격 변동 없음, 농특세 포함) */
+{
+  const one = (eok, age, years) => JB.jongbu(eok * 100000000, { age, years });
+  const P4 = [15, 20, 35, 50];
+  ok(P4.map((p) => one(p, 50, 2).total).join() === '691200,2275200,11347200,23443200', '1주택·공제 0% 15·20·35·50억 = 69.1·227.5·1,134.7·2,344.3만', P4.map((p) => one(p, 50, 2).total).join());
+  ok(P4.map((p) => one(p, 60, 10).total).join() === '276480,910080,4538880,9377280', '60세·10년(60%) = 27.6·91.0·453.9·937.7만', P4.map((p) => one(p, 60, 10).total).join());
+  ok(P4.map((p) => PT.propertyTax(p * 100000000).total + one(p, 50, 2).total).join() === '4120200,7099200,20356200,36637200', '보유세(재산세 + 종부세) = 412.0·709.9·2,035.6·3,663.7만');
+  const t = one(30, 70, 10);
+  ok(t.creditPct === 80 && t.credit === 5164800 && t.total === 1549440, '70세·10년(80%) 30억 — 세액공제 516.5만 · 종부세 154.9만', JSON.stringify(t));
+  const h = one(15, 50, 2);
+  ok(h.base === 180000000 && h.calc === 900000 && h.propDeduct === 324000 && h.tax === 576000 && h.rural === 115200, '15억 흐름 — 과세표준 1.8억 · 산출 90만 · 재산세 공제 32.4만 · 농특세 11.52만');
+  ok(one(12, 50, 2).total === 0 && JB.jongbu(900000000, { type: 'multi' }).total === 0 && JB.jongbu(1000000000, { type: 'multi' }).total === 187200, '1주택 12억·다주택 9억까지 0원 · 다주택 10억 18.72만');
+  ok(JB.jongbu(3000000000, { type: 'multi', three: true }).calc === 10800000 && JB.jongbu(3000000000, { type: 'multi' }).calc === 10380000 && JB.jongbu(1500000000, { type: 'multi', three: true }).calc === JB.jongbu(1500000000, { type: 'multi' }).calc, '3주택 이상은 과세표준 12억 초과분만 중과');
+  ok(one(20, 72, 20).creditPct === 80 && one(20, 64, 4).creditPct === 20 && one(20, 59, 4).creditPct === 0, '세액공제 합계 80% 한도 · 60세 20%');
+  ok(JB.jongbu(6000000000).installment === Math.floor(JB.jongbu(6000000000).tax / 2) && JB.jongbu(2500000000).installment === JB.jongbu(2500000000).tax - 2500000, '분납 — 500만 이하 250만 초과분 · 넘으면 절반');
+  ok(JB.jongbu(2000000000, { type: 'corp' }).calc === 32400000 && JB.jongbu(2000000000, { type: 'corp', three: true }).calc === 60000000, '법인 공제 0 · 2.7%·5.0% 단일');
+}
 /* 브라우저 엔진 묶음 = 서버 엔진 (같은 소스에서 생성되는지 확인) */
 {
   const vm = await import('node:vm');
@@ -463,6 +481,7 @@ ok(EI.childCredit(10000000, 'single').raw === 0 && EI.eitc({ type: 'single', wag
   ok(B.annualDays(5) === 17 && B.annualPay(3000000, 10).total === AN.annualPay(3000000, 10).total && B.prorated('2025-07-01').days1 === 7.6 && B.annualByFiscal('2024-07-01', 2028).days === 16, '번들 annualDays · annualPay · prorated');
   ok(B.withholding(3000000).net === FR.withholding(3000000).net && B.withholding(3000000, 'other').net === 2736000 && B.grossUp(2901000).gross === 3000000 && Object.keys(B.FREE_TYPES).join() === 'business,other' && Object.keys(B.TYPES).join() === 'single,one,dual', '번들 withholding · grossUp — 기타소득 TYPES 가 근로장려금 TYPES 를 덮지 않음');
   ok(B.nhisEmployee(3000000).employee === NH.employee(3000000).employee && B.nhisLocal({ income: 30000000 }).total === 203360 && B.propertyPoints(300000000) === 100 && B.POINT_VALUE === 208.4, '번들 nhisEmployee · nhisLocal · propertyPoints');
+  ok(B.jongbu(2000000000).total === 2275200 && B.jongbu(3000000000, { age: 70, years: 10 }).total === JB.jongbu(3000000000, { age: 70, years: 10 }).total && B.propertyTax(1500000000).total === 3429000, '번들 jongbu · propertyTax');
 }
 
 console.log(`test: ${pass} pass, ${fail} fail`);

@@ -101,6 +101,7 @@
       return { href: '/inheritance-tax/' + ic + '/' + ia + '/', label: fmtMan(ia) + '원 상속세' };
     }
     if (/종합소득|종소세/.test(t)) { if (!first) return { href: '/income-tax/', label: '종합소득세 표' }; var ii = nearest(G.inc || [first], man(first)); return { href: '/income-tax/' + ii + '/', label: '소득 ' + fmtMan(ii) + '원 종합소득세' }; }
+    if (/종부세|종합부동산세/.test(t)) { if (!first) return { href: '/jongbu/', label: '종부세 계산기' }; var jb = nearest(G.jongbu || [first], man(first)); return { href: '/jongbu/' + jb + '/', label: '공시가 ' + fmtMan(jb) + '원 종부세' }; }
     if (/재산세|공시가/.test(t)) { if (!first) return { href: '/property-tax/', label: '재산세 표' }; var pp = nearest(G.prop || [first], man(first)); return { href: '/property-tax/' + pp + '/', label: '공시가 ' + fmtMan(pp) + '원 재산세' }; }
     if (/자동차세|배기량|\d\s*cc/.test(t)) {
       if (/전기|수소|ev/.test(t)) return { href: '/car-tax/ev/', label: '전기차 자동차세' };

@@ -54,7 +54,7 @@
       if (m < 0) $('bb-sub').textContent = '출산 예정 · 태어나면 첫 달부터 부모급여 100만원 + 아동수당 10만원';
       else if (m < 24) $('bb-sub').textContent = '생후 ' + m + '개월 · 부모급여 ' + won(r.parent) + ' + 아동수당 ' + won(r.child) + ' · 이번 달 기준';
       else if (m < 96) $('bb-sub').textContent = '생후 ' + m + '개월 (' + Math.floor(m / 12) + '세) · 아동수당 ' + won(r.child) + (r.home ? ' + 가정양육이면 양육수당 ' + won(r.home) : '') + ' · 부모급여는 끝났습니다';
-      else $('bb-sub').textContent = '만 8세가 지나 아동수당이 끝났습니다';
+      else $('bb-sub').textContent = '만 9세가 지나 아동수당이 끝났습니다 (2026년 기준)';
       $('bb-first').textContent = num(r.firstMeeting);
       $('bb-total24').textContent = num(r.total24);
       $('bb-remaining').textContent = num(r.remaining24);

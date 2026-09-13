@@ -1,22 +1,23 @@
-/* 근로장려금·자녀장려금 — 조세특례제한법 제100조의2~제100조의13, 2024년 귀속(2025년 5월 정기 신청) 기준
+/* 근로장려금·자녀장려금 — 조세특례제한법 제100조의2~제100조의13·제100조의27~제100조의31, 2025년 귀속(2026년 5월 정기 신청) 기준
  * 근로장려금: 가구 유형별 '총급여액 등'에 따라 점증(비례) → 평탄(최대) → 점감. 최대 단독 165만, 홑벌이 285만, 맞벌이 330만.
  *   단독  400만 미만 × 165/400 · 400~900만 165만 · 900~2,200만 165만 − (총급여 − 900만) × 165/1,300
  *   홑벌이 700만 미만 × 285/700 · 700~1,400만 285만 · 1,400~3,200만 285만 − (총급여 − 1,400만) × 285/1,800
- *   맞벌이 800만 미만 × 330/800 · 800~1,700만 330만 · 1,700~3,800만 330만 − (총급여 − 1,700만) × 330/2,100
- * 자녀장려금: 18세 미만 부양자녀 1인당 총급여 2,100만 미만 100만, 2,100~7,000만 100만 − (총급여 − 2,100만) × 50/4,900 (최소 50만), 7,000만 이상 0.
+ *   맞벌이 800만 미만 × 330/800 · 800~1,700만 330만 · 1,700~4,400만 330만 − (총급여 − 1,700만) × 330/2,700  (2024년 귀속까지는 3,800만·330/2,100 — 국세청 신청자격 안내, 한국세정신문)
+ * 자녀장려금: 18세 미만 부양자녀 1인당 — 홑벌이 총급여 2,100만 미만 100만, 2,100~7,000만 100만 − (총급여 − 2,100만) × 50/4,900
+ *   맞벌이 2,500만 미만 100만, 2,500~7,000만 100만 − (총급여 − 2,500만) × 50/4,500 (둘 다 최소 50만), 7,000만 이상 0.
  * 재산: 전년 6월 1일 기준 가구원 재산 합계 2.4억 이상이면 제외, 1.7억 이상 2.4억 미만이면 산정액의 50%. 10원 미만 절사.
  * 미반영: 산정액 1만 5천원 미만 미지급·3만원 미만 3만원 규정, 기한 후 신청 감액, 사업소득의 업종별 조정률, 총소득 기준금액(부부 합산) 판정. */
 
-export const EITC_ASOF = '2024년 귀속 · 2025년 신청';
+export const EITC_ASOF = '2025년 귀속 · 2026년 신청';
 export const PROPERTY_LIMIT = 240000000;     /* 이상이면 지급 제외 */
 export const PROPERTY_HALF = 170000000;      /* 이상이면 50% 감액 */
 
 export const TYPES = {
   single: { key: 'single', label: '단독 가구', short: '단독', max: 1650000, phaseIn: 4000000, flatTo: 9000000, limit: 22000000, who: '배우자, 18세 미만 부양자녀, 70세 이상 직계존속이 모두 없는 가구' },
   one: { key: 'one', label: '홑벌이 가구', short: '홑벌이', max: 2850000, phaseIn: 7000000, flatTo: 14000000, limit: 32000000, who: '배우자(총급여액 등 300만원 미만)나 18세 미만 부양자녀, 70세 이상 직계존속(연 소득 100만원 이하)이 있는 가구' },
-  dual: { key: 'dual', label: '맞벌이 가구', short: '맞벌이', max: 3300000, phaseIn: 8000000, flatTo: 17000000, limit: 38000000, who: '본인과 배우자 각각의 총급여액 등이 300만원 이상인 가구' },
+  dual: { key: 'dual', label: '맞벌이 가구', short: '맞벌이', max: 3300000, phaseIn: 8000000, flatTo: 17000000, limit: 44000000, who: '본인과 배우자 각각의 총급여액 등이 300만원 이상인 가구' },
 };
-export const CTC = { max: 1000000, min: 500000, flatTo: 21000000, limit: 70000000 };   /* 자녀장려금 · 부양자녀 1인당 */
+export const CTC = { max: 1000000, min: 500000, flatTo: 21000000, flatToDual: 25000000, limit: 70000000 };   /* 자녀장려금 · 부양자녀 1인당 (flatTo 홑벌이 · flatToDual 맞벌이) */
 
 const floor10 = (n) => Math.floor(n / 10) * 10;
 
@@ -35,9 +36,9 @@ export function workCredit(wage, type = 'single') {
 /* 총급여액 등 → 자녀장려금 산정액(부양자녀 1인당, 재산 감액 전). 단독 가구는 부양자녀가 없으므로 0 */
 export function childCredit(wage, type = 'one') {
   if (type === 'single') return { raw: 0, phase: 'none' };
-  const w = Math.max(0, wage || 0);
-  if (w < CTC.flatTo) return { raw: CTC.max, phase: 'flat' };
-  if (w < CTC.limit) return { raw: floor10(Math.max(CTC.min, CTC.max - (w - CTC.flatTo) * (CTC.max - CTC.min) / (CTC.limit - CTC.flatTo))), phase: 'out' };
+  const w = Math.max(0, wage || 0), flatTo = type === 'dual' ? CTC.flatToDual : CTC.flatTo;
+  if (w < flatTo) return { raw: CTC.max, phase: 'flat' };
+  if (w < CTC.limit) return { raw: floor10(Math.max(CTC.min, CTC.max - (w - flatTo) * (CTC.max - CTC.min) / (CTC.limit - flatTo))), phase: 'out' };
   return { raw: 0, phase: 'over' };
 }
 

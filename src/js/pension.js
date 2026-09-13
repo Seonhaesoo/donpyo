@@ -41,7 +41,7 @@
       if (shift < 0) tips.push('조기 수령은 평생 감액됩니다. 정상 개시 ' + normal + '세에 받으면 월 ' + won(D.pension({ avgIncome: income, years: years, birthYear: birth }).monthly) + '입니다.');
       if (shift > 0) tips.push('연기하는 동안은 받지 못하니 손익분기는 대략 80세 전후입니다. 정상 개시 ' + normal + '세에 받으면 월 ' + won(D.pension({ avgIncome: income, years: years, birthYear: birth }).monthly) + '입니다.');
     }
-    if (p.B !== income && income > 0) tips.push('기준소득월액은 하한 40만원, 상한 637만원(2025년 7월~2026년 6월)이라 그 밖의 소득은 보험료도 연금도 상·하한 기준으로 계산합니다.');
+    if (p.B !== income && income > 0) tips.push('기준소득월액은 하한 41만원, 상한 659만원(2026년 7월~2027년 6월)이라 그 밖의 소득은 보험료도 연금도 상·하한 기준으로 계산합니다.');
     $('pn-tips').innerHTML = tips.map(function (t) { return '<div class="callout">' + t + '</div>'; }).join('');
     $('pn-years-rows').innerHTML = YEARS.map(function (y) {
       var r = D.pension({ avgIncome: income, years: y, birthYear: birth, startAge: start });

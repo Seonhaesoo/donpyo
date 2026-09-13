@@ -56,13 +56,13 @@
       $('nh-extra-label').textContent = '회사 부담';
       $('nh-extra').textContent = num(e.employer);
       $('nh-sub').textContent = '보수월액 ' + manwon(e.base) + ' · 건강보험 ' + won(e.healthEmployee) + ' + 장기요양 ' + won(e.careEmployee) + ' · 연 ' + won(e.annualEmployee);
-      rows.push(row('보수월액', num(e.base), e.capped ? '상한 ' + won(D.WAGE_MAX) + ' 적용' : e.floored ? '하한 ' + won(D.WAGE_MIN) + ' 적용' : '월 과세 급여 (비과세 식대 제외)'));
+      rows.push(row('보수월액', num(e.base), e.capped ? '보험료 상한 ' + won(D.PREMIUM_MAX) + ' 적용' : e.floored ? '보험료 하한 ' + won(D.PREMIUM_MIN) + ' 적용' : '월 과세 급여 (비과세 식대 제외)'));
       rows.push(row('건강보험료 (× ' + pct(D.HEALTH_RATE, 2) + ')', num(e.health), '근로자 ' + num(e.healthEmployee) + ' + 사업주 ' + num(e.healthEmployer)));
       rows.push(row('장기요양보험료 (건강보험료 × ' + pct(D.CARE_RATE, 2) + ')', num(e.care), '근로자 ' + num(e.careEmployee) + ' + 사업주 ' + num(e.careEmployer)));
       rows.push(row('회사 부담까지 합계', num(e.total), '10원 미만 절사'));
       $('nh-rows').innerHTML = rows.join('') + '<div class="lg-total"><span>급여에서 빠지는 금액</span><span class="num">' + num(e.employee) + '</span></div>';
-      if (e.capped) tips.push('보수월액이 상한 ' + won(D.WAGE_MAX) + '을 넘어 상한 기준으로 계산했습니다. 월급이 더 올라도 건강보험료는 이 금액에서 멈춥니다.');
-      if (e.floored) tips.push('보수월액이 하한 ' + won(D.WAGE_MIN) + '보다 적어 하한 기준으로 계산했습니다.');
+      if (e.capped) tips.push('보수월액이 약 ' + manwon(Math.round(D.WAGE_MAX / 10000) * 10000) + '을 넘어 월 보험료 상한 ' + won(D.PREMIUM_MAX) + '(근로자 몫 ' + won(D.PREMIUM_MAX / 2) + ')을 적용했습니다. 월급이 더 올라도 건강보험료는 이 금액에서 멈춥니다.');
+      if (e.floored) tips.push('계산한 보험료가 하한 ' + won(D.PREMIUM_MIN) + '보다 적어 하한을 적용했습니다.');
       tips.push('보수월액은 월급 전체가 아니라 비과세(식대 등)를 뺀 과세 급여입니다. 식대 20만원이 비과세라면 보수월액은 월급보다 20만원 적습니다. 매년 4월에는 전년도 실제 보수로 정산해 추가 납부나 환급이 생깁니다.');
       var lc = D.nhisLocal({ income: wage * 12 });
       tips.push('같은 소득을 지역가입자로 내면 회사 부담이 없어 재산이 없어도 월 ' + won(lc.total) + '입니다. 재산 점수는 공단 60등급표를 6단계로 줄인 근사치라 <a href="' + D.NHIS_URL + '" target="_blank" rel="noopener">공단 모의계산</a>이 정확합니다.');

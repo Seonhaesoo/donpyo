@@ -49,10 +49,10 @@ export function bothTotal(wageA, wageB = wageA) {
   return { a, b, total: a + b };
 }
 
-/* ---------- 출산·양육 지원금 (2025년, 전국 공통) ---------- */
+/* ---------- 출산·양육 지원금 (2026년, 전국 공통) ---------- */
 export const FIRST_MEETING = { first: 2000000, second: 3000000 };          /* 첫만남이용권: 첫째 200만, 둘째부터 300만 (바우처, 출생 후 1년 안에 사용) */
 export const PARENT_PAY = { age0: 1000000, age1: 500000 };                 /* 부모급여: 0~11개월 월 100만, 12~23개월 월 50만 */
-export const CHILD_ALLOWANCE = { monthly: 100000, untilMonths: 96 };       /* 아동수당: 만 8세 미만(0~95개월) 월 10만 */
+export const CHILD_ALLOWANCE = { monthly: 100000, untilMonths: 108 };      /* 아동수당: 2026년 만 9세 미만(0~107개월) 월 10만 — 2030년까지 해마다 1세씩 늘어 만 13세 미만(정책브리핑). 비수도권 월 10.5만·인구감소지역 11만·12만은 넣지 않음 */
 export const HOME_CARE = { monthly: 100000, fromMonths: 24, untilMonths: 87 }; /* 양육수당: 가정양육 24~86개월 월 10만 */
 export const PREGNANCY_VOUCHER = { single: 1000000, perTwin: 1000000 };   /* 임신·출산 진료비: 단태아 100만, 다태아 태아당 100만 */
 
@@ -60,7 +60,7 @@ export const BENEFITS = [
   { key: 'pregnancy', name: '임신·출산 진료비 바우처', amount: '단태아 100만원 · 다태아 태아당 100만원', when: '임신 확인 후 ~ 출산 후 2년', where: '국민행복카드 (카드사·병원·건강보험공단)', note: '진료비·약제비, 2세 미만 자녀 진료비에 사용' },
   { key: 'first', name: '첫만남이용권', amount: '첫째 200만원 · 둘째부터 300만원', when: '출생 후 1년 안에 사용', where: '정부24 · 복지로 · 주민센터', note: '국민행복카드 바우처, 유흥·사행업종 외 대부분 사용 가능' },
   { key: 'parent', name: '부모급여', amount: '0세 월 100만원 · 1세 월 50만원', when: '0~23개월', where: '복지로 · 주민센터 (출생 60일 안에 신청하면 출생월부터)', note: '어린이집 이용 시 보육료 바우처를 빼고 차액을 현금으로' },
-  { key: 'child', name: '아동수당', amount: '월 10만원', when: '0~95개월 (만 8세 미만)', where: '복지로 · 주민센터', note: '소득과 관계없이 전원 지급' },
+  { key: 'child', name: '아동수당', amount: '월 10만원 (비수도권·인구감소지역 10.5만~12만원)', when: '0~107개월 (2026년 만 9세 미만)', where: '복지로 · 주민센터', note: '소득과 관계없이 전원 지급 · 2030년까지 해마다 1세씩 늘어 만 13세 미만' },
   { key: 'home', name: '양육수당', amount: '월 10만원', when: '24~86개월', where: '복지로 · 주민센터', note: '어린이집·유치원을 다니지 않는 가정양육 아동' },
   { key: 'local', name: '지역 출산장려금', amount: '지자체별 (수십만~수천만원)', when: '지자체 기준', where: '정부24 "출산지원금" 검색 · 복지로 · 주민센터', note: '거주 기간 조건이 있는 곳이 많음' },
 ];
@@ -100,7 +100,7 @@ export function babyBenefits(birth, order = 1, today) {
   const sumRange = (from, to, f) => { let s = 0; for (let k = from; k < to; k++) s += f(k); return s; };
   const parentTotal = sumRange(0, 24, parentPayAt);                       /* 1,800만 */
   const childTo24 = sumRange(0, 24, childAllowanceAt);                     /* 240만 */
-  const childTotal = sumRange(0, CHILD_ALLOWANCE.untilMonths, childAllowanceAt);   /* 960만 */
+  const childTotal = sumRange(0, CHILD_ALLOWANCE.untilMonths, childAllowanceAt);   /* 1,080만 (2026년 만 9세 미만) */
   const remaining24 = m >= 24 ? 0 : sumRange(Math.max(0, m), 24, (k) => parentPayAt(k) + childAllowanceAt(k));
   return {
     ageMonths: m, born: m >= 0, order, firstMeeting,
@@ -108,17 +108,17 @@ export function babyBenefits(birth, order = 1, today) {
     parentTotal, childTo24, childTotal,
     total24: firstMeeting + parentTotal + childTo24,                       /* 출생 ~ 만 2세 (첫만남 + 부모급여 + 아동수당) */
     remaining24,                                                            /* 이번 달부터 만 2세까지 남은 월 지급분 */
-    total96: firstMeeting + parentTotal + childTotal,                       /* 만 8세까지 (양육수당 제외) */
+    total96: firstMeeting + parentTotal + childTotal,                       /* 아동수당이 끝날 때까지 (2026년 만 9세 전, 양육수당 제외) — 키 이름은 예전 그대로 */
   };
 }
 
-/* 시기별 월 지급액 — 출생부터 만 8세까지 4구간 */
+/* 시기별 월 지급액 — 출생부터 만 9세까지 4구간 */
 export function benefitTimeline(birth) {
   const phases = [
     { from: 0, to: 12, label: '0세 (0~11개월)', items: ['부모급여 100만', '아동수당 10만'] },
     { from: 12, to: 24, label: '1세 (12~23개월)', items: ['부모급여 50만', '아동수당 10만'] },
     { from: 24, to: 87, label: '2세 ~ 7세 3개월 (24~86개월)', items: ['아동수당 10만', '가정양육 시 양육수당 10만'] },
-    { from: 87, to: 96, label: '~ 만 8세 전 (87~95개월)', items: ['아동수당 10만'] },
+    { from: 87, to: 108, label: '~ 만 9세 전 (87~107개월)', items: ['아동수당 10만'] },
   ];
   return phases.map((p) => {
     const s = addMonths(birth, p.from), e = addMonths(birth, p.to - 1);

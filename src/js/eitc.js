@@ -6,7 +6,7 @@
   var $ = function (id) { return document.getElementById(id); };
   var val = function (id) { var v = parseInt(($(id).value || '0').replace(/[^0-9]/g, ''), 10); return isNaN(v) ? 0 : v; };
   var row = function (label, value, small) { return '<div class="lg-row"><div class="lbl"><span>' + label + '</span>' + (small ? '<small>' + small + '</small>' : '') + '</div><span class="num">' + value + '</span></div>'; };
-  var MAX = { single: 2100, one: 3100, dual: 3700 }, SHORT = { single: '단독', one: '홑벌이', dual: '맞벌이' };
+  var MAX = { single: 2100, one: 3100, dual: 4300 }, SHORT = { single: '단독', one: '홑벌이', dual: '맞벌이' };
   var phaseLabel = function (p) { return p === 'in' ? '점증' : p === 'flat' ? '최대 지급' : p === 'out' ? '점감' : '대상 아님'; };
   var q = new URL(location.href).searchParams;
   if (q.get('t') && D.TYPES[q.get('t')]) $('ei-type').value = q.get('t');
@@ -31,7 +31,8 @@
     if (r.factor < 1) rows.push(row('재산 ' + (r.factor === 0 ? '2.4억원 이상 — 제외' : '1.7억원 이상 — 50% 감액'), r.factor === 0 ? '−' + num(r.workRaw) : '−' + num(r.workRaw - r.work)));
     rows.push(row('근로장려금 (10원 미만 절사)', num(r.work)));
     if (type !== 'single') {
-      rows.push(row('자녀장려금 (부양자녀 1명당)', num(r.perChild), r.childPhase === 'flat' ? '총급여 ' + manwon(D.CTC.flatTo) + ' 미만 최대 ' + manwon(D.CTC.max) : r.childPhase === 'out' ? manwon(D.CTC.max) + ' − (총급여 − ' + manwon(D.CTC.flatTo) + ') × 50/4,900 · 최소 ' + manwon(D.CTC.min) : '총급여 ' + manwon(D.CTC.limit) + ' 이상 — 대상 아님'));
+      var cf = type === 'dual' ? D.CTC.flatToDual : D.CTC.flatTo;
+      rows.push(row('자녀장려금 (부양자녀 1명당)', num(r.perChild), r.childPhase === 'flat' ? '총급여 ' + manwon(cf) + ' 미만 최대 ' + manwon(D.CTC.max) : r.childPhase === 'out' ? manwon(D.CTC.max) + ' − (총급여 − ' + manwon(cf) + ') × 50/' + num((D.CTC.limit - cf) / 10000) + ' · 최소 ' + manwon(D.CTC.min) : '총급여 ' + manwon(D.CTC.limit) + ' 이상 — 대상 아님'));
       rows.push(row('× 부양자녀 ' + r.children + '명', num(r.child)));
     }
     $('ei-rows').innerHTML = rows.join('') + '<div class="lg-total"><span>합계</span><span class="num">' + num(r.total) + '</span></div>';

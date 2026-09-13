@@ -1,21 +1,22 @@
 import { RATES, YEAR } from '../data/rates.mjs';
-/* 건강보험료 — 국민건강보험법 제69조~제73조·시행령 제32조·제42조, 노인장기요양보험법 제9조 (2025년 기준)
+/* 건강보험료 — 국민건강보험법 제69조~제73조·시행령 제32조·제42조, 노인장기요양보험법 제9조 (2026년 기준)
  *
  * 직장가입자
- *   건강보험료 = 보수월액 × 7.09% (근로자 3.545% + 사업주 3.545%).
- *   보수월액 상한 12,720,000원 · 하한 279,300원.
- *   장기요양보험료 = 건강보험료 × 12.95%, 역시 절반씩 나눠 낸다.
+ *   건강보험료 = 보수월액 × 7.19% (근로자 3.595% + 사업주 3.595%) — 요율은 data/rates.mjs.
+ *   월 보험료 상한 9,183,480원(근로자 몫 4,591,740원) · 하한 20,160원 (2026년, 시행령 제32조). 보수월액으로는 약 1억 2,773만원 · 28만원.
+ *   (2026-09-13 전에는 보수월액 상한을 12,720,000원으로 잘못 적어 월 1,272만원을 넘는 보수의 보험료가 틀렸다.)
+ *   장기요양보험료 = 건강보험료 × 13.14%, 역시 절반씩 나눠 낸다.
  *
  * 지역가입자 (2022년 9월 2단계 개편 이후)
- *   소득: 정률제. 연소득 336만원 이하는 최저보험료 19,780원, 그보다 많으면 직장가입자와 같은
- *     7.09%를 적용해 월 보험료 = 연소득 × 7.09% ÷ 12.
+ *   소득: 정률제. 연소득 336만원 이하는 최저보험료 20,160원(월 보험료 하한), 그보다 많으면 직장가입자와 같은
+ *     7.19%를 적용해 월 보험료 = 연소득 × 7.19% ÷ 12.
  *   재산: 재산과세표준(시가가 아니라 지방세 과세표준)에서 기본공제 1억원을 뺀 금액을
- *     재산등급표로 점수화하고, 부과점수당 금액 208.4원(2025년)을 곱한다.
+ *     재산등급표로 점수화하고, 부과점수당 금액 211.5원(2026년)을 곱한다.
  *     ※ 공단의 재산등급표는 60등급이지만 이 사이트는 이를 6단계로 줄인 근사식을 쓴다.
  *        구간 경계에서 실제 보험료와 차이가 날 수 있으므로 정확한 금액은
  *        국민건강보험공단 모의계산(https://www.nhis.or.kr)에서 확인해야 한다.
  *   자동차는 2024년 2월 부과분부터 보험료 산정에서 빠졌다.
- *   장기요양보험료는 직장과 같이 건강보험료 × 12.95%.
+ *   장기요양보험료는 직장과 같이 건강보험료 × 13.14%.
  *
  * 각 보험료는 10원 미만 절사.
  * 미반영: 소득월액보험료(보수 외 소득 연 2,000만원 초과 직장가입자), 피부양자 자격,
@@ -26,10 +27,12 @@ export const NHIS_URL = 'https://www.nhis.or.kr';
 export const HALF_RATE = RATES[YEAR].health;                 /* 직장가입자 근로자·사업주 각각 */
 export const HEALTH_RATE = Math.round(HALF_RATE * 2 * 100000) / 100000;   /* 직장·지역 공통 */
 export const CARE_RATE = RATES[YEAR].care;                   /* 장기요양보험료 = 건강보험료 × 이 비율 */
-export const WAGE_MAX = 12720000;              /* 보수월액 상한 */
-export const WAGE_MIN = 279300;                /* 보수월액 하한 */
-export const POINT_VALUE = 208.4;              /* 지역가입자 부과점수당 금액 (2025년) */
-export const LOCAL_MIN = 19780;                /* 지역가입자 최저보험료 */
+export const PREMIUM_MAX = 9183480;            /* 월 보험료 상한 (근로자·사업주 합계, 2026년) */
+export const PREMIUM_MIN = 20160;              /* 월 보험료 하한 (2026년, 직장·지역 공통) */
+export const WAGE_MAX = Math.floor(PREMIUM_MAX / HEALTH_RATE);   /* 상한에 걸리는 보수월액 (표시용) */
+export const WAGE_MIN = Math.ceil(PREMIUM_MIN / HEALTH_RATE);    /* 하한에 걸리는 보수월액 (표시용) */
+export const POINT_VALUE = 211.5;              /* 지역가입자 부과점수당 금액 (2026년) */
+export const LOCAL_MIN = PREMIUM_MIN;          /* 지역가입자 최저보험료 = 월 보험료 하한 */
 export const LOCAL_MIN_INCOME = 3360000;       /* 연소득 336만원 이하 → 최저보험료 */
 export const PROPERTY_DEDUCTION = 100000000;   /* 재산 기본공제 1억원 */
 
@@ -61,7 +64,7 @@ export const longTerm = (health) => floor10(Math.max(0, health || 0) * CARE_RATE
 export function employee(wage) {
   const raw = Math.max(0, Math.round(wage || 0));
   const base = Math.min(Math.max(raw, WAGE_MIN), WAGE_MAX);
-  const health = floor10(base * HEALTH_RATE);
+  const health = Math.min(PREMIUM_MAX, Math.max(PREMIUM_MIN, floor10(raw * HEALTH_RATE)));   /* 상·하한은 보험료에 건다 (시행령 제32조) */
   const healthHalf = floor10(health / 2);
   const care = longTerm(health);
   const careHalf = floor10(care / 2);
@@ -97,7 +100,7 @@ export function local(i = {}) {
 }
 
 /* 표기용 — 실제 적용 요율에서 만든다 */
-export const NHIS_ASOF = `${YEAR}년 요율 기준 (지역가입자 부과점수 단가·최저보험료는 2025년 고시값)`;
+export const NHIS_ASOF = `${YEAR}년 요율 기준`;
 export const HEALTH_PCT = `${(HEALTH_RATE * 100).toFixed(2)}%`;      /* 예: 7.19% */
 export const HALF_PCT = `${(HALF_RATE * 100).toFixed(3)}%`;          /* 예: 3.595% */
 export const CARE_PCT = `${(CARE_RATE * 100).toFixed(2)}%`;          /* 예: 13.14% */

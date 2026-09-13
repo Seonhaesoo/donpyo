@@ -70,7 +70,7 @@ ok(L.annuityPayment(12000000, 0, 12) === 1000000, '무이자');
   ok(near(i.health, 125820, 20), '건강보험 3.595%', i.health);
   ok(near(i.care, Math.floor(i.health * 0.1314 / 10) * 10, 10), '장기요양 13.14%', i.care);
   ok(i.employment === 31500, '고용보험 0.9%');
-  ok(insurance(10000000, YEAR).pension === Math.floor(6370000 * 0.0475 / 10) * 10, '국민연금 상한');
+  ok(insurance(10000000, YEAR).pension === Math.floor(6590000 * 0.0475 / 10) * 10, '국민연금 상한 (2026.7~ 659만)');
 }
 
 /* 간이세액 — 국세청 표 원본 값과 일치해야 하고, 표 밖 구간은 별표 2 계산식 */
@@ -164,6 +164,7 @@ ok(YE.cardDeduction(40000000, 20000000, 5000000) === 3000000, '카드공제 한�
 ok(YE.cardDeduction(40000000, 5000000, 0) === 0, '카드공제 문턱 미달');
 ok(YE.cardDeduction(40000000, 12000000, 2000000) === 900000, '카드공제 신용 200만×15% + 체크 200만×30%', YE.cardDeduction(40000000, 12000000, 2000000));
 ok(YE.cardDeduction(40000000, 8000000, 4000000) === 600000, '카드공제 문턱을 체크카드로 넘김 (200만×30%)', YE.cardDeduction(40000000, 8000000, 4000000));
+ok(YE.cardDeduction(130000000, 60000000, 20000000) === 2500000 && YE.cardDeduction(90000000, 60000000, 20000000) === 2500000, '카드공제 한도 — 총급여 7천만원 초과는 1억 2천만원을 넘어도 250만 (2023년~)', YE.cardDeduction(130000000, 60000000, 20000000));
 ok(YE.childCredit(1) === 250000 && YE.childCredit(2) === 550000 && YE.childCredit(3) === 950000, '자녀세액공제 25·55·95만');
 ok(YE.earnedIncomeTaxCredit(2377500, 40000000) === 684000, '근로소득세액공제 한도 68.4만', YE.earnedIncomeTaxCredit(2377500, 40000000));
 ok(YE.earnedIncomeTaxCredit(1000000, 30000000) === 550000, '근로소득세액공제 55%');
@@ -300,8 +301,9 @@ ok([0, 5, 6, 11, 12, 23, 24, 168, 179, 180, 300].map(SB.accountScore).join() ===
   ok(bb.parent === 500000 && bb.child === 100000 && bb.monthly === 600000, '생후 17개월 — 부모급여 50만 + 아동수당 10만', JSON.stringify(bb));
   ok(bb.total24 === 2000000 + 18000000 + 2400000 && PL.babyBenefits('2025-03-15', 2, '2026-09-08').total24 === 3000000 + 18000000 + 2400000, '만 2세까지 총액 첫째 2,240만 · 둘째 2,340만');
   ok(bb.remaining24 === 7 * 600000 && PL.babyBenefits('2024-01-01', 1, '2026-09-08').monthly === 100000, '남은 7개월 × 60만 · 2세 넘으면 아동수당만');
+  ok(bb.childTotal === 10800000 && PL.babyBenefits('2017-12-01', 1, '2026-09-08').child === 100000 && PL.babyBenefits('2017-08-01', 1, '2026-09-08').child === 0, '아동수당 2026년 만 9세 미만 — 108개월 × 10만 = 1,080만 · 8세 9개월은 받고 9세 1개월은 끝', bb.childTotal);
   const tl = PL.benefitTimeline('2025-03-15');
-  ok(tl.length === 4 && tl[0].start === '2025-03' && tl[0].end === '2026-02' && tl[0].monthly === 1100000 && tl[1].monthly === 600000 && tl[3].end === '2033-02', '지원금 타임라인', JSON.stringify(tl.map((p) => [p.start, p.end, p.monthly])));
+  ok(tl.length === 4 && tl[0].start === '2025-03' && tl[0].end === '2026-02' && tl[0].monthly === 1100000 && tl[1].monthly === 600000 && tl[3].end === '2034-02', '지원금 타임라인 (아동수당 2026년 만 9세 전까지)', JSON.stringify(tl.map((p) => [p.start, p.end, p.monthly])));
 }
 
 /* 전기요금 — 한전 주택용 저압 (2025) */
@@ -326,7 +328,8 @@ ok(EI.workCredit(5000000, 'single').raw === 1650000 && EI.workCredit(8990000, 's
 ok(EI.workCredit(15000000, 'single').raw === 888460 && EI.workCredit(22000000, 'single').raw === 0, '단독 1,500만 점감 88.846만 · 2,200만 0', EI.workCredit(15000000, 'single').raw);
 ok(EI.workCredit(6000000, 'one').raw === 2442850 && EI.workCredit(10000000, 'one').raw === 2850000, '홑벌이 600만 244.285만 · 1,000만 최대 285만', EI.workCredit(6000000, 'one').raw);
 ok(EI.workCredit(15000000, 'one').raw === 2691660 && EI.workCredit(32000000, 'one').raw === 0, '홑벌이 1,500만 — 285만 − 100만 × 285/1,800 = 269.166만', EI.workCredit(15000000, 'one').raw);
-ok(EI.workCredit(20000000, 'dual').raw === 2828570 && EI.workCredit(37990000, 'dual').raw > 0 && EI.workCredit(38000000, 'dual').raw === 0, '맞벌이 2,000만 282.857만 · 3,800만 경계', EI.workCredit(20000000, 'dual').raw);
+ok(EI.workCredit(20000000, 'dual').raw === 2933330 && EI.workCredit(43990000, 'dual').raw > 0 && EI.workCredit(44000000, 'dual').raw === 0, '맞벌이 2,000만 293.333만 · 4,400만 경계 (2025년 귀속)', EI.workCredit(20000000, 'dual').raw);
+ok(EI.childCredit(23000000, 'dual').raw === 1000000 && EI.childCredit(30000000, 'dual').raw === 944440 && EI.childCredit(69990000, 'dual').raw === 500110 && EI.childCredit(70000000, 'dual').raw === 0, '자녀장려금 맞벌이 — 2,500만까지 100만 · 3,000만 94.444만 · 7,000만 0', EI.childCredit(30000000, 'dual').raw);
 ok(EI.childCredit(15000000, 'one').raw === 1000000 && EI.childCredit(30000000, 'one').raw === 908160 && EI.childCredit(69990000, 'one').raw === 500100 && EI.childCredit(70000000, 'one').raw === 0, '자녀장려금 100만 · 3,000만 90.816만 · 최소 50만 · 7,000만 0', EI.childCredit(30000000, 'one').raw);
 ok(EI.childCredit(10000000, 'single').raw === 0 && EI.eitc({ type: 'single', wage: 10000000, children: 2 }).child === 0, '단독 가구는 자녀장려금 없음');
 {
@@ -341,18 +344,18 @@ ok(EI.childCredit(10000000, 'single').raw === 0 && EI.eitc({ type: 'single', wag
 /* 국민연금 예상 수령액 — 국민연금법 §51·§63 어림 */
 {
   const p = NP.pension({ avgIncome: 3000000, years: 20 });
-  ok(p.base === 7854890 && p.monthly === 654570 && p.mult === 1 && p.startAge === 65, '월 300만 · 20년 — 1.29 × (3,089,062 + 300만) = 연 785.489만 · 월 65.457만', JSON.stringify([p.base, p.monthly]));
-  ok(NP.pension({ avgIncome: 3000000, years: 10 }).monthly === 327280 && NP.pension({ avgIncome: 3000000, years: 40 }).monthly === 1309140, '10년 = 20년의 절반 · 40년 = 2배', NP.pension({ avgIncome: 3000000, years: 10 }).monthly);
+  ok(p.base === 7989629 && p.monthly === 665800 && p.mult === 1 && p.startAge === 65, '월 300만 · 20년 — 1.29 × (3,193,511 + 300만) = 연 798.9629만 · 월 66.58만', JSON.stringify([p.base, p.monthly]));
+  ok(NP.pension({ avgIncome: 3000000, years: 10 }).monthly === 332900 && NP.pension({ avgIncome: 3000000, years: 40 }).monthly === 1331600, '10년 = 20년의 절반 · 40년 = 2배', NP.pension({ avgIncome: 3000000, years: 10 }).monthly);
   ok(near(NP.pension({ avgIncome: NP.A_VALUE, years: 40 }).monthly / NP.A_VALUE, 0.43, 0.001), '평균 소득자 40년 가입 = 소득대체율 43%', NP.pension({ avgIncome: NP.A_VALUE, years: 40 }).monthly / NP.A_VALUE);
   ok(NP.pension({ avgIncome: 3000000, years: 9 }).monthly === 0 && !NP.pension({ avgIncome: 3000000, years: 9 }).eligible, '가입 10년 미만은 노령연금 없음');
-  ok(NP.pension({ avgIncome: 10000000, years: 20 }).B === 6370000 && NP.pension({ avgIncome: 100000, years: 20 }).B === 400000, 'B값 상한 637만 · 하한 40만');
+  ok(NP.pension({ avgIncome: 10000000, years: 20 }).B === 6590000 && NP.pension({ avgIncome: 100000, years: 20 }).B === 410000, 'B값 상한 659만 · 하한 41만 (2026.7~2027.6)');
   ok(NP.pension({ avgIncome: 3000000, years: 20, birthYear: 1970, startAge: 60 }).rate === 0.7 && NP.pension({ avgIncome: 3000000, years: 20, birthYear: 1970, startAge: 55 }).shift === -5, '조기 5년 30% 감액 · 5년 넘게는 불가');
   ok(near(NP.pension({ avgIncome: 3000000, years: 20, birthYear: 1970, startAge: 70 }).rate, 1.36, 1e-9) && near(NP.pension({ avgIncome: 3000000, years: 20, birthYear: 1970, startAge: 66 }).rate, 1.072, 1e-9), '연기 5년 36% · 1년 7.2%');
   ok([1950, 1953, 1957, 1961, 1965, 1969, 1990].map(NP.startAge).join() === '60,61,62,63,64,65,65', '수급 개시 연령 60~65세', [1950, 1953, 1957, 1961, 1965, 1969, 1990].map(NP.startAge).join());
-  ok(NP.pension({ avgIncome: 3000000, years: 20, constant: 1.26 }).base === Math.round(1.26 * 6089062), '2025년 비례상수 1.26');
+  ok(NP.pension({ avgIncome: 3000000, years: 20, constant: NP.CONSTANT[2025] }).base === Math.round(1.245 * (NP.A_VALUE + 3000000)), '2025년 비례상수 1.245 (소득대체율 41.5%)');
   ok(NP.premium(3000000, 2026).total === 285000 && NP.premium(3000000, 2026).employee === 142500 && NP.premium(3000000, 2033).total === 390000, '보험료 2026년 9.5% → 2033년 13%', NP.premium(3000000, 2026).total);
   const pb = NP.payback({ avgIncome: 3000000, years: 20 });
-  ok(pb.paidTotal === 64800000 && pb.paidSelf === 32400000 && pb.monthsSelf === 50, '20년 납부 6,480만(본인 3,240만) → 본인 부담 회수 50개월', JSON.stringify([pb.paidTotal, pb.monthsSelf]));
+  ok(pb.paidTotal === 64800000 && pb.paidSelf === 32400000 && pb.monthsSelf === 49, '20년 납부 6,480만(본인 3,240만) → 본인 부담 회수 49개월 (A값 2026년)', JSON.stringify([pb.paidTotal, pb.monthsSelf]));
 }
 
 /* 양도소득세 — 소득세법 §89·§95·§103·§104 (2025) */
@@ -422,20 +425,20 @@ ok(EI.childCredit(10000000, 'single').raw === 0 && EI.eitc({ type: 'single', wag
   ok(FR.withholding(3000000).net === LBX.freelance(3000000).net && FR.withholding(1250000).total === LBX.freelance(1250000).withheld, '사업소득 3.3% 는 기존 labor 엔진과 같은 값');
 }
 
-/* 건강보험료 — 국민건강보험법 §69~§73 (2025년 기준) */
+/* 건강보험료 — 국민건강보험법 §69~§73 (2026년 기준) */
 {
   const e = NH.employee(3000000);
   ok(e.health === 215700 && e.healthEmployee === 107850 && e.care === 28340 && e.careEmployee === 14170 && e.employee === 122020, '보수월액 300만 — 건강 215,700(근로자 107,850) · 장기요양 28,340(14,170) · 근로자 122,020 (2026년 요율 7.19%)', JSON.stringify([e.health, e.care, e.employee]));
   ok(e.employee + e.employer === e.total && e.annualEmployee === 1464240, '근로자 + 사업주 = 총액 · 연 146.424만', e.annualEmployee);
-  ok(NH.employee(15000000).base === NH.WAGE_MAX && NH.employee(100000).base === NH.WAGE_MIN && NH.employee(15000000).health === 914560, '보수월액 상한 1,272만 · 하한 279,300', JSON.stringify([NH.employee(15000000).base, NH.employee(100000).base]));
+  ok(NH.employee(200000000).health === NH.PREMIUM_MAX && NH.employee(200000000).healthEmployee === 4591740 && NH.employee(200000000).capped && NH.employee(100000).health === NH.PREMIUM_MIN && NH.employee(100000).floored && NH.employee(15000000).health === 1078500 && !NH.employee(15000000).capped, '월 보험료 상한 918만 3,480원(근로자 459만 1,740원) · 하한 2만 160원 · 월 1,500만은 상한 아래', JSON.stringify([NH.employee(200000000).health, NH.employee(100000).health, NH.employee(15000000).health]));
   ok(NH.longTerm(215700) === 28340 && near(NH.CARE_RATE, RATES[YEAR].care, 1e-12) && near(NH.HEALTH_RATE, RATES[YEAR].health * 2, 1e-9), '장기요양·건강 요율은 data/rates.mjs 를 따른다 (연봉 페이지와 동일)');
   const l = NH.local({ income: 30000000 });
   ok(l.incomePart === 179750 && l.propertyPart === 0 && l.health === 179750 && l.care === 23610 && l.total === 203360, '지역 연소득 3,000만 재산 없음 — 소득 179,750 + 장기요양 23,610 = 203,360', JSON.stringify([l.incomePart, l.care, l.total]));
-  ok(NH.local({ income: 3000000 }).minimum && NH.local({ income: 3000000 }).incomePart === NH.LOCAL_MIN && NH.local({ income: 0 }).total === 22370, '연소득 336만 이하 최저보험료 19,780원', NH.local({ income: 0 }).total);
+  ok(NH.local({ income: 3000000 }).minimum && NH.local({ income: 3000000 }).incomePart === NH.LOCAL_MIN && NH.local({ income: 0 }).total === 22800, '연소득 336만 이하 최저보험료 20,160원', NH.local({ income: 0 }).total);
   ok([0, 100000000, 100000001, 250000000, 400000000, 600000000, 900000000, 1500000000].map(NH.propertyPoints).join() === '0,0,22,60,100,150,200,250', '재산 점수 근사표 6단계 (공제 1억 후)', [0, 100000000, 120000000, 1500000000].map(NH.propertyPoints).join());
   const lp = NH.local({ income: 50000000, property: 300000000 });
-  ok(lp.points === 100 && lp.propertyPart === 20840 && lp.health === 320420 && lp.total === 362520 && lp.approx, '지역 연소득 5,000만 · 재산과표 3억 — 100점 × 208.4 = 20,840 · 월 362,520', JSON.stringify([lp.points, lp.propertyPart, lp.total]));
-  ok(NH.POINT_VALUE === 208.4 && NH.LOCAL_MIN === 19780 && NH.PROPERTY_DEDUCTION === 100000000 && NH.WAGE_MAX === 12720000 && NH.WAGE_MIN === 279300, '2025년 부과 기준값 (부과점수당 208.4원·최저 19,780원·기본공제 1억·상한 1,272만·하한 279,300)');
+  ok(lp.points === 100 && lp.propertyPart === 21150 && lp.health === 320730 && lp.total === 362870 && lp.approx, '지역 연소득 5,000만 · 재산과표 3억 — 100점 × 211.5 = 21,150 · 월 362,870', JSON.stringify([lp.points, lp.propertyPart, lp.total]));
+  ok(NH.POINT_VALUE === 211.5 && NH.LOCAL_MIN === 20160 && NH.PROPERTY_DEDUCTION === 100000000 && NH.PREMIUM_MAX === 9183480 && NH.PREMIUM_MIN === 20160 && NH.WAGE_MAX === 127725730, '2026년 부과 기준값 (부과점수당 211.5원·최저 20,160원·기본공제 1억·월 보험료 상한 918만 3,480원 = 보수월액 약 1억 2,773만)', NH.WAGE_MAX);
 }
 
 /* 종합부동산세 — 재정경제부 2026 세제개편안 문답자료의 현행 기준 사례(공시가격 변동 없음, 농특세 포함) */
@@ -476,11 +479,11 @@ ok(EI.childCredit(10000000, 'single').raw === 0 && EI.eitc({ type: 'single', wag
   ok(B.subscriptionScore({ homelessYears: 10, family: 2, accountMonths: 180 }).total === 54 && B.subGrade(54).key === 'mid', '번들 subscriptionScore');
   ok(B.parentalLeave({ wage: 3000000, months: 12 }).total === PL.parentalLeave({ wage: 3000000, months: 12 }).total && B.babyBenefits('2025-03-15', 1, '2026-09-08').total24 === 22400000, '번들 parentalLeave · babyBenefits');
   ok(B.electricBill(300).total === EL.electricBill(300).total && B.electricBill(1100, { season: 'summer' }).total === 375870, '번들 electricBill');
-  ok(B.eitc({ type: 'one', wage: 15000000, children: 1 }).total === 3691660 && B.pension({ avgIncome: 3000000, years: 20 }).monthly === 654570, '번들 eitc · pension');
+  ok(B.eitc({ type: 'one', wage: 15000000, children: 1 }).total === 3691660 && B.pension({ avgIncome: 3000000, years: 20 }).monthly === 665800 && B.eitc({ type: 'dual', wage: 20000000 }).work === EI.eitc({ type: 'dual', wage: 20000000 }).work && B.nhisEmployee(200000000).health === 9183480, '번들 eitc · pension · nhis 상한');
   ok(B.capitalGains({ sale: 1500000000, cost: 900000000, expense: 30000000, holdYears: 5, liveYears: 5, oneHouse: true }).total === 11061600 && B.carCost({ price: 30000000 }).monthly === 873520 && B.carTax(1598).total === 290836, '번들 capitalGains · carCost · carTax');
   ok(B.annualDays(5) === 17 && B.annualPay(3000000, 10).total === AN.annualPay(3000000, 10).total && B.prorated('2025-07-01').days1 === 7.6 && B.annualByFiscal('2024-07-01', 2028).days === 16, '번들 annualDays · annualPay · prorated');
   ok(B.withholding(3000000).net === FR.withholding(3000000).net && B.withholding(3000000, 'other').net === 2736000 && B.grossUp(2901000).gross === 3000000 && Object.keys(B.FREE_TYPES).join() === 'business,other' && Object.keys(B.TYPES).join() === 'single,one,dual', '번들 withholding · grossUp — 기타소득 TYPES 가 근로장려금 TYPES 를 덮지 않음');
-  ok(B.nhisEmployee(3000000).employee === NH.employee(3000000).employee && B.nhisLocal({ income: 30000000 }).total === 203360 && B.propertyPoints(300000000) === 100 && B.POINT_VALUE === 208.4, '번들 nhisEmployee · nhisLocal · propertyPoints');
+  ok(B.nhisEmployee(3000000).employee === NH.employee(3000000).employee && B.nhisLocal({ income: 30000000 }).total === 203360 && B.propertyPoints(300000000) === 100 && B.POINT_VALUE === 211.5, '번들 nhisEmployee · nhisLocal · propertyPoints');
   ok(B.jongbu(2000000000).total === 2275200 && B.jongbu(3000000000, { age: 70, years: 10 }).total === JB.jongbu(3000000000, { age: 70, years: 10 }).total && B.propertyTax(1500000000).total === 3429000, '번들 jongbu · propertyTax');
 }
 

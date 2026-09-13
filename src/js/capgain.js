@@ -50,7 +50,7 @@
     }
     if (r.exempt && !r.fullyExempt && live < 2) tips.push('거주 2년 미만이면 장기보유특별공제는 일반 표(연 2%, 최대 30%)만 적용됩니다. 2년 이상 거주하면 보유·거주 각 연 4%로 최대 80%까지 늘어납니다.');
     if (r.exempt && !r.fullyExempt && live >= 2 && (hold < 10 || live < 10)) tips.push('보유·거주가 각 10년이 되면 장기보유특별공제 80%로 세금이 크게 줄어듭니다.');
-    if (!oneHouse && !sur) tips.push('조정대상지역 다주택 중과(2주택 +20%p, 3주택 이상 +30%p, 장특공제 배제)는 ' + D.SURCHARGE_UNTIL + '까지 유예 중이라 기본세율과 일반 공제로 계산했습니다. 유예가 끝난 뒤의 세금은 "중과 포함 계산"을 켜서 보세요.');
+    if (!oneHouse && !sur) tips.push('다주택 중과(조정대상지역 2주택 +20%p, 3주택 이상 +30%p, 장특공제 배제) 유예는 ' + D.SURCHARGE_UNTIL + '에 끝났습니다. 지금은 중과 없는 기본세율로 계산했으니, 팔려는 집이 조정대상지역에 있으면 "조정대상지역 다주택 중과 적용"을 켜서 보세요.');
     if (sur && oneHouse) tips.push('1세대 1주택에는 중과가 없습니다. 주택 수를 2주택 이상으로 바꾸면 중과를 계산합니다.');
     if (r.total > 10000000) tips.push('세액이 1,000만원을 넘으면 납부 기한부터 2개월 안에 나눠 낼 수 있습니다(2,000만원 이하는 1,000만원 초과분, 초과면 절반까지).');
     $('cg-tips').innerHTML = tips.map(function (t) { return '<div class="callout">' + t + '</div>'; }).join('');

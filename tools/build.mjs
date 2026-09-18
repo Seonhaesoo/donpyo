@@ -221,7 +221,7 @@ function salaryPage(m) {
   const p = netPay({ annual, nontax: NT });
   const prev = netPay({ annual, year: PREV, nontax: NT });
   const url = salaryUrl(m);
-  const title = `연봉 ${manwon(annual)} 실수령액 — 월 ${won(p.net)} (${YEAR}년)`;
+  const title = `연봉 ${manwon(annual)} 실수령액은? 월 ${won(p.net)} (${YEAR}년, 세후 월급)`;
   const desc = `${YEAR}년 연봉 ${manwon(annual)} 실수령액은 월 ${won(p.net)}입니다. 세전 월급 ${won(p.gross)}에서 국민연금·건강보험·장기요양·고용보험·소득세를 뺀 금액이며, 부양가족·비과세 식대별 표와 연봉 인상 시 변화, 대출 한도까지 정리했습니다.`;
   const nb = neighbors(SALARIES, m, 3);
   const rk = RK.rank(annual);
@@ -283,13 +283,13 @@ function monthlyPage(m) {
   const gross = m * 10000;
   const p = netPay({ monthly: gross, nontax: NT });
   const url = monthlyUrl(m);
-  const title = `월급 ${manwon(gross)} 실수령액 — ${won(p.net)} (${YEAR}년)`;
+  const title = `월급 ${manwon(gross)} 세후 실수령액은? ${won(p.net)} (${YEAR}년, 4대보험·세금 뺀 금액)`;
   const desc = `${YEAR}년 세전 월급 ${manwon(gross)}의 실수령액은 ${won(p.net)}입니다. 국민연금·건강보험·장기요양·고용보험·소득세 공제 내역과 부양가족·비과세 식대별 표, 연봉 환산을 정리했습니다.`;
   const nb = neighbors(MONTHLIES, m, 3);
   const annualNear = nearest(SALARIES, Math.round(gross * 12 / 10000));
   const body = `
 ${crumb([['/monthly/', '월급 실수령액'], [null, `${num(Math.floor(m / 100) * 100)}만원대`]])}
-<h1 class="title">월급 ${manwon(gross)} 실수령액</h1>
+<h1 class="title">월급 ${manwon(gross)} 세후 실수령액</h1>
 <p class="meta">세전 월급 기준 · ${YEAR}년 1월 요율 · 식대 비과세 20만원 포함 · 연봉으로는 ${manwon(gross * 12)}</p>
 ${lead(`월급 ${manwon(gross)}은 4대보험 ${won(p.insurance)}과 소득세·지방소득세 ${won(p.taxTotal)}을 빼면 ${won(p.net)}이 통장에 들어옵니다. 연봉으로는 ${manwon(gross * 12)}이고 연말정산 근로소득자 가운데 상위 ${RK.rank(gross * 12).topPct}% 수준입니다. 부양가족이 많으면 실수령이 늘고, 식대 비과세가 없으면 줄어듭니다 — 아래에서 바꿔 보세요.`)}
 ${payVariants(gross * 12)}
@@ -437,7 +437,7 @@ function retirePage(pm, y) {
   const s = R.severance(pay, y);
   const t = R.severanceTax(s.amount, y);
   const url = retireUrl(pm, y);
-  const title = `월급 ${manwon(pay)} ${y}년 근속 퇴직금 — 세전 ${won(s.amount)} · 세후 ${won(t.net)}`;
+  const title = `월급 ${manwon(pay)} ${y}년 근속 퇴직금은? 세전 ${won(s.amount)} · 세후 ${won(t.net)} (${YEAR}년)`;
   const desc = `월급 ${manwon(pay)}으로 ${y}년 일하고 퇴직하면 퇴직금은 세전 ${won(s.amount)}, 퇴직소득세를 뺀 실수령은 ${won(t.net)}입니다. 근속연수공제·환산급여 계산 과정과 근속연수별·월급별 표를 정리했습니다.`;
   const yearRows = RETIRE_YEARS.map((yy) => { const ss = R.severance(pay, yy), tt = R.severanceTax(ss.amount, yy); return { cls: yy === y ? 'on' : '', cells: [`<a href="${retireUrl(pm, yy)}">${yy}년</a>`, num(ss.amount), num(tt.total), num(tt.net)] }; });
   const payRows = neighbors(RETIRE_PAYS, pm, 3).map((pp) => { const ss = R.severance(pp * 10000, y), tt = R.severanceTax(ss.amount, y); return { cls: pp === pm ? 'on' : '', cells: [`<a href="${retireUrl(pp, y)}">${manwon(pp * 10000)}</a>`, num(ss.amount), num(tt.total), num(tt.net)] }; });
@@ -491,7 +491,7 @@ function hourlyPage(w, h) {
   const p = insured ? netPay({ monthly }) : null;
   const url = hourlyUrl(w, h);
   const isMin = w === R0.minWage;
-  const title = `시급 ${num(w)}원 주 ${h}시간 알바 월급 — ${won(monthly)}${eligible ? ' (주휴수당 포함)' : ''}`;
+  const title = `시급 ${num(w)}원 주 ${h}시간 알바 월급은? ${won(monthly)}${eligible ? ' (주휴수당 포함)' : ''} — ${YEAR}년`;
   const desc = `시급 ${num(w)}원${isMin ? `(${YEAR}년 최저임금)` : ''}으로 주 ${h}시간 일하면 주휴수당 ${eligible ? won(weeklyHoliday) : '없음(주 15시간 미만)'}, 주급 ${won(weekly)}, 월급 약 ${won(monthly)}입니다. 4대보험 가입 여부와 실수령까지 정리했습니다.`;
   const body = `
 ${crumb([['/hourly/', '알바 월급'], [null, `시급 ${num(w)}원`]])}

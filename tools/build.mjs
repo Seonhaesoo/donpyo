@@ -89,7 +89,7 @@ ${GA}${ADS}<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="${esc(o.desc)}">
 <link rel="canonical" href="${SITE}${o.url}">
 <meta name="naver-site-verification" content="4b97280869fc76ad09530d1871a862771b9c1bdf">
-${o.noindex ? '<meta name="robots" content="noindex">\n' : ''}<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+${o.noindex ? '<meta name="robots" content="noindex">\n' : '<meta name="robots" content="max-image-preview:large">\n'}<link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;700&display=swap">

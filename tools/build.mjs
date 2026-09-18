@@ -356,7 +356,7 @@ ${crumb([['/', '홈'], [null, '실수령 역산']])}
 <p class="meta">"월 300만원은 받고 싶다"를 세전 연봉으로 옮기는 표 · ${YEAR}년 요율 · 본인 1인 · 식대 비과세 20만원 포함</p>
 <form class="quick" data-quick="net" data-step="10" data-min="150" data-max="800"><label for="q-net">원하는 월 실수령액</label><div class="quick-row"><div class="quick-in"><input id="q-net" type="text" inputmode="numeric" placeholder="300"><span>만원</span></div><button class="btn" type="submit">필요 연봉 보기</button></div></form>
 ${section('실수령액별 필요 연봉', null, table(['월 실수령', '세전 월급', '연봉'], rows))}`;
-  write('/net/', shell({ url: '/net/', title: `실수령액으로 연봉 찾기 — 월 150만원부터 800만원까지 (${YEAR}년)`, desc: `원하는 월 실수령액을 받으려면 연봉이 얼마여야 하는지 10만원 단위로 역산한 표입니다.`, body, nav: 'monthly' }));
+  write('/net/', shell({ url: '/net/', title: `실수령액으로 연봉 찾기 — 월 150만원부터 800만원까지 (${YEAR}년)`, desc: `월 300만원을 손에 쥐려면 연봉이 얼마여야 할까요? 월 실수령액 150만원부터 800만원까지 10만원 단위로 필요한 세전 월급과 연봉을 거꾸로 계산한 표예요. 부양가족 수와 비과세 식대에 따른 차이까지.`, body, nav: 'monthly' }));
 }
 
 /* ---------- 대출 페이지 ---------- */
@@ -412,7 +412,7 @@ ${section('기간 × 금리', null, table(['기간'].concat(LOAN_RATES.map(fmtRa
 ${ad()}
 ${section('다른 금액', null, chips(LOAN_AMOUNTS.map((x) => ({ label: short(x * 10000), value: L.annuityPayment(x * 10000, 0.045, 360), href: `/loan/${x}/`, on: x === a }))))}
 <p class="note">위 칩의 숫자는 30년·연 4.5% 기준 월 상환액입니다.</p>`;
-  write(`/loan/${a}/`, shell({ url: `/loan/${a}/`, title: `대출 ${manwon(P)} 월 상환액표 — 10년~40년 · 2.5%~7%`, desc: `${manwon(P)} 대출의 기간별·금리별 월 상환액(원리금균등)을 한 표로 정리했습니다.`, body, nav: 'loan' }));
+  write(`/loan/${a}/`, shell({ url: `/loan/${a}/`, title: `대출 ${manwon(P)} 월 상환액표 — 10년~40년 · 2.5%~7%`, desc: `${manwon(P)}을 빌리면 매달 얼마를 갚을까요? 10년부터 40년까지, 연 2.5%부터 7%까지 기간·금리별 월 상환액(원리금균등)을 한 표로. 칸을 누르면 회차별 상환표와 총 이자, 원금균등·만기일시 비교까지 이어집니다.`, body, nav: 'loan' }));
 }
 
 function loanIndex() {
@@ -849,7 +849,7 @@ ${crumb([['/', '홈'], [null, '전세 vs 월세']])}
 <h1 class="title">전세 보증금별 대출 이자와 월세 환산</h1>
 <p class="meta">보증금 전액을 전세대출로 채울 때 월 이자와, 같은 보증금을 월세로 돌릴 때(전환율 ${fmtRate(CONVERSION_CAP)}) 금액</p>
 ${section('보증금별 비교', '월 금액(원) · 보증금을 누르면 금리·비율별 표와 반전세 환산', table(['보증금', '이자 3.5%', '이자 4.0%', '이자 4.5%', `월세 전환 ${fmtRate(CONVERSION_CAP)}`], rows))}`;
-  write('/jeonse/', shell({ url: '/jeonse/', title: '전세 vs 월세 계산표 — 보증금별 전세대출 이자와 월세 전환액', desc: '전세 보증금 5천만원부터 10억원까지 전세대출 월 이자와 월세 전환액을 비교했습니다.', body, nav: 'loan' }));
+  write('/jeonse/', shell({ url: '/jeonse/', title: '전세 vs 월세 계산표 — 보증금별 전세대출 이자와 월세 전환액', desc: '전세 보증금 5천만원부터 10억원까지, 전세대출 이자로 다달이 내는 돈과 월세로 바꿨을 때 내는 돈을 나란히 비교했어요. 금리·전월세전환율별 표와 어느 쪽이 유리한지 가르는 기준까지.', body, nav: 'loan' }));
 }
 
 /* ---------- 적금 ---------- */
@@ -2177,7 +2177,7 @@ const carAgeRows = (cc) => [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((age) => 
 
 function carTaxPage(cc) {
   const t = CT.carTax(cc, { year: YEAR }), t5 = CT.carTax(cc, { age: 5, year: YEAR }), t12 = CT.carTax(cc, { age: 12, year: YEAR }), url = carTaxUrl(cc);
-  const title = `${num(cc)}cc 자동차세 — 연 ${won(t.total)} (교육세 포함) · 1월 연납 ${won(t.prepaid)} · 연식별 표 (${YEAR}년)`;
+  const title = `${num(cc)}cc 자동차세는? 연 ${won(t.total)} · 1월 연납 ${won(t.prepaid)} (${YEAR}년, 교육세 포함)`;
   const desc = `배기량 ${num(cc)}cc 승용차의 자동차세는 cc당 ${t.unit}원으로 ${won(t.tax)}, 지방교육세 30%를 더하면 연 ${won(t.total)}입니다(1~2년차). 5년차면 ${won(t5.total)}, 12년차 이상은 절반. 6월·12월 ${won(t.half)}씩, 1월 연납은 ${won(t.prepaid)}.`;
   const body = `
 ${crumb([['/car-tax/', '자동차세'], [null, `${num(cc)}cc`]])}
@@ -2243,7 +2243,7 @@ const LTV_NOTE = `<p class="note">${LV.LTV_ASOF} 기준입니다. 규제지역 �
 function ltvPage(m) {
   const P = m * 10000, url = ltvUrl(m);
   const reg = LV.ltvLimit(P, 'regulated'), regF = LV.ltvLimit(P, 'regulated', { firstHome: true }), met = LV.ltvLimit(P, 'metro'), metF = LV.ltvLimit(P, 'metro', { firstHome: true }), oth = LV.ltvLimit(P, 'other'), othF = LV.ltvLimit(P, 'other', { firstHome: true });
-  const title = `${manwon(P)} 집 LTV 대출 한도 — 규제지역 ${manwon(reg.limit)} · 비규제 ${manwon(met.limit)} · 생애최초 ${manwon(regF.limit)} (${LV.LTV_ASOF})`;
+  const title = `${manwon(P)} 집 LTV 대출 한도는? 규제지역 ${manwon(reg.limit)} · 비규제 ${manwon(met.limit)} (${LV.LTV_ASOF})`;
   const desc = `${manwon(P)}짜리 집을 살 때 주택담보대출 한도는 규제지역(서울 등) LTV 40%로 ${manwon(reg.limit)}${reg.capped ? `(${manwon(reg.cap)} 한도)` : ''}, 수도권 비규제 ${manwon(met.limit)}, 지방 ${manwon(oth.limit)}, 생애최초는 규제지역 ${manwon(regF.limit)}·지방 ${manwon(othF.limit)}입니다. 연봉별 DSR 한도와 필요 현금까지.`;
   const acq = RE.acquisitionTax(P), br = RE.brokerage(P);
   const dsrRows = [3000, 4000, 5000, 7000, 10000, 15000, 20000].map((s) => { const d = L.dsrLimit(s * 10000, 0.045, 360).principal, ds = L.loanForPayment(L.dsrLimit(s * 10000, 0.045, 360).monthlyCap, 0.06, 360); const real = Math.min(reg.limit, ds); return { cells: [`<a href="${dsrUrl(nearest(SALARIES, s))}">연봉 ${manwon(s * 10000)}</a>`, num(d), num(ds), num(real), real < reg.limit ? 'DSR' : 'LTV'] }; });

@@ -259,7 +259,7 @@ ok(CT.carTax(1999).total === 519740, '1,999cc 51만 9,740원', CT.carTax(1999).t
 ok(CT.carTax(998).tax === 79840 && CT.carTax(1000).unit === 80 && CT.carTax(1001).unit === 140, 'cc 구간 경계');
 ok(CT.carTax(1598, { age: 5 }).discount === 0.15 && CT.carTax(1598, { age: 12 }).discount === 0.5 && CT.carTax(1598, { age: 20 }).discount === 0.5, '차령 경감 5년차 15% · 12년차 이상 50%');
 ok(CT.carTax(0, { ev: true }).total === 130000, '전기차 13만');
-ok(CT.carTax(1598, { year: 2026 }).prepay === Math.floor(290836 * 0.03 * 11 / 12), '2026년 연납 3% × 11/12');
+ok(CT.carTax(1598, { year: 2026 }).prepay === Math.floor(290836 * 0.05 * 11 / 12), '2026년 연납 5% × 11/12');
 
 /* LTV */
 ok(LV.ltvLimit(1000000000, 'regulated').limit === 400000000, '10억 규제지역 40%');

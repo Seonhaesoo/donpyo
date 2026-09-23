@@ -5,7 +5,7 @@
 export const CC_RATES = [[1000, 80], [1600, 140], [Infinity, 200]];
 export const EV_TAX = 100000;
 export const EDU = 0.3;
-export const ANNUAL_DISCOUNT = { 2023: 0.07, 2024: 0.05, 2025: 0.05, 2026: 0.03, 2027: 0 };
+export const ANNUAL_DISCOUNT = { 2023: 0.07, 2024: 0.05, 2025: 0.05, 2026: 0.05, 2027: 0.05 };   /* 2026년 5% 동결(지방세법 시행령) · 2027년은 12월 시행령 개정으로 확정 — 5% 가정 */
 
 export const perCc = (cc) => CC_RATES.find(([lim]) => cc <= lim)[1];
 export const ageDiscount = (age) => age <= 2 ? 0 : Math.min(0.5, Math.round((age - 2) * 5) / 100);

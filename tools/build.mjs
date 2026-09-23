@@ -275,7 +275,8 @@ ${crumb([['/', '홈'], [null, '연봉 실수령액']])}
 <p class="meta">연봉 2,000만원부터 3억원까지 · 부양가족 본인 1인 · 식대 비과세 20만원 포함 · 국세청 간이세액표 기준</p>
 <form class="quick" data-quick="salary" data-step="100" data-min="2000" data-max="30000"><label for="q-salary">연봉으로 바로 찾기</label><div class="quick-row"><div class="quick-in"><input id="q-salary" type="text" inputmode="numeric" placeholder="4200"><span>만원</span></div><button class="btn" type="submit">실수령액 보기</button></div></form>
 ${section('연봉별 월 실수령액', '연봉을 누르면 부양가족·비과세별 표, 인상 시 변화, 대출 한도까지 볼 수 있습니다', table(['연봉', '세전 월급', '월 공제', '월 실수령'], rows))}
-<p class="note">1억원 초과는 1,000만원, 2억원 초과는 5,000만원 단위로 실었습니다. 간이세액표는 월 1,000만원 초과분에 별도 계산식을 적용합니다.</p>`;
+<p class="note">1억원 초과는 1,000만원, 2억원 초과는 5,000만원 단위로 실었습니다. 간이세액표는 월 1,000만원 초과분에 별도 계산식을 적용합니다.</p>
+${section('내년에는', null, list([{ href: '/2027/salary/', title: '2027년 연봉 실수령액표', sub: '국민연금 10% 반영 · 2026년과 차이' }, { href: '/2027/', title: '2027년 달라지는 돈', sub: '최저임금·4대보험 한눈에' }]))}`;
   write('/salary/', shell({ url: '/salary/', title: `${YEAR}년 연봉 실수령액표 — 2,000만원부터 3억원까지`, desc: `${YEAR}년 연봉별 월 실수령액을 한 표로 정리했습니다. 4대보험과 간이세액표 소득세를 뺀 실제 손에 쥐는 돈, 연봉을 누르면 부양가족·비과세별 상세 표가 나옵니다.`, body, nav: 'salary' }));
 }
 
@@ -314,7 +315,8 @@ ${crumb([['/', '홈'], [null, '월급 실수령액']])}
 <h1 class="title">${YEAR}년 월급 실수령액표</h1>
 <p class="meta">세전 월급 150만원부터 1,000만원까지 10만원 단위 · 부양가족 본인 1인 · 식대 비과세 20만원 포함</p>
 <form class="quick" data-quick="monthly" data-step="10" data-min="150" data-max="1000"><label for="q-monthly">월급으로 바로 찾기</label><div class="quick-row"><div class="quick-in"><input id="q-monthly" type="text" inputmode="numeric" placeholder="350"><span>만원</span></div><button class="btn" type="submit">실수령액 보기</button></div></form>
-${section('월급별 실수령액', null, table(['세전 월급', '월 공제', '월 실수령', '연봉 환산'], rows))}`;
+${section('월급별 실수령액', null, table(['세전 월급', '월 공제', '월 실수령', '연봉 환산'], rows))}
+${section('내년에는', null, list([{ href: '/2027/monthly/', title: '2027년 월급 실수령액표', sub: '국민연금 10% 반영 · 2026년과 차이' }, { href: '/2027/', title: '2027년 달라지는 돈', sub: '최저임금·4대보험 한눈에' }]))}`;
   write('/monthly/', shell({ url: '/monthly/', title: `${YEAR}년 월급 실수령액표 — 150만원부터 1,000만원까지`, desc: `${YEAR}년 세전 월급별 실수령액을 10만원 단위로 정리했습니다. 4대보험과 소득세를 뺀 실제 입금액과 연봉 환산.`, body, nav: 'monthly' }));
 }
 
@@ -536,6 +538,7 @@ function home() {
 </div>
 <form class="quick quick-smart" data-quick="smart"><label for="q-home">숫자로 바로 찾기 — 연봉·월급·대출·시급·퇴직금 무엇이든</label><div class="quick-row"><div class="quick-in"><input id="q-home" type="text" placeholder="연봉 4200 / 2억 30년 4.5% / 시급 12000 주20" autocomplete="off" autocapitalize="off"></div><button class="btn" type="submit">찾기</button></div><div class="quick-hint" data-hint aria-live="polite">예시를 누르거나 직접 적어 보세요</div><div class="quick-ex"><button type="button">연봉 4200</button><button type="button">월급 350</button><button type="button">실수령 300</button><button type="button">2억 30년 4.5%</button><button type="button">시급 12000 주 20시간</button><button type="button">퇴직금 350 5년</button><button type="button">전세 2억</button><button type="button">적금 50 3년</button><button type="button">증여 1억</button><button type="button">복비 5억</button><button type="button">예금 1억 1년</button><button type="button">상속 10억</button><button type="button">재산세 5억</button><button type="button">자동차세 1598cc</button><button type="button">전기요금 300kwh</button><button type="button">육아휴직 300만</button><button type="button">무주택 10년 부양가족 2명</button><button type="button">근로장려금 1500 홑벌이</button><button type="button">국민연금 300 20년</button><button type="button">양도세 15억 9억</button><button type="button">차 유지비 3000</button><button type="button">연차 5년</button><button type="button">프리랜서 300만</button><button type="button">보수월액 300만원 건강보험료</button></div><div class="quick-links"><a href="/salary/">연봉표</a><a href="/monthly/">월급표</a><a href="/net/">실수령으로 연봉 찾기</a><a href="/loan/">대출표</a></div></form>
 <script>window.DONPYO_GRID=${JSON.stringify({ salary: SALARIES, monthly: MONTHLIES, net: NETS, loanA: LOAN_AMOUNTS, loanY: LOAN_YEARS, loanR: LOAN_RATES.map(rateSlug), retireP: RETIRE_PAYS, retireY: RETIRE_YEARS, hourlyW: HOURLY_WAGES, hourlyH: HOURLY_HOURS, uiP: UI_PAYS, uiY: UI_YEARS, jeonse: JEONSE, savM: SAV_M, savN: SAV_N, free: FREE, ot: OT_PAYS, carP: CAR_PRICES, carN: CAR_MONTHS, goals: GOALS, saveM: SAVE_M, gift: GIFT_AMOUNTS, bokbi: BOKBI, acq: ACQ, depP: DEP_P, depN: DEP_N, inh: INH_AMOUNTS, inc: INC, prop: PROP, jongbu: JONGBU, cars: CARS, ltv: LTV_P, subH: SUB_H, subF: SUB_F, leave: PL_WAGES, elec: EL_KWH, eitc: EITC_WAGES, penI: PEN_I, penY: PEN_Y, capS: CAP_SALES, carcost: CARCOST_P, annualY: ANNUAL_YEARS, annualP: ANNUAL_PAYS, nhisE: NHIS_E, nhisL: NHIS_L })}</script>
+<a class="feature" href="/2027/"><span class="feature-mark">27</span><span class="feature-text"><b>2027년 달라지는 돈 — 최저임금 10,700원, 국민연금 10%</b><span>건강보험은 동결 · 내 월급 실수령이 얼마나 달라지는지 표로</span></span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
 <a class="feature" href="/yearend/"><span class="feature-mark">13</span><span class="feature-text"><b>연말정산, 돌려받을까 더 낼까</b><span>연봉·카드·의료비·연금저축만 넣으면 결정세액과 환급 예상액이 바로</span></span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5L10.5 8 6 12.5" stroke="#8A948E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></a>
 <a class="feature" href="/couple/"><span class="feature-mark">둘</span><span class="feature-text"><b>둘이 합쳐 얼마까지 빌릴 수 있을까</b><span>링크 하나 보내면 상대가 연봉만 넣고 끝 — 합산 대출 한도·전세 여력</span></span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5L10.5 8 6 12.5" stroke="#8A948E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></a>
 ${section('급여와 일', null, `<div class="dict">
@@ -543,6 +546,7 @@ ${section('급여와 일', null, `<div class="dict">
 <a href="/monthly/"><b>월급 실수령액</b><span>세전 350만원 → <span class="num">${num(netPay({ monthly: 3500000, nontax: NT }).net)}</span>원</span></a>
 <a href="/net/"><b>실수령으로 연봉 찾기</b><span>월 300만원 받으려면 연봉 <span class="num">${num(grossForNet(3000000, { nontax: NT }) * 12)}</span>원</span></a>
 <a href="/minimum-wage/"><b>${YEAR}년 최저임금</b><span>시급 ${num(R0.minWage)}원 → 월급 <span class="num">${num(R0.minWage * MONTH_HOURS)}</span>원</span></a>
+<a href="/minimum-wage/${YEAR + 1}/"><b>${YEAR + 1}년 최저임금 확정</b><span>시급 ${num(MIN_WAGE_HISTORY[YEAR + 1])}원 → 월급 <span class="num">${num(MIN_WAGE_HISTORY[YEAR + 1] * MONTH_HOURS)}</span>원 · 실수령까지</span></a>
 <a href="/freelance/"><b>프리랜서 3.3%</b><span>300만원 → 실수령 <span class="num">${num(FR.withholding(3000000).net)}</span>원 · 기타소득 8.8%면 <span class="num">${num(FR.withholding(3000000, 'other').net)}</span>원</span></a>
 <a href="/overtime/"><b>연장·야간·휴일수당</b><span>월급 350만 → 연장 1시간 <span class="num">${num(LB.overtime(3500000).ext)}</span>원</span></a>
 <a href="/leave/"><b>연차수당</b><span>월급 350만 → 하루 <span class="num">${num(LB.leaveDaily(3500000))}</span>원</span></a>
@@ -978,20 +982,27 @@ function minWagePage(year) {
   const prev = MIN_WAGE_HISTORY[year - 1];
   const monthly = w * MONTH_HOURS, daily = w * 8, weekly = w * 48, annual = monthly * 12;
   const url = year === YEAR ? '/minimum-wage/' : `/minimum-wage/${year}/`;
-  const p = netPay({ monthly, nontax: NT });
+  const future = year > YEAR && !!RATES[year];          /* 다음 해 — 그해 요율(국민연금 인상 반영)로 실수령 계산 */
+  const p = netPay({ monthly, nontax: NT, year: future ? year : YEAR });
   const isCur = w === R0.minWage;
-  const hist = Object.keys(MIN_WAGE_HISTORY).map(Number).sort((a, b) => b - a).map((y) => ({ cls: y === year ? 'on' : '', cells: [y === YEAR ? `<a href="/minimum-wage/">${y}년</a>` : (y === YEAR - 1 ? `<a href="/minimum-wage/${y}/">${y}년</a>` : `${y}년`), num(MIN_WAGE_HISTORY[y]), num(MIN_WAGE_HISTORY[y] * MONTH_HOURS), MIN_WAGE_HISTORY[y - 1] ? pct(MIN_WAGE_HISTORY[y] / MIN_WAGE_HISTORY[y - 1] - 1) : '-'] }));
+  const hist = Object.keys(MIN_WAGE_HISTORY).map(Number).sort((a, b) => b - a).map((y) => ({ cls: y === year ? 'on' : '', cells: [y === YEAR ? `<a href="/minimum-wage/">${y}년</a>` : (y === YEAR - 1 || (y === YEAR + 1 && RATES[y]) ? `<a href="/minimum-wage/${y}/">${y}년</a>` : `${y}년`), num(MIN_WAGE_HISTORY[y]), num(MIN_WAGE_HISTORY[y] * MONTH_HOURS), MIN_WAGE_HISTORY[y - 1] ? pct(MIN_WAGE_HISTORY[y] / MIN_WAGE_HISTORY[y - 1] - 1) : '-'] }));
   const hoursRows = [15, 20, 25, 30, 35, 40].map((h) => { const hol = Math.round(w * Math.min(h, 40) / 40 * 8); const wk = w * h + hol; const label = isCur ? `<a href="${hourlyUrl(w, h)}">주 ${h}시간</a>` : `주 ${h}시간`; return { cells: [label, num(hol), num(wk), num(Math.round(wk * WEEKS_PER_MONTH))] }; });
-  const title = `${year}년 최저임금 — 시급 ${num(w)}원, 월급 ${won(monthly)}, 연봉 ${manwon(annual)}`;
-  const desc = `${year}년 최저임금은 시급 ${num(w)}원입니다. 월급 ${won(monthly)}(209시간), 연봉 ${won(annual)}이고 4대보험과 세금을 뺀 월 실수령은 약 ${won(p.net)}입니다. 주 근무시간별 월급과 연도별 인상 내역을 정리했습니다.`;
+  const title = future ? `${year}년 최저임금 확정 — 시급 ${num(w)}원(${pct(w / prev - 1)} 인상), 월급 ${won(monthly)}, 실수령 약 ${won(p.net)}` : `${year}년 최저임금 — 시급 ${num(w)}원, 월급 ${won(monthly)}, 연봉 ${manwon(annual)}`;
+  const desc = `${year}년 최저임금은 시급 ${num(w)}원${future ? `으로 확정됐습니다(${year - 1}년 ${num(prev)}원에서 ${num(w - prev)}원 인상)` : '입니다'}. 월급 ${won(monthly)}(209시간), 연봉 ${won(annual)}이고 4대보험과 세금을 뺀 월 실수령은 약 ${won(p.net)}입니다. 주 근무시간별 월급과 연도별 인상 내역을 정리했습니다.`;
   const body = `
 ${crumb([['/', '홈'], [null, `${year}년 최저임금`]])}
 <h1 class="title">${year}년 최저임금 — 시급 ${num(w)}원</h1>
-<p class="meta">${prev ? `${year - 1}년 ${num(prev)}원에서 ${pct(w / prev - 1)} 인상 · ` : ''}월급은 주 40시간 + 주휴 8시간 = 209시간 기준${year !== YEAR ? ` · 실수령은 ${YEAR}년 요율로 계산` : ''}</p>
+${year === YEAR && MIN_WAGE_HISTORY[YEAR + 1] ? `<div class="callout"><b>${YEAR + 1}년 최저임금 확정</b> — 시급 ${num(MIN_WAGE_HISTORY[YEAR + 1])}원(${pct(MIN_WAGE_HISTORY[YEAR + 1] / w - 1)} 인상), 월급 ${won(MIN_WAGE_HISTORY[YEAR + 1] * MONTH_HOURS)}. <a href="/minimum-wage/${YEAR + 1}/">${YEAR + 1}년 최저임금 월급·실수령 →</a></div>` : ''}
+<p class="meta">${prev ? `${year - 1}년 ${num(prev)}원에서 ${pct(w / prev - 1)} 인상 · ` : ''}월급은 주 40시간 + 주휴 8시간 = 209시간 기준${future ? ` · 실수령은 ${year}년 요율(국민연금 ${pct(RATES[year].pension * 2, 0)}·건강보험 동결)로 계산` : year !== YEAR ? ` · 실수령은 ${YEAR}년 요율로 계산` : ''}</p>
 ${lead(`${year}년 최저임금 시급 ${num(w)}원으로 주 40시간 일하면 주휴수당을 포함해 월급 ${won(monthly)}, 연봉 ${won(annual)}입니다. 4대보험과 소득세를 빼면 손에 ${won(p.net)} 정도가 남고, 주 15시간 미만 근무는 주휴수당이 없어 그만큼 적습니다.`)}
 ${hero({ label: '최저임금 월급 (세전)', value: monthly, sub: `시급 ${num(w)}원 × 209시간 · 연봉 ${won(annual)} · 4대보험·세금 빼면 약 ${won(p.net)}` })}
 ${tiles([{ label: '시급', value: w }, { label: '일급 (8시간)', value: daily }, { label: '주급 (40시간 + 주휴)', value: weekly }])}
-${section('실수령액', `월급 ${won(monthly)}에서 4대보험과 소득세를 뺀 금액 — 부양가족·식대는 아래에서`, payVariants(annual))}
+${future ? section('어떻게 정해졌나', null, `<div class="doc">
+<p>최저임금위원회가 ${year - 1}년 7월 14일 제14차 전원회의에서 사용자위원안 시급 <b>${num(w)}원</b>을 의결했습니다(재적 27명 투표 — 근로자위원안 11표, 사용자위원안 15표, 무효 1표). ${year - 1}년 ${num(prev)}원보다 ${num(w - prev)}원, ${pct(w / prev - 1)} 오른 값이고 업종 구분 없이 모든 사업장에 똑같이 적용됩니다. 고용노동부가 8월 5일까지 고시하며 ${year}년 1월 1일부터 12월 31일까지 효력이 있습니다.</p>
+<p>영향을 받는 근로자는 고용형태별 근로실태조사 기준 약 66만 명(3.8%), 경제활동인구부가조사 기준 약 298만 명(13.3%)입니다. 월 환산액 ${won(monthly)}은 주 40시간에 주휴 8시간을 더한 209시간 기준이라, 주휴수당이 없는 주 15시간 미만 근무는 시급 × 실제 시간만 받습니다.</p>
+</div>`) : ''}
+${future ? section(`${year - 1}년과 비교`, `월 209시간 · 실수령은 각 해 요율`, tiles([{ label: `${year - 1}년 월급`, value: prev * MONTH_HOURS }, { label: `${year}년 월급`, value: monthly }, { label: '월급 차이', value: monthly - prev * MONTH_HOURS }, { label: `${year - 1}년 실수령`, value: netPay({ monthly: prev * MONTH_HOURS, nontax: NT }).net }, { label: `${year}년 실수령`, value: p.net }, { label: '실수령 차이', value: p.net - netPay({ monthly: prev * MONTH_HOURS, nontax: NT }).net }])) : ''}
+${future ? section('실수령액', `월급 ${won(monthly)}에서 ${year}년 4대보험과 소득세를 뺀 금액 · 본인 1인 · 식대 비과세 20만원 포함`, ledger('공제 내역', '월 기준 · 원', [{ label: '국민연금', note: pct(RATES[year].pension, 2), value: p.pension }, { label: '건강보험', note: pct(RATES[year].health, 3), value: p.health }, { label: '장기요양', note: `건강보험의 ${pct(RATES[year].care, 2)}`, value: p.care }, { label: '고용보험', note: pct(RATES[year].employment, 1), value: p.employment }, { label: '소득세', note: '간이세액표 · 1인', value: p.tax }, { label: '지방소득세', note: '소득세의 10%', value: p.local }], { label: '공제 합계', value: p.deductions })) : section('실수령액', `월급 ${won(monthly)}에서 4대보험과 소득세를 뺀 금액 — 부양가족·식대는 아래에서`, payVariants(annual))}
 ${section('주 근무시간별 월급', '주 15시간 이상이면 주휴수당이 붙습니다 · 한 달 4.345주', table(['근무시간', '주휴수당(주)', '주급', '월급'], hoursRows))}
 ${ad()}
 ${section('연도별 최저임금', null, table(['연도', '시급', '월급(209시간)', '인상률'], hist))}
@@ -1004,6 +1015,129 @@ ${section('이어서 계산하기', null, list([
 ${guideLinks(['weekly-holiday-pay', 'net-pay-steps'])}
 <p class="note">고용노동부 최저임금 고시 기준. 주휴수당·월 209시간 환산은 근로기준법과 고용노동부 행정해석을 따랐습니다. <a href="/method/">계산 기준 보기</a></p>`;
   write(url, shell({ url, title, desc, body, nav: 'hourly' }));
+}
+
+/* ---------- 2027년 달라지는 돈 — /2027/ 허브 + 요율표·연봉·월급 실수령액표 ----------
+ * 확정된 것: 최저임금 10,700원(최저임금위원회 2026.7.14 의결), 국민연금 10%(2025.3 개정 국민연금법), 건강보험료율 7.19% 동결(건정심 2026.9.8).
+ * 아직인 것: 장기요양보험료율(10월 이후 결정 — 2026년 값으로 가정), 고용보험(변경 발표 없음), 국민연금 상·하한(2027.7 조정), 간이세액표.
+ * data/rates.mjs 의 RATES[2027] 을 쓴다. 해마다 1월: 확정값으로 바꾸고 이 주석을 지운다. */
+function year2027Pages() {
+  const Y2 = YEAR + 1, R2 = RATES[Y2];
+  if (!R2) return;
+  const net2 = (o) => netPay({ ...o, year: Y2 });
+  const ASSUME = '장기요양보험료율은 10월 이후 결정되므로 2026년 값(건강보험료의 13.14%)으로 두었고, 국민연금 기준소득월액 상·하한과 간이세액표도 지금 값입니다. 확정되는 대로 갱신합니다.';
+  const w2 = R2.minWage, mw2 = w2 * MONTH_HOURS, mw1 = R0.minWage * MONTH_HOURS;
+  const p300 = net2({ monthly: 3000000 }), p300a = netPay({ monthly: 3000000 });
+  const s42a = netPay({ annual: 42000000, nontax: NT }), s42b = net2({ annual: 42000000, nontax: NT });
+  const link2027 = (cur) => list([
+    { href: '/2027/', title: '2027년 달라지는 돈', sub: '최저임금·4대보험·실수령액 한눈에' },
+    { href: '/2027/salary/', title: '2027년 연봉 실수령액표', sub: '2026년과 나란히' },
+    { href: '/2027/monthly/', title: '2027년 월급 실수령액표', sub: '세전 월급별' },
+    { href: '/2027/rates/', title: '2027년 4대보험 요율표', sub: '국민연금 10% · 건강보험 동결' },
+    { href: `/minimum-wage/${Y2}/`, title: `${Y2}년 최저임금 ${num(w2)}원`, sub: `월급 ${won(mw2)}` },
+  ].filter((i) => i.href !== cur));
+
+  /* --- 허브 --- */
+  {
+    const rows = [
+      { cells: ['최저임금 시급', num(R0.minWage) + '원', `<b>${num(w2)}원</b>`, `+${num(w2 - R0.minWage)}원 (${pct(w2 / R0.minWage - 1)})`] },
+      { cells: ['최저임금 월급 (209시간)', won(mw1), `<b>${won(mw2)}</b>`, `+${won(mw2 - mw1)}`] },
+      { cells: ['국민연금 (근로자)', pct(R0.pension, 2), `<b>${pct(R2.pension, 2)}</b>`, '합계 9.5% → 10%'] },
+      { cells: ['건강보험 (근로자)', pct(R0.health, 3), `<b>${pct(R2.health, 3)}</b>`, '7.19% 동결'] },
+      { cells: ['장기요양', `건강보험료의 ${pct(R0.care, 2)}`, `${pct(R2.care, 2)} (가정)`, '10월 이후 결정'] },
+      { cells: ['고용보험 (근로자)', pct(R0.employment, 1), pct(R2.employment, 1), '변경 발표 없음'] },
+      { cells: ['월급 300만원 실수령', won(p300a.net), `<b>${won(p300.net)}</b>`, `${won(p300.net - p300a.net)} (국민연금 +${won(p300.pension - p300a.pension)})`] },
+      { cells: ['연봉 4,200만원 월 실수령', won(s42a.net), `<b>${won(s42b.net)}</b>`, won(s42b.net - s42a.net)] },
+    ];
+    const body = `
+${crumb([['/', '홈'], [null, '2027년 달라지는 돈']])}
+<h1 class="title">2027년 달라지는 돈 — 최저임금·4대보험·실수령액</h1>
+<p class="meta">확정: 최저임금 ${num(w2)}원(7월 14일 의결) · 국민연금 10% · 건강보험료율 7.19% 동결(9월 8일) · 아직: 장기요양보험료율(10월 이후)</p>
+${lead(`2027년 1월부터 최저임금이 시급 <b>${num(w2)}원</b>(월급 ${won(mw2)})으로 ${pct(w2 / R0.minWage - 1)} 오르고, 국민연금 보험료율은 연금개혁 일정대로 <b>10%</b>(근로자 ${pct(R2.pension, 2)})가 됩니다. 건강보험료율은 7.19%로 동결이라 월급이 그대로면 실수령액은 국민연금 인상분만큼만 줄어듭니다. 월급 300만원이면 한 달 ${won(p300a.net - p300.net)}이 덜 들어옵니다.`)}
+${section('2026년 → 2027년', null, table(['항목', '2026년', '2027년', '차이·비고'], rows))}
+${ad()}
+${section('무엇이 확정됐나', null, `<div class="doc">
+<p><b>최저임금 ${num(w2)}원</b> — 최저임금위원회가 2026년 7월 14일 사용자위원안으로 의결했습니다(2026년 ${num(R0.minWage)}원에서 ${num(w2 - R0.minWage)}원, ${pct(w2 / R0.minWage - 1)} 인상). 주 40시간 기준 월 환산액은 ${won(mw2)}, 업종 구분 없이 하나이며 2027년 1월 1일부터 12월 31일까지 적용됩니다. <a href="/minimum-wage/${Y2}/">2027년 최저임금 월급·주휴·실수령 →</a></p>
+<p><b>국민연금 10%</b> — 2025년 3월 개정된 국민연금법에 따라 보험료율이 2026년 9.5%에서 2027년 10%로 오릅니다(근로자 ${pct(R2.pension, 2)}, 회사 같은 비율). 2033년 13%까지 매년 0.5%p씩 오르는 일정의 두 번째 해입니다. <a href="/2027/rates/">2027년 4대보험 요율표 →</a></p>
+<p><b>건강보험료율 7.19% 동결</b> — 보건복지부 건강보험정책심의위원회가 2026년 9월 8일 결정했습니다. 근로자 부담은 보수월액의 ${pct(R2.health, 3)} 그대로입니다.</p>
+</div>`)}
+${section('아직 안 정해진 것', null, `<div class="doc">
+<p><b>장기요양보험료율</b> — 장기요양위원회가 10월 이후 결정합니다. 이 사이트의 2027년 계산은 2026년 값(건강보험료의 ${pct(R2.care, 2)})을 가정했으며, 확정되면 바꿉니다.</p>
+<p><b>국민연금 기준소득월액 상·하한</b> — 매년 7월에 조정됩니다(지금 하한 ${num(R2.pensionMin)}원·상한 ${num(R2.pensionMax)}원). 상한을 넘는 고소득자의 연금 보험료는 7월에 조금 더 오릅니다.</p>
+<p><b>근로소득 간이세액표</b> — 세법이 바뀌면 국세청이 2월쯤 개정합니다. 지금은 2024년 2월 개정표로 계산합니다.</p>
+</div>`)}
+${section('내 월급은 얼마나 달라지나', '2027년 요율 · 부양가족 본인 1인 · 식대 비과세 20만원 포함', table(['월급', '2026년 실수령', '2027년 실수령', '차이'], [200, 250, 300, 350, 400, 450, 500, 600, 700, 800].map((m) => { const a = netPay({ monthly: m * 10000, nontax: NT }), b = net2({ monthly: m * 10000, nontax: NT }); return { cells: [`<a href="${monthlyUrl(m)}">${manwon(m * 10000)}</a>`, won(a.net), `<b>${won(b.net)}</b>`, won(b.net - a.net)] }; })))}
+${section('이어서 계산하기', null, link2027('/2027/'))}
+${guideLinks(['insurance-rates', 'net-pay-steps', 'weekly-holiday-pay'])}
+<p class="note">최저임금위원회·고용노동부 고시, 국민연금법, 보건복지부 건정심 결정을 정리했습니다. ${ASSUME} <a href="/method/">계산 기준 보기</a></p>`;
+    write('/2027/', shell({ url: '/2027/', title: `2027년 달라지는 돈 — 최저임금 ${num(w2)}원·국민연금 10%·건보 동결, 실수령액은 얼마나 주나`, desc: `2027년 최저임금 시급 ${num(w2)}원(월급 ${won(mw2)}), 국민연금 보험료율 10%, 건강보험료율 7.19% 동결. 월급 300만원 실수령이 ${won(p300.net)}으로 ${won(p300a.net - p300.net)} 줄어드는 이유와 연봉·월급별 2027년 실수령액표.`, body, nav: 'salary' }));
+  }
+
+  /* --- 요율표 --- */
+  {
+    const rows = [
+      { cells: ['국민연금 (근로자)', pct(R0.pension, 2), `<b>${pct(R2.pension, 2)}</b>`, `사업주도 같은 비율 · 합계 ${pct(R2.pension * 2, 1)}`] },
+      { cells: ['건강보험 (근로자)', pct(R0.health, 3), `<b>${pct(R2.health, 3)}</b>`, '보험료율 7.19% 동결 (2026.9.8 건정심)'] },
+      { cells: ['장기요양', pct(R0.care, 2), `${pct(R2.care, 2)}`, '건강보험료에 곱함 · 2027년 요율은 10월 이후 결정'] },
+      { cells: ['고용보험 (근로자)', pct(R0.employment, 1), pct(R2.employment, 1), '변경 발표 없음 · 사업주는 0.9% + 고용안정 0.25~0.85%'] },
+      { cells: ['산재보험', '-', '-', '사업주 전액, 업종별 요율'] },
+      { cells: ['국민연금 기준소득 상한', num(R0.pensionMax), num(R2.pensionMax), `하한 ${num(R2.pensionMin)}원 · 2027년 7월 조정`] },
+      { cells: ['최저임금 (시급)', num(R0.minWage), `<b>${num(w2)}</b>`, `월급 ${num(mw2)}원`] },
+    ];
+    const sched = Object.keys(PENSION_SCHEDULE).map(Number).sort().map((y) => ({ cls: y === Y2 ? 'on' : '', cells: [`${y}년`, pct(PENSION_SCHEDULE[y], 2), pct(PENSION_SCHEDULE[y] * 2, 1), num(Math.floor(3000000 * PENSION_SCHEDULE[y] / 10) * 10)] }));
+    const ex = p300;
+    const body = `
+${crumb([['/', '홈'], ['/2027/', '2027년'], [null, '4대보험 요율표']])}
+<h1 class="title">2027년 4대보험 요율표</h1>
+<p class="meta">근로자 부담 기준 · 2026년과 비교 · 국민연금 10%(확정) · 건강보험 7.19% 동결(확정) · 장기요양 미정</p>
+${lead(`2027년 4대보험에서 바뀌는 것은 국민연금 하나입니다. 보험료율이 9.5%에서 <b>10%</b>로 올라 근로자 부담이 ${pct(R0.pension, 2)}에서 ${pct(R2.pension, 2)}가 되고, 건강보험료율은 7.19%로 동결됐습니다. 월급 300만원이면 국민연금이 한 달 ${won(ex.pension - p300a.pension)} 더 나가고, 실수령은 ${won(ex.net)}이 됩니다.`)}
+${section('2026년 → 2027년', null, table(['항목', '2026년', '2027년', '비고'], rows))}
+${section('국민연금 인상 일정', '2025년 3월 개정 국민연금법 — 보험료율 9% → 13%, 매년 0.5%p', table(['연도', '근로자', '합계', '월급 300만원이면'], sched))}
+${ad()}
+${section('월급 300만원의 공제 예시', `비과세 없음 · 본인 1인 · 2027년`, ledger('공제 내역', '월 기준 · 원', [
+  { label: '국민연금', note: pct(R2.pension, 2), value: ex.pension },
+  { label: '건강보험', note: pct(R2.health, 3), value: ex.health },
+  { label: '장기요양', note: `건강보험의 ${pct(R2.care, 2)} (가정)`, value: ex.care },
+  { label: '고용보험', note: pct(R2.employment, 1), value: ex.employment },
+  { label: '소득세', note: '간이세액표', value: ex.tax },
+  { label: '지방소득세', note: '10%', value: ex.local },
+], { label: '실수령', value: ex.net }))}
+${section('이어서 계산하기', null, link2027('/2027/rates/'))}
+${guideLinks(['insurance-rates', 'health-insurance-guide', 'pension-guide'])}
+<p class="note">국민연금법 개정 일정, 보건복지부 건강보험정책심의위원회(2026.9.8) 결정, 고용노동부 고시 기준. ${ASSUME} <a href="/method/">계산 기준 보기</a></p>`;
+    write('/2027/rates/', shell({ url: '/2027/rates/', title: `2027년 4대보험 요율표 — 국민연금 10%(근로자 ${pct(R2.pension, 2)})·건강보험 7.19% 동결·고용보험 0.9%`, desc: `2027년 4대보험 근로자 부담: 국민연금 ${pct(R2.pension, 2)}(합계 10%), 건강보험 ${pct(R2.health, 3)}(7.19% 동결), 장기요양·고용보험. 2026년과 비교표, 국민연금 인상 일정, 월급 300만원 공제 예시.`, body, nav: 'salary' }));
+  }
+
+  /* --- 연봉 실수령액표 --- */
+  {
+    const rows = SALARIES.map((m) => { const a = netPay({ annual: m * 10000, nontax: NT }), b = net2({ annual: m * 10000, nontax: NT }); return { cells: [`<a href="${salaryUrl(m)}">연봉 ${manwon(m * 10000)}</a>`, num(b.gross), num(b.deductions), `<b>${num(b.net)}</b>`, num(b.net - a.net)] }; });
+    const body = `
+${crumb([['/', '홈'], ['/2027/', '2027년'], [null, '연봉 실수령액표']])}
+<h1 class="title">2027년 연봉 실수령액표</h1>
+<p class="meta">연봉 2,000만원부터 3억원까지 · 2027년 요율(국민연금 10%·건보 동결) · 부양가족 본인 1인 · 식대 비과세 20만원 포함 · 마지막 열은 2026년과 차이</p>
+${lead(`2027년에는 국민연금 보험료율이 10%로 올라 같은 연봉의 월 실수령액이 2026년보다 조금 줄어듭니다. 연봉 4,200만원이면 월 ${won(s42b.net)}로 ${won(s42a.net - s42b.net)} 적어지고, 건강보험료율은 동결이라 그 밖의 공제는 그대로입니다. 연봉을 누르면 부양가족·비과세별 상세(2026년 기준)와 인상 시 변화를 볼 수 있습니다.`)}
+${section('연봉별 월 실수령액 (2027년)', '원 · 마지막 열은 2026년 대비 월 변화', table(['연봉', '세전 월급', '월 공제', '월 실수령', '2026년 대비'], rows))}
+<p class="note">1억원 초과는 1,000만원, 2억원 초과는 5,000만원 단위로 실었습니다. ${ASSUME}</p>
+${section('이어서 계산하기', null, link2027('/2027/salary/'))}
+${guideLinks(['net-pay-steps', 'insurance-rates', 'dependents'])}`;
+    write('/2027/salary/', shell({ url: '/2027/salary/', title: `2027년 연봉 실수령액표 — 2,000만원부터 3억원까지 (국민연금 10% 반영)`, desc: `2027년 연봉별 월 실수령액을 한 표로. 국민연금 보험료율 10%와 건강보험료율 7.19% 동결을 반영해 2026년과 차이까지 보여 줍니다. 연봉 4,200만원은 월 ${won(s42b.net)}.`, body, nav: 'salary' }));
+  }
+
+  /* --- 월급 실수령액표 --- */
+  {
+    const rows = MONTHLIES.map((m) => { const a = netPay({ monthly: m * 10000, nontax: NT }), b = net2({ monthly: m * 10000, nontax: NT }); return { cells: [`<a href="${monthlyUrl(m)}">월급 ${manwon(m * 10000)}</a>`, num(b.deductions), `<b>${num(b.net)}</b>`, num(b.net - a.net), num(b.annualGross)] }; });
+    const m350a = netPay({ monthly: 3500000, nontax: NT }), m350b = net2({ monthly: 3500000, nontax: NT });
+    const body = `
+${crumb([['/', '홈'], ['/2027/', '2027년'], [null, '월급 실수령액표']])}
+<h1 class="title">2027년 월급 실수령액표</h1>
+<p class="meta">세전 월급 150만원부터 1,000만원까지 10만원 단위 · 2027년 요율 · 부양가족 본인 1인 · 식대 비과세 20만원 포함</p>
+${lead(`세전 월급 350만원이면 2027년 실수령은 ${won(m350b.net)}로 2026년(${won(m350a.net)})보다 ${won(m350a.net - m350b.net)} 줄어듭니다. 줄어드는 몫은 전부 국민연금 인상분이고, 2027년 최저임금 월급 ${won(mw2)}의 실수령은 약 ${won(net2({ monthly: mw2, nontax: NT }).net)}입니다.`)}
+${section('월급별 실수령액 (2027년)', '원 · 2026년 대비는 월 변화', table(['세전 월급', '월 공제', '월 실수령', '2026년 대비', '연봉 환산'], rows))}
+<p class="note">${ASSUME}</p>
+${section('이어서 계산하기', null, link2027('/2027/monthly/'))}
+${guideLinks(['net-pay-steps', 'withholding-table', 'weekly-holiday-pay'])}`;
+    write('/2027/monthly/', shell({ url: '/2027/monthly/', title: `2027년 월급 실수령액표 — 150만원부터 1,000만원까지 (국민연금 10% 반영)`, desc: `2027년 세전 월급별 실수령액을 10만원 단위로. 국민연금 10%·건강보험 동결 기준이며 2026년과 차이를 함께 보여 줍니다. 월급 350만원은 ${won(m350b.net)}, 최저임금 월급 ${won(mw2)}은 약 ${won(net2({ monthly: mw2, nontax: NT }).net)}.`, body, nav: 'monthly' }));
+  }
 }
 
 /* ---------- 프리랜서 3.3% 원천징수 ---------- */
@@ -1289,6 +1423,7 @@ ${section('이어서 계산하기', null, list([
   { href: '/salary/', title: '연봉 실수령액표', sub: '연봉별 월 실수령' },
   { href: '/monthly/', title: '월급 실수령액표', sub: '세전 월급별 공제' },
   { href: '/minimum-wage/', title: `${YEAR}년 최저임금`, sub: `시급 ${num(R0.minWage)}원 · 월급 ${num(R0.minWage * MONTH_HOURS)}원` },
+  { href: '/2027/rates/', title: '2027년 4대보험 요율표', sub: '국민연금 10% · 건강보험 7.19% 동결' },
 ]))}
 <p class="note">국민연금공단·국민건강보험공단·고용노동부 고시 기준. 건강보험 보수월액 상한, 국민연금 기준소득월액 상하한은 매년 바뀝니다. <a href="/method/">계산 기준 보기</a></p>`;
   write('/rates/', shell({ url: '/rates/', title: `${YEAR}년 4대보험 요율표 — 국민연금·건강보험·고용보험 근로자 부담과 인상 일정`, desc: `${YEAR}년 국민연금 ${pct(R0.pension, 2)}(근로자), 건강보험 ${pct(R0.health * 2, 2)}(총 보험료율, 근로자는 절반), 장기요양 ${pct(R0.care, 2)}, 고용보험 ${pct(R0.employment, 1)}. ${PREV}년과 비교하고 2033년까지 국민연금 인상 일정을 정리했습니다.`, body, nav: 'salary' }));
@@ -1621,7 +1756,7 @@ function yearendPage() {
   const body = `
 ${crumb([['/', '홈'], [null, '연말정산 미리보기']])}
 <h1 class="title">연말정산 미리보기 — 돌려받을까, 더 낼까</h1>
-<p class="meta">연봉과 카드·의료비·연금저축 몇 가지만 넣으면 결정세액을 추정해 1년 동안 미리 낸 세금과 비교합니다 · ${YEAR}년 귀속 규정 · 입력값은 이 기기 밖으로 나가지 않습니다</p>
+<p class="meta">${YEAR}년 귀속 · ${YEAR + 1}년 1~2월 정산 · 연봉과 카드·의료비·연금저축 몇 가지만 넣으면 결정세액을 추정해 1년 동안 미리 낸 세금과 비교합니다 · 입력값은 이 기기 밖으로 나가지 않습니다</p>
 <form class="quick ye-form" id="ye-form">
 <div class="ye-grid">
 ${inp('ye-annual', '연봉 (세전 · 만원)', 4200)}
@@ -1640,6 +1775,29 @@ ${inp('ye-pa', '연금저축·IRP 납입 (만원)', 0)}
 <div class="hero"><div class="hero-label" id="ye-result-label">환급 예상</div><div class="hero-num"><span class="num" id="ye-result">0</span><span class="unit">원</span></div><div class="hero-sub" id="ye-result-sub">계산 중</div></div>
 <div id="ye-tips"></div>
 <div class="ledger"><div class="lg-head"><h2>계산 흐름</h2><span>원 · 1년</span></div><div id="ye-rows"></div></div>
+${section(`${YEAR}년 귀속 연말정산 일정`, `${YEAR + 1}년 1~2월에 정산 · 국세청 홈택스`, table(['때', '무엇', '메모'], [
+  { cells: ['11월 초', '홈택스 <b>연말정산 미리보기</b> 서비스', `1~9월 카드 사용액과 작년 공제 자료로 예상 세액 · 작년은 11월 5일 개통`] },
+  { cells: ['~12월 31일', '공제 지출 마감', '연금저축·IRP 납입, 기부, 안경·렌즈, 월세 이체, 혼인신고까지 올해 안에'] },
+  { cells: [`${YEAR + 1}년 1월 15일`, '<b>간소화 서비스</b> 자료 조회', '1월 20일 확정 자료 · 빠진 자료는 영수증 직접 제출'] },
+  { cells: [`${YEAR + 1}년 1월 말~2월`, '회사에 서류 제출', '부양가족 등록, 간소화 PDF 또는 자료 제공 동의'] },
+  { cells: [`${YEAR + 1}년 2~3월`, '환급 · 추가 납부', '2월 급여에 반영, 회사에 따라 3월 · 회사 원천세 신고는 3월 10일'] },
+]))}
+${section(`${YEAR}년 귀속부터 달라진 것`, `2025년 개정 세법 · ${YEAR}년 1월 1일 이후 지출·지급분부터`, `<div class="doc">
+<p><b>자녀가 있으면 신용카드 공제 한도가 늘어납니다.</b> 신용카드 등 사용금액 기본공제 한도(총급여 7천만원 이하 300만원·초과 250만원)에 자녀·손자녀 등 부양가족 1명당 <b>50만원</b>(7천만원 초과는 25만원)씩, 최대 100만원(초과는 50만원)이 더해집니다.</p>
+<p><b>배우자도 월세 세액공제.</b> 세대주와 주소가 다른 배우자가 요건을 채우면 배우자도 월세 세액공제를 받을 수 있습니다(부부 합산 한도 연 1,000만원).</p>
+<p><b>출산·보육수당 비과세가 자녀 1명당.</b> 본인이나 배우자의 출산, 6세 이하 자녀 보육과 관련해 회사가 주는 수당의 비과세 한도가 월 20만원에서 <b>자녀 1명당 월 20만원</b>으로 바뀝니다.</p>
+<p><b>교육비 세액공제 확대.</b> 기본공제 대상 자녀의 교육비는 자녀 소득과 관계없이 공제되고, 9세 미만 또는 초등학교 2학년 이하 자녀의 예능 학원·체육시설 교육비도 공제 대상에 들어갑니다.</p>
+<p><b>고향사랑기부금.</b> 10만원 초과 20만원 이하 기부분의 세액공제율이 15%에서 40%로 오릅니다(10만원까지는 그대로 전액).</p>
+<p><b>이어지는 것.</b> 결혼세액공제(2024~${YEAR}년 혼인신고, 1인 50만원·부부 100만원 — <b>${YEAR}년이 마지막 해</b>), 자녀세액공제 첫째 25만·둘째 30만·셋째부터 40만원, 헬스장·수영장 이용료 30% 공제(총급여 7천만원 이하), 주택청약저축 소득공제 연 300만원(세대주·배우자), 월세 세액공제 총급여 8천만원 이하·연 1,000만원. 위 계산기는 자녀 수에 따른 카드 한도 상향과 배우자 월세 공제를 아직 반영하지 않습니다.</p>
+</div>`)}
+${section('지금 챙길 것 — 10월부터 12월까지', null, `<div class="doc">
+<p><b>카드 문턱부터 확인.</b> 총급여의 25%를 이미 넘겼다면 남은 기간은 체크카드·현금영수증(30%)이 신용카드(15%)보다 두 배 공제됩니다. 못 넘길 것 같으면 어떤 카드를 써도 공제가 없으니 혜택 좋은 카드를 그냥 쓰면 됩니다.</p>
+<p><b>연금저축·IRP.</b> 연 900만원(연금저축 600만원까지)까지 15%(총급여 5,500만원 초과 12%)를 돌려받습니다. 12월 31일까지 넣은 돈만 올해 몫입니다.</p>
+<p><b>월세.</b> 임대차계약서와 이체 내역을 챙기고, 전입신고가 돼 있는지 확인하세요. 무주택 세대주(요건을 채운 배우자 포함)만 됩니다.</p>
+<p><b>안경·렌즈, 산후조리원, 기부.</b> 간소화에 안 잡히는 것은 영수증을 받아 두세요. 안경·콘택트렌즈는 1인당 50만원까지 의료비에 넣습니다.</p>
+<p><b>혼인신고.</b> 결혼세액공제는 ${YEAR}년 안에 혼인신고한 부부까지입니다. 식은 내년이라도 신고를 올해 하면 1인 50만원씩 받습니다.</p>
+<p><b>부양가족·중도입사.</b> 올해 태어난 아이, 새로 모시게 된 부모님은 회사에 등록하고, 이직했다면 전 직장의 원천징수영수증을 받아 두세요.</p>
+</div>`)}
 ${section('어떻게 계산하나', '국세청 연말정산 규정을 단순화한 추정입니다', `<div class="doc">
 <p><b>① 근로소득금액</b> — 총급여(연봉 − 비과세 식대)에서 근로소득공제를 뺍니다. 근로소득공제는 총급여 500만원까지 70%, 1,500만원까지 40%, 4,500만원까지 15%, 1억원까지 5%, 그 초과 2%(한도 2,000만원)입니다.</p>
 <p><b>② 과세표준</b> — 기본공제(본인·부양가족 1인당 150만원), 국민연금·건강·고용보험료(근로자 부담 전액), 신용카드 등 소득공제(총급여 25% 초과분 × 신용카드 15%·체크카드/현금영수증 30%, 한도 총급여 7,000만원 이하 300만원·초과 250만원)를 뺍니다.</p>
@@ -1669,7 +1827,7 @@ ${section('이어서 계산하기', null, list([
 ]))}
 ${guideLinks(['withholding-table', 'dependents', 'net-pay-steps'])}
 <p class="note">${YEAR}년 귀속 연말정산 규정을 단순화한 추정치입니다. 주택청약·주택자금·기부금·전통시장·대중교통 추가 한도·경로우대·장애인·한부모 공제, 중도 입사·퇴사, 상여 원천징수 방식은 반영하지 않았습니다. 정확한 값은 국세청 홈택스 '연말정산 미리보기'에서 확인하세요. <a href="/method/">계산 기준 보기</a></p>`;
-  write(url, shell({ url, title: `연말정산 미리보기 — 환급·추가 납부 예상 계산기 (${YEAR}년 귀속)`, desc: '연봉과 신용카드·의료비·보험료·월세·연금저축 납입액을 넣으면 근로소득공제부터 세액공제까지 계산해 결정세액과 미리 낸 세금을 비교하고 환급 예상액을 보여줍니다.', body, nav: 'salary', scripts: ['/js/engine.js', '/js/yearend.js'] }));
+  write(url, shell({ url, title: `연말정산 미리보기 ${YEAR + 1} — ${YEAR}년 귀속 환급 예상 계산기·일정·달라진 점`, desc: '연봉과 신용카드·의료비·보험료·월세·연금저축 납입액을 넣으면 근로소득공제부터 세액공제까지 계산해 결정세액과 미리 낸 세금을 비교하고 환급 예상액을 보여줍니다.', body, nav: 'salary', scripts: ['/js/engine.js', '/js/yearend.js'] }));
 }
 
 /* ---------- 임베드 위젯 ---------- */
@@ -3356,7 +3514,7 @@ jeonseIndex(); JEONSE.forEach(jeonsePage);
 savingsIndex(); SAV_M.forEach((m) => SAV_N.forEach((nm) => savingsPage(m, nm)));
 dsrIndex(); SALARIES.forEach(dsrPage);
 rankPage(); agePage();
-minWagePage(YEAR); minWagePage(YEAR - 1);
+minWagePage(YEAR); minWagePage(YEAR - 1); if (MIN_WAGE_HISTORY[YEAR + 1] && RATES[YEAR + 1]) minWagePage(YEAR + 1); year2027Pages();
 freelanceIndex(); FREE.forEach(freelancePage);
 overtimeIndex(); OT_PAYS.forEach(overtimePage);
 leaveIndex(); OT_PAYS.forEach(leavePage);

@@ -1,0 +1,34 @@
+# 돈표 (donpyo.com)
+
+> 한국의 급여·세금·대출·연금 계산 사전. 연봉·월급 실수령액, 최저임금, 4대보험 요율, 퇴직금, 실업급여, 대출 상환, 연말정산 등을 금액별로 미리 계산해 표로 정리해 둔 정적 사이트다. 모든 숫자는 국세청 간이세액표, 국민연금·건강보험·고용보험 고시, 최저임금위원회 고시 등 공개 자료로 계산하며 페이지마다 기준(연도·요율·가정)을 적어 둔다.
+
+## 인용할 때
+- 계산 기준 연도와 가정(부양가족 1인, 식대 비과세 20만원 포함 등)은 각 페이지의 `meta` 줄과 맨 아래 `note`에 있다. 인용할 때 함께 적어 주면 정확하다.
+- 요율은 매년 1월(4대보험)·7월(국민연금 상하한, 다음 해 최저임금)에 갱신한다. 갱신일은 각 페이지 아래 "갱신 YYYY-MM-DD".
+- 계산 방법 전체: https://donpyo.com/method/
+
+## 자주 찾는 페이지
+- 2027년 달라지는 돈(최저임금 10,700원·국민연금 10%·건보 동결): https://donpyo.com/2027/
+- 2027년 최저임금 확정: https://donpyo.com/minimum-wage/2027/
+- 2027년 4대보험 요율표: https://donpyo.com/2027/rates/
+- 2027년 연봉 실수령액표: https://donpyo.com/2027/salary/
+- 2027년 월급 실수령액표: https://donpyo.com/2027/monthly/
+- 2026년 연봉 실수령액표: https://donpyo.com/salary/ (연봉별 상세는 /salary/4200/ 처럼 만원 단위)
+- 2026년 월급 실수령액표: https://donpyo.com/monthly/ (월급별 상세는 /monthly/350/)
+- 실수령으로 연봉 역산: https://donpyo.com/net/
+- 2026년 4대보험 요율표: https://donpyo.com/rates/
+- 2026년 최저임금: https://donpyo.com/minimum-wage/
+- 알바 월급·주휴수당: https://donpyo.com/hourly/
+- 연말정산 미리보기(2026년 귀속·일정·달라진 점): https://donpyo.com/yearend/
+- 대출 상환 계산: https://donpyo.com/loan/
+- 퇴직금·퇴직소득세: https://donpyo.com/retire/
+- 실업급여: https://donpyo.com/unemployment/
+- 국민연금 예상 수령액: https://donpyo.com/pension/
+- 건강보험료 계산: https://donpyo.com/nhis/
+- 자동차세·연납: https://donpyo.com/car-tax/
+- 서재(설명 글 22편): https://donpyo.com/guide/
+- 사이트맵: https://donpyo.com/sitemap.xml · 새 글 RSS: https://donpyo.com/rss.xml
+
+## 운영
+- 운영: 돈표 (문의는 사이트 소개 페이지 https://donpyo.com/about/)
+- 자매 사이트: 사주첩 https://sajucheop.com, 바디집 https://bodyzip.com

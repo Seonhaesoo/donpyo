@@ -401,7 +401,9 @@ ${section('금액이 바뀌면', `${y}년 · 연 ${fmtRate(r)}`, chips(neighbors
 ${liveLoan(a, y, r)}
 ${guideLinks(['loan-types', 'dsr'])}
 <p class="note">이자는 매달 남은 원금에 연이율의 12분의 1을 곱해 원 단위로 반올림했습니다. 실제 대출은 금리 변동, 거치기간, 중도상환수수료, 은행의 일할 계산 방식에 따라 달라집니다. <a href="/method/">계산 기준 보기</a></p>`;
-  write(url, shell({ url, title, desc, body, nav: 'loan', scripts: ['/js/engine.js', '/js/live.js'] }));
+  /* 색인은 흔한 조합(10·20·30년 × 연 3.0~5.0%)만 — 995장을 모두 내놓으니 구글이 '발견했지만 색인 안 함'으로 두고 크롤을 아꼈다(2026-09-23 URL 검사). 나머지는 noindex(사이트맵에서도 빠짐), 링크와 계산은 그대로 */
+  const core = [10, 20, 30].includes(y) && r >= 0.03 - 1e-9 && r <= 0.05 + 1e-9;
+  write(url, shell({ url, title, desc, body, nav: 'loan', noindex: !core, scripts: ['/js/engine.js', '/js/live.js'] }));
 }
 
 function loanAmountIndex(a) {

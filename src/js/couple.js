@@ -28,7 +28,7 @@
       '<tr class="sum"><td>합산</td><td>' + num(A + B) + '</td><td>' + num(na + nb) + '</td><td>' + num(floorMan(lc.p45)) + '</td></tr></tbody></table></div>';
     html += '<div class="tiles"><div class="tile"><small>3.5%면</small><span class="num">' + manwon(floorMan(lc.p35)) + '</span></div><div class="tile"><small>스트레스 6%로 계산</small><span class="num">' + manwon(floorMan(lc.p60)) + '</span></div><div class="tile"><small>한도만큼 전세대출 시 월 이자(4%)</small><span class="num">' + num(jeonseInterest) + '</span></div></div>';
     if (ad + bd > 0) html += '<div class="callout">기존 대출 월 ' + won((ad + bd) * 10000) + '을 갚고 있다고 보고 그만큼 여력을 뺐습니다.</div>';
-    html += '<div class="callout"><b>읽는 법</b> — 은행권 DSR 40% 기준으로 다른 대출이 없을 때의 최대치입니다. 실제 한도는 LTV(집값 대비 비율), 스트레스 금리, 신용대출 유무에 따라 더 낮을 수 있습니다. 합산 심사는 부부(혼인신고 기준)만 가능하고, 예비부부는 대출 실행 전 혼인신고가 필요한 상품이 많습니다.</div>';
+    html += '<div class="callout"><b>읽는 법</b>: 은행권 DSR 40% 기준으로 다른 대출이 없을 때의 최대치입니다. 실제 한도는 LTV(집값 대비 비율), 스트레스 금리, 신용대출 유무에 따라 더 낮을 수 있습니다. 합산 심사는 부부(혼인신고 기준)만 가능하고, 예비부부는 대출 실행 전 혼인신고가 필요한 상품이 많습니다.</div>';
     return html;
   }
 

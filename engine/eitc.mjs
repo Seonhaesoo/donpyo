@@ -67,8 +67,8 @@ export function eitc(i = {}) {
 /* 구간 설명 — 페이지 문장용 */
 export function phaseText(wage, type = 'single') {
   const T = TYPES[type] || TYPES.single, w = workCredit(wage, type);
-  if (w.phase === 'in') return `${Math.round(T.phaseIn / 10000).toLocaleString('ko-KR')}만원 미만 점증 구간이라 총급여에 비례해 늘어나는 구간`;
-  if (w.phase === 'flat') return `${Math.round(T.phaseIn / 10000).toLocaleString('ko-KR')}만~${Math.round(T.flatTo / 10000).toLocaleString('ko-KR')}만원 평탄 구간이라 최대 ${Math.round(T.max / 10000)}만원을 다 받는 구간`;
+  if (w.phase === 'in') return `총급여에 비례해 늘어나는 ${Math.round(T.phaseIn / 10000).toLocaleString('ko-KR')}만원 미만 점증 구간`;
+  if (w.phase === 'flat') return `최대 ${Math.round(T.max / 10000)}만원을 다 받는 ${Math.round(T.phaseIn / 10000).toLocaleString('ko-KR')}만~${Math.round(T.flatTo / 10000).toLocaleString('ko-KR')}만원 평탄 구간`;
   if (w.phase === 'out') return `${Math.round(T.flatTo / 10000).toLocaleString('ko-KR')}만원을 넘어 총급여가 늘수록 줄어드는 점감 구간`;
   return `총급여 ${Math.round(T.limit / 10000).toLocaleString('ko-KR')}만원 이상이라 근로장려금 대상이 아닌 구간`;
 }

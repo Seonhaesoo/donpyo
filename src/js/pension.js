@@ -20,7 +20,7 @@
     var normal = D.startAge(birth), start = normal + shift;
     var p = D.payback({ avgIncome: income, years: years, birthYear: birth, startAge: start });
     $('pn-monthly').textContent = num(p.monthly);
-    $('pn-sub').textContent = p.eligible ? (birth + '년생 · ' + p.startAge + '세 개시' + (shift ? ' (' + (shift < 0 ? -shift + '년 조기 −' + pct0(-shift * 0.06) : shift + '년 연기 +' + pct1(shift * 0.072)) + ')' : '') + ' · ' + years + '년 가입 · 지금 돈 기준 어림') : '가입기간 10년 미만 — 노령연금 대신 반환일시금';
+    $('pn-sub').textContent = p.eligible ? (birth + '년생 · ' + p.startAge + '세 개시' + (shift ? ' (' + (shift < 0 ? -shift + '년 조기 −' + pct0(-shift * 0.06) : shift + '년 연기 +' + pct1(shift * 0.072)) + ')' : '') + ' · ' + years + '년 가입 · 지금 돈 기준 어림') : '가입기간 10년 미만이라 노령연금 대신 반환일시금';
     $('pn-annual').textContent = num(p.annual);
     $('pn-age').textContent = p.startAge + '세';
     $('pn-rep').textContent = pct1(p.replacement);

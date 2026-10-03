@@ -18,7 +18,7 @@
       : (one ? '1세대 1주택은 공시가격 12억원까지 종부세가 없습니다' : '공시가격 합계 9억원까지는 종부세가 없습니다'));
     set('jb-deduct', '−' + D.num(r.deduct)); set('jb-deduct-l', one ? '1세대 1주택 12억원' : '그 밖의 개인 9억원');
     set('jb-base', D.num(r.base));
-    set('jb-calc', D.num(r.calc)); set('jb-calc-l', r.three ? '3주택 이상 — 12억 초과분 2.0~5.0%' : '0.5~2.7% 누진');
+    set('jb-calc', D.num(r.calc)); set('jb-calc-l', r.three ? '3주택 이상: 12억 초과분 2.0~5.0%' : '0.5~2.7% 누진');
     set('jb-prop', '−' + D.num(r.propDeduct)); set('jb-prop-l', '과세표준 × ' + r.propPct + '% × 0.4%');
     set('jb-credit', '−' + D.num(r.credit)); set('jb-credit-l', one ? '나이 ' + r.agePct + '% + 보유 ' + r.holdPct + '% = ' + r.creditPct + '% (한도 80%)' : '1세대 1주택만');
     set('jb-tax', D.num(r.tax)); set('jb-rural', '+' + D.num(r.rural)); set('jb-total2', D.num(r.total));

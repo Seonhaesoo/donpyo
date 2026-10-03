@@ -34,7 +34,7 @@
       rows.push(row('연소득', num(income), '사업·근로·이자·배당·연금·기타소득 합계'));
       rows.push(row(r.minimum ? '최저보험료 (연소득 ' + manwon(D.LOCAL_MIN_INCOME) + ' 이하)' : '소득 보험료 (연소득 × ' + pct(D.HEALTH_RATE, 2) + ' ÷ 12)', num(r.incomePart), r.minimum ? '소득이 적어도 이 금액은 냅니다' : '직장가입자와 같은 요율'));
       rows.push(row('재산과세표준 − 기본공제 ' + manwon(D.PROPERTY_DEDUCTION), num(r.propertyNet), '재산세 과세표준 기준 · 전세보증금은 30%'));
-      rows.push(row('재산 부과점수 × ' + D.POINT_VALUE + '원', num(r.propertyPart), r.points + '점 — 60등급표를 6단계로 줄인 근사'));
+      rows.push(row('재산 부과점수 × ' + D.POINT_VALUE + '원', num(r.propertyPart), r.points + '점 · 60등급표를 6단계로 줄인 근사치'));
       rows.push(row('건강보험료', num(r.health), '10원 미만 절사'));
       rows.push(row('장기요양보험료 (× ' + pct(D.CARE_RATE, 2) + ')', num(r.care), ''));
       $('nh-rows').innerHTML = rows.join('') + '<div class="lg-total"><span>월 합계</span><span class="num">' + num(r.total) + '</span></div>';

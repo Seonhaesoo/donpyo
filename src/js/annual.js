@@ -46,7 +46,7 @@
       else if (f.kind === 'full') rows.push(row('회계연도 기준 ' + f.year + '년 1월 1일', f.days + '일', f.note));
       else if (f.kind === 'monthly') rows.push(row('회계연도 기준 ' + f.year + '년', h.days + '일', '입사한 해에는 두 기준이 같습니다 (개근한 달마다 1일, 최대 11일) · 다음 해 1월 1일에 비례연차'));
     }
-    rows.push(row('미사용 연차', unused + '일', unused > (ok ? h.days : 25) ? '올해 발생 일수보다 많습니다 — 이월분까지 넣었다면 그대로 두세요' : ''));
+    rows.push(row('미사용 연차', unused + '일', unused > (ok ? h.days : 25) ? '올해 발생 일수보다 많습니다. 이월분까지 넣었다면 그대로 두세요' : ''));
     $('an-rows').innerHTML = rows.join('') + '<div class="lg-total"><span>연차수당</span><span class="num">' + num(pay.total) + '</span></div>';
 
     var tips = [];

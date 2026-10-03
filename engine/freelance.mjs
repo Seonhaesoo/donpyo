@@ -31,13 +31,13 @@ export const TYPES = {
   business: {
     key: 'business', label: '사업소득 (인적용역)', short: '사업소득',
     total: 0.033, netRate: 0.967, taxRate: BUSINESS_RATE, localRate: 0.003, expense: 0,
-    who: '계속·반복해서 용역을 제공하는 프리랜서 — 디자이너·개발자·강사·번역가·배달·보험모집인 등',
+    who: '계속·반복해서 용역을 제공하는 프리랜서(디자이너·개발자·강사·번역가·배달·보험모집인 등)',
     code: '거주자의 사업소득 (원천징수 3.3%)',
   },
   other: {
     key: 'other', label: '기타소득 (강연료·원고료 등)', short: '기타소득',
     total: 0.088, netRate: 0.912, taxRate: OTHER_RATE, localRate: 0.02, expense: OTHER_EXPENSE,
-    who: '일시적·우발적인 용역 — 한 번 나간 특강, 기고한 원고, 자문, 상금·사례금 등',
+    who: '일시적·우발적인 용역(한 번 나간 특강, 기고한 원고, 자문, 상금·사례금 등)',
     code: '기타소득 (필요경비 60% 인정 후 22% → 총액의 8.8%)',
   },
 };

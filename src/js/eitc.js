@@ -17,7 +17,7 @@
     var T = D.TYPES[type];
     var r = D.eitc({ type: type, wage: wage, property: prop, children: kids });
     $('ei-total').textContent = num(r.total);
-    $('ei-sub').textContent = T.label + ' · 총급여액 등 ' + manwon(wage) + ' · ' + (r.factor === 0 ? '재산 2.4억원 이상 — 지급 제외' : r.factor === 0.5 ? '재산 1.7억원 이상 — 50% 감액' : phaseLabel(r.phase) + ' 구간') + ' · 연 1회';
+    $('ei-sub').textContent = T.label + ' · 총급여액 등 ' + manwon(wage) + ' · ' + (r.factor === 0 ? '재산 2.4억원 이상이라 지급 제외' : r.factor === 0.5 ? '재산 1.7억원 이상이라 50% 감액' : phaseLabel(r.phase) + ' 구간') + ' · 연 1회';
     $('ei-work').textContent = num(r.work);
     $('ei-child').textContent = num(r.child);
     var cut = (r.workRaw - r.work) + (r.childRaw * r.children - r.child);
@@ -28,11 +28,11 @@
     else if (r.phase === 'flat') rows.push(row('평탄 구간 (최대 지급)', num(r.workRaw), manwon(T.phaseIn) + ' 이상 ' + manwon(T.flatTo) + ' 미만'));
     else if (r.phase === 'out') rows.push(row('점감 구간', num(r.workRaw), manwon(T.max) + ' − (총급여 − ' + manwon(T.flatTo) + ') × ' + Math.round(T.max / 10000) + '/' + num((T.limit - T.flatTo) / 10000)));
     else rows.push(row('총급여 ' + manwon(T.limit) + ' 이상', '0', '근로장려금 대상 아님'));
-    if (r.factor < 1) rows.push(row('재산 ' + (r.factor === 0 ? '2.4억원 이상 — 제외' : '1.7억원 이상 — 50% 감액'), r.factor === 0 ? '−' + num(r.workRaw) : '−' + num(r.workRaw - r.work)));
+    if (r.factor < 1) rows.push(row('재산 ' + (r.factor === 0 ? '2.4억원 이상 (제외)' : '1.7억원 이상 (50% 감액)'), r.factor === 0 ? '−' + num(r.workRaw) : '−' + num(r.workRaw - r.work)));
     rows.push(row('근로장려금 (10원 미만 절사)', num(r.work)));
     if (type !== 'single') {
       var cf = type === 'dual' ? D.CTC.flatToDual : D.CTC.flatTo;
-      rows.push(row('자녀장려금 (부양자녀 1명당)', num(r.perChild), r.childPhase === 'flat' ? '총급여 ' + manwon(cf) + ' 미만 최대 ' + manwon(D.CTC.max) : r.childPhase === 'out' ? manwon(D.CTC.max) + ' − (총급여 − ' + manwon(cf) + ') × 50/' + num((D.CTC.limit - cf) / 10000) + ' · 최소 ' + manwon(D.CTC.min) : '총급여 ' + manwon(D.CTC.limit) + ' 이상 — 대상 아님'));
+      rows.push(row('자녀장려금 (부양자녀 1명당)', num(r.perChild), r.childPhase === 'flat' ? '총급여 ' + manwon(cf) + ' 미만 최대 ' + manwon(D.CTC.max) : r.childPhase === 'out' ? manwon(D.CTC.max) + ' − (총급여 − ' + manwon(cf) + ') × 50/' + num((D.CTC.limit - cf) / 10000) + ' · 최소 ' + manwon(D.CTC.min) : '총급여 ' + manwon(D.CTC.limit) + ' 이상이라 대상 아님'));
       rows.push(row('× 부양자녀 ' + r.children + '명', num(r.child)));
     }
     $('ei-rows').innerHTML = rows.join('') + '<div class="lg-total"><span>합계</span><span class="num">' + num(r.total) + '</span></div>';

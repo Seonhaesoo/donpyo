@@ -22,7 +22,7 @@
     else if (under30) why.push('만 30세 미만 미혼은 무주택기간을 0점으로 봅니다. 만 30세가 되는 날부터 기간이 쌓입니다.');
     if (fam >= 6) why.push('부양가족은 6명 이상이면 35점으로 같습니다.');
     if (months >= 180) why.push('통장 가입기간은 15년 이상이면 17점으로 같습니다.');
-    $('sb-grade').innerHTML = '<div class="callout"><b>' + g.label + '</b> — ' + g.text + (why.length ? '<br>' + why.join(' ') : '') + '</div>';
+    $('sb-grade').innerHTML = '<div class="callout"><b>' + g.label + '</b>: ' + g.text + (why.length ? '<br>' + why.join(' ') : '') + '</div>';
     var h = Math.max(0, Math.min(15, Math.floor(years))), f = Math.max(0, Math.min(6, Math.floor(fam)));
     var link = $('sb-link');
     if (owner || under30) { link.hidden = true; }

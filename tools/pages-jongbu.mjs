@@ -12,7 +12,7 @@ const CREDIT_ROWS = [[0, '해당 없음', { age: 0, years: 0 }], [20, '만 60세
 const NOTE = `<p class="note">${Y}년 귀속 주택분 종합부동산세 기준입니다(종합부동산세법 제8~10조, 같은 법 시행령 제2조의4·제4조의3, 국세청 「${Y}년 종합부동산세 요약표」). 재산세는 표준세율대로 부과됐다고 보고 공제했고, 세부담상한(전년 보유세의 150%)·합산배제 주택·부부 공동명의 특례는 반영하지 않았습니다. 공시가격은 사람별 합계입니다. 실제 세액은 고지서를 기준으로 하세요. <a href="/method/">계산 기준 보기</a></p>`;
 
 function flow(r, P) {
-  const rows = [['공시가격 합계', num(P)], ['공제', '−' + num(r.deduct), r.type === 'one' ? '1세대 1주택 12억원' : '그 밖의 개인 9억원'], ['과세표준', num(r.base), '(공시가격 − 공제) × 60%'], ['산출세액', num(r.calc), r.three ? '3주택 이상 — 12억 초과분 2.0~5.0%' : '0.5~2.7% 누진'], ['재산세 공제', '−' + num(r.propDeduct), `과세표준 × ${r.propPct}% × 0.4%`]];
+  const rows = [['공시가격 합계', num(P)], ['공제', '−' + num(r.deduct), r.type === 'one' ? '1세대 1주택 12억원' : '그 밖의 개인 9억원'], ['과세표준', num(r.base), '(공시가격 − 공제) × 60%'], ['산출세액', num(r.calc), r.three ? '3주택 이상: 12억 초과분 2.0~5.0%' : '0.5~2.7% 누진'], ['재산세 공제', '−' + num(r.propDeduct), `과세표준 × ${r.propPct}% × 0.4%`]];
   if (r.creditPct) rows.push([`세액공제 ${r.creditPct}%`, '−' + num(r.credit), '나이·보유 기간']);
   rows.push(['종합부동산세', num(r.tax)], ['농어촌특별세 20%', '+' + num(r.rural)], ['합계', num(r.total)]);
   return rows;

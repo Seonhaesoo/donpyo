@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { GUIDES } from '../data/guides.mjs';
 import { GUIDES_EXTRA as A } from '../data/guides-extra-a.mjs';
 import { GUIDES_EXTRA as B } from '../data/guides-extra-b.mjs';
+import { GUIDES_EXTRA as C2 } from '../data/guides-extra-c.mjs';
 import { guideContext } from './guide-context.mjs';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -14,7 +15,7 @@ const DIST = path.join(ROOT, 'dist');
 const hasDist = fs.existsSync(path.join(DIST, 'index.html'));
 const table = (head, rows) => `<table><tr>${head.map((h) => `<th>${h}</th>`).join('')}</tr>${rows.map((r) => `<tr>${r.cells.map((x) => `<td>${x}</td>`).join('')}</tr>`).join('')}</table>`;
 const c = guideContext({ NT: 200000, table });
-const all = [...GUIDES, ...A, ...B];
+const all = [...GUIDES, ...A, ...B, ...C2];
 const slugs = new Set(all.map((g) => g.slug));
 const title = (g) => g.title.replace(/\$\{YEAR\}/g, c.YEAR);
 const textOf = (html) => html.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();

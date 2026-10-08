@@ -15,6 +15,7 @@ import { AGE_INCOME as AGE } from '../data/age-income.mjs';
 import { GUIDES as BASE_GUIDES } from '../data/guides.mjs';
 import { GUIDES_EXTRA as GUIDES_A } from '../data/guides-extra-a.mjs';
 import { GUIDES_EXTRA as GUIDES_B } from '../data/guides-extra-b.mjs';
+import { GUIDES_EXTRA as GUIDES_C } from '../data/guides-extra-c.mjs';
 import { PRICES, PRICES_ASOF } from '../data/prices.mjs';
 import { HISTORY, CPI } from '../data/rates-history.mjs';
 import * as GO from '../engine/goal.mjs';
@@ -57,7 +58,15 @@ const BUILD_ISO = kst.toISOString().slice(0, 10);
 const t0 = Date.now();
 const urls = [];
 const NOINDEX = new Set();   /* shell({ noindex }) 로 쓴 주소 — 사이트맵에서 뺀다 */
-const GUIDES = [...BASE_GUIDES, ...GUIDES_A, ...GUIDES_B];   /* 서재: 기본 10편 + 2026-09-13 추가분(세금·부동산, 연금·보험·생활) */
+/* 본문을 마지막으로 고친 날 — 사이트맵 lastmod·푸터·서재 날짜. 글·요율을 고칠 때만 바꾼다(빌드 날짜를 쓰면 매번 '새 글'처럼 보여 검색엔진이 날짜를 믿지 않는다) */
+const CONTENT_DATE = '2026-10-08';
+/* 색인 정리(2026-10-08, 애드센스 '가치가 별로 없는 콘텐츠' 대응): 금액만 바뀌는 계산 페이지는 실제 수요가 있던 주소(data/index-keep.json:
+ * 2026-09-06~10-08 GA4 방문 또는 구글 노출 10회 이상)만 색인하고 나머지는 noindex — 페이지·링크·계산은 그대로 둔다.
+ * 허브(1단계 주소)·서재·2027·최저임금·관계별 증여세/상속세 표·전기차 자동차세는 늘 색인. 수요가 새로 생긴 주소는 index-keep.json 에 더한다. */
+const INDEX_KEEP = new Set(JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'index-keep.json'), 'utf8')).keep);
+const ALWAYS_INDEX = /^\/(guide|2027|minimum-wage|updates)\/|^\/gift-tax\/[a-z]+\/$|^\/inheritance-tax\/[a-z0-9]+\/$|^\/car-tax\/ev\/$/;
+const thinPage = (u) => u.split('/').filter(Boolean).length >= 2 && !ALWAYS_INDEX.test(u) && !INDEX_KEEP.has(u);
+const GUIDES = [...BASE_GUIDES, ...GUIDES_A, ...GUIDES_B, ...GUIDES_C];   /* 서재: 기본 10편 + 2026-09-13 추가분(세금·부동산, 연금·보험·생활) + 2026-10-08 2027·퇴사 3편 */
 
 /* 국민연금 인상 일정용 가상 연도 요율 (다른 요율은 올해 그대로) */
 for (const [y, r] of Object.entries(PENSION_SCHEDULE)) if (!RATES[y]) RATES[y] = { ...R0, pension: r };
@@ -75,6 +84,7 @@ function write(url, html) {
 }
 
 function shell(o) {
+  if (!o.noindex && o.url && thinPage(o.url)) o.noindex = true;
   if (o.noindex) NOINDEX.add(o.url);
   const GA = GA_ID ? `<script async src="https://www.googletagmanager.com/gtag/js?id=${GA_ID}"></script><script>if(location.hostname.indexOf('localhost')<0&&location.hostname.indexOf('127.0.0.1')<0&&location.protocol!=='file:'){window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${GA_ID}');}</script>\n` : '';
   const ADS = ADSENSE && !o.bare ? `<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE}" crossorigin="anonymous"></script>\n` : '';
@@ -110,7 +120,7 @@ ${o.bare ? o.body : `<div class="app">
 </header>
 ${o.body}
 <footer class="foot">
-  <div class="frow"><span>© 돈표 · ${YEAR}년 1월 요율 · 갱신 ${BUILD_ISO}</span><nav><a href="/guide/">서재</a><a href="/method/">계산 기준</a><a href="/about/">소개</a><a href="/embed/">위젯</a><a href="/terms/">이용약관</a><a href="/privacy/">개인정보</a><a href="https://bodyzip.com/">바디집</a></nav></div>
+  <div class="frow"><span>© 돈표 · ${YEAR}년 1월 요율 · 갱신 ${CONTENT_DATE}</span><nav><a href="/guide/">서재</a><a href="/method/">계산 기준</a><a href="/about/">소개</a><a href="/updates/">업데이트 기록</a><a href="/embed/">위젯</a><a href="/terms/">이용약관</a><a href="/privacy/">개인정보</a><a href="https://bodyzip.com/">바디집</a></nav></div>
   <p class="fnote">계산 결과는 참고용입니다. 회사의 비과세 항목·상여·연말정산, 은행별 계산 방식에 따라 실제 금액과 다를 수 있습니다.</p>
 </footer>
 </div>`}
@@ -703,7 +713,7 @@ ${table(['항목', `${PREV}년`, `${YEAR}년`, '비고'], [
   const about = `
 ${crumb([['/', '홈'], [null, '소개']])}
 <h1 class="title">돈표를 소개합니다</h1>
-<p class="meta">돈 계산 사전 · ${YEAR}년 요율 기준 · 갱신 ${BUILD_ISO}</p>
+<p class="meta">돈 계산 사전 · ${YEAR}년 요율 기준 · 갱신 ${CONTENT_DATE}</p>
 <div class="doc">
 <p>돈표(돈 계산 사전)는 "연봉 4,200만원이면 한 달에 얼마 받지?", "2억을 30년 빌리면 한 달에 얼마 갚지?" 같은 질문에 계산기 없이 바로 답하려고 만든 사이트입니다. 연봉·월급·대출·퇴직금·실업급여부터 세금·부동산·연금까지 금액별 페이지를 미리 계산해 두어, 숫자만 고르면 공제 내역과 비교표가 함께 나옵니다.</p>
 <h2>무엇을 근거로 계산하나요</h2>
@@ -725,14 +735,13 @@ ${crumb([['/', '홈'], [null, '소개']])}
 <p>돈표는 사주 풀이 사이트 <a href="${SAJU}">사주첩</a>과 몸 계산 사전 <a href="https://bodyzip.com/">바디집</a>을 만드는 팀이 운영합니다.</p>
 <h2>고친 기록</h2>
 <ul>
-<li>2026년 9월 6일, 연봉·월급·대출·퇴직금·알바 페이지로 문을 열었습니다.</li>
-<li>2026년 9월 7~11일, 연말정산, 증여세·상속세·취득세·재산세, 청약 가점, 육아휴직 급여, 전기요금, 근로장려금, 국민연금, 양도소득세, 연차수당, 프리랜서 3.3%, 건강보험료를 더했습니다.</li>
-<li>2026년 9월 12일, 종합부동산세 계산기를 더했습니다.</li>
-<li>2026년 9월 13일, 세금·부동산·연금 서재 글을 더하고 소개와 계산 기준을 보강했습니다.</li>
+${UPDATES.slice(0, 4).map((x) => `<li>${x.date.replace(/^(\d+)-0?(\d+)-0?(\d+)$/, '$1년 $2월 $3일')}, ${x.text}</li>`).join('')}
 </ul>
+<p><a href="/updates/">전체 업데이트 기록 보기</a></p>
 <h2>문의</h2>
 <p>오류 제보, 요율 갱신 요청, 제휴 문의는 인스타그램 <a href="https://www.instagram.com/sajucheop/" target="_blank" rel="noopener">@sajucheop</a> 다이렉트 메시지로 보내 주세요. 계산 오류는 페이지 주소와 함께 알려 주시면 확인한 뒤 바로 고치고 이 기록에 남깁니다.</p>
 </div>`;
+  updatesPage();
   write('/about/', shell({ url: '/about/', title: '돈표 소개 — 계산 근거와 검증, 갱신 방식', desc: '돈표가 연봉 실수령액·대출·세금을 무엇을 근거로 계산하고 어떻게 검증·갱신하는지, 한계와 개인정보, 문의 방법을 정리했습니다.', body: about }));
 
   const terms = `
@@ -789,6 +798,7 @@ ${ledger('구직급여일액 계산', '원', [
   { label: '상한액', note: `${YEAR}년`, value: d.upper },
 ], { label: '적용 구직급여일액', value: d.daily })}
 <div class="callout">${capNote}. ${YEAR}년은 상한액과 하한액 차이가 하루 ${won(d.upper - d.lower)}뿐이라 월급이 아주 적지 않은 한 대부분 상한액 근처를 받습니다.</div>
+<div class="callout"><b>2027년 1월 이후 퇴직하면</b>: 하한액이 최저임금 10,700원 × 80% × 8시간 = 하루 ${won(U.dailyBenefit(pay, 2027).lower)}으로 오릅니다. 2026년 상한액 ${won(d.upper)}보다 높아져 상한액이 새로 정해지기 전에는 월급과 관계없이 하루 ${won(U.dailyBenefit(pay, 2027).daily)}입니다. 상한액과 주 6일 지급 개편안은 아직 정해지지 않았습니다. <a href="/guide/unemployment-2027/">2027년 실업급여 정리</a></div>
 ${section('지급일수와 총액', '피보험기간(고용보험 가입 기간)과 퇴직 당시 나이로 정해집니다', table(['피보험기간', '50세 미만', '총액', '50세 이상·장애인', '총액'], yearRows))}
 ${section('월급이 바뀌면', `피보험 ${uiLabel(y)} · 50세 미만 ${days}일`, table(['월급', '하루', '한 달', '총액'], payRows))}
 ${ad()}
@@ -810,7 +820,8 @@ ${crumb([['/', '홈'], [null, '실업급여']])}
 <h1 class="title">${YEAR}년 실업급여 계산표</h1>
 <p class="meta">월급 × 피보험기간별 구직급여 총액(50세 미만) · 상한 ${won(up)} · 하한 ${won(lo)}</p>
 ${section('월급 × 피보험기간', '총 수령액(원) · 칸을 누르면 하루·한 달 금액과 50세 이상 일수', table(['월급', '하루'].concat(UI_YEARS.map(uiLabel)), rows))}
-<p class="note">${YEAR}년은 상한액 ${won(up)}과 하한액 ${won(lo)} 차이가 작아 월급 차이가 거의 반영되지 않습니다. 피보험기간이 길수록, 50세 이상이면 더 오래 받습니다.</p>`;
+<p class="note">${YEAR}년은 상한액 ${won(up)}과 하한액 ${won(lo)} 차이가 작아 월급 차이가 거의 반영되지 않습니다. 피보험기간이 길수록, 50세 이상이면 더 오래 받습니다.</p>
+<div class="callout"><b>2027년</b>: 최저임금 10,700원으로 하한액이 하루 ${won(U.dailyBenefit(1000000, 2027).lower)}이 되어 2026년 상한액보다 높아집니다. 상한액·주 6일 지급·고용보험료 개편안은 아직 정해지지 않았습니다. <a href="/guide/unemployment-2027/">2027년 실업급여 정리</a></div>`;
   write('/unemployment/', shell({ url: '/unemployment/', title: `${YEAR}년 실업급여 계산표 — 월급·가입기간별 하루·한 달·총액`, desc: `${YEAR}년 구직급여 상한액·하한액을 반영해 월급과 고용보험 가입기간별로 하루 수령액, 한 달 수령액, 총액을 표로 정리했습니다.`, body, nav: 'unemployment' }));
 }
 
@@ -1476,6 +1487,44 @@ const KIND_LINKS = {
   life: [{ href: '/method/', title: '계산 기준과 출처' }],
 };
 
+/* 서재 글 수정일 — 2026-10-03 전 글은 그날 문구를 다듬었고, 그 뒤 글은 올린 날 */
+const guideModified = (g) => g.modified || ((g.published || '2026-09-06') > '2026-10-03' ? g.published : '2026-10-03');
+
+/* 업데이트 기록 — 이용자에게 보이는 변경만, 최근 것부터. 글·요율을 고칠 때 맨 위에 한 줄 더한다 */
+const UPDATES = [
+  { date: '2026-10-08', text: '서재에 2027년 실업급여, 2027년 월급에서 더 빠지는 돈, 퇴사할 때 받는 돈 계산 순서를 더했습니다. 실업급여 계산표에 2027년 하한액(하루 68,480원)과 미정인 상한액을 안내했습니다.' },
+  { date: '2026-10-03', text: '서재와 계산기 안내 문장을 읽기 쉽게 다듬었습니다(약 140곳).' },
+  { date: '2026-09-23', text: '2027년 달라지는 돈(최저임금 10,700원, 국민연금 10%, 건강보험료율 동결) 페이지를 열고, 연말정산 2026년 귀속 일정을 더했으며, 자동차세 연납 공제율을 5%로 바로잡았습니다.' },
+  { date: '2026-09-19', text: '새 글을 받아 볼 수 있는 RSS 피드를 열었습니다.' },
+  { date: '2026-09-18', text: '월급·연봉·알바·퇴직금 페이지 제목에 답(실수령액)을 바로 적었습니다.' },
+  { date: '2026-09-13', text: '세금·부동산·연금·보험 서재 글 12편을 더하고 2026년 기준을 갱신했습니다(건강보험 보험료 상·하한, 국민연금 A값, 근로장려금 2025년 귀속, 아동수당 만 9세, 양도세 중과 유예 종료).' },
+  { date: '2026-09-12', text: '종합부동산세 계산기를 더했습니다.' },
+  { date: '2026-09-09', text: '연차·연차수당, 프리랜서 3.3%, 건강보험료 계산기를 더하고 건강보험 요율을 사이트 전체에서 하나로 맞췄습니다.' },
+  { date: '2026-09-08', text: '근로장려금, 국민연금 예상 수령액, 양도소득세, 자동차 유지비, 청약 가점, 육아휴직 급여, 출산 지원금, 전기요금 누진제 계산을 더했습니다.' },
+  { date: '2026-09-07', text: '증여세·상속세·종합소득세·재산세·취득세·자동차세, LTV 한도, 복비, 예금 이자, 연말정산 미리보기를 더하고 월급 역산 단위 오류 등 40여 건을 고쳤습니다.' },
+  { date: '2026-09-06', text: '연봉·월급 실수령액, 대출 상환액, 퇴직금, 알바 월급, 실업급여, 전세 vs 월세, DSR 한도 계산으로 문을 열었습니다.' },
+];
+function updatesPage() {
+  const body = `
+${crumb([['/', '홈'], [null, '업데이트 기록']])}
+<h1 class="title">업데이트 기록</h1>
+<p class="meta">돈표가 언제 무엇을 고쳤는지 · 최근 갱신 ${UPDATES[0].date}</p>
+<div class="doc">
+<p>요율과 제도는 해마다 1월과 7월에 크게 바뀌고, 그 사이에도 정부 발표에 따라 달라집니다. 돈표는 매달 초 최저임금·4대보험 요율·구직급여 상한·기준금리 발표를 확인하고, 바뀐 값은 같은 계산 엔진을 쓰는 모든 표와 글에 한꺼번에 반영합니다. 아래는 이용자가 보는 내용이 바뀐 기록입니다.</p>
+<ul>
+${UPDATES.map((x) => `<li><b>${x.date}</b> ${x.text}</li>`).join('\n')}
+</ul>
+<h2>다음 갱신 예정</h2>
+<ul>
+<li>2027년 장기요양보험료율 결정(보통 10~11월) — 2027년 실수령액에 반영</li>
+<li>구직급여 상한액과 고용보험료율 개편안 확정 — 실업급여 계산표와 2027년 실수령액에 반영</li>
+<li>2027년 1월 — 새해 요율로 모든 표의 기준 연도 변경</li>
+</ul>
+<p>틀린 숫자를 발견하면 인스타그램 <a href="https://www.instagram.com/sajucheop/" target="_blank" rel="noopener">@sajucheop</a> 다이렉트 메시지로 알려 주세요. 확인해서 고치고 이 기록에 남깁니다.</p>
+</div>`;
+  write('/updates/', shell({ url: '/updates/', title: '업데이트 기록 — 돈표가 고친 숫자와 새 글', desc: '돈표의 요율 갱신, 새 계산기와 서재 글, 바로잡은 오류를 날짜순으로 정리한 기록입니다.', body }));
+}
+
 function guidePages() {
   const c = guideContext();
   GUIDES.forEach((g, i) => {
@@ -1483,11 +1532,11 @@ function guidePages() {
     const title = gtitle(g);
     /* 같은 갈래 글을 먼저, 모자라면 다른 갈래로 */
     const others = GUIDES.filter((x) => x.slug !== g.slug && x.kind === g.kind).concat(GUIDES.filter((x) => x.kind !== g.kind)).slice(0, 4);
-    const ld = { '@context': 'https://schema.org', '@type': 'Article', headline: title, description: g.desc, url: SITE + url, datePublished: g.published || '2026-09-06', dateModified: BUILD_ISO, inLanguage: 'ko', author: { '@type': 'Organization', name: '돈표' }, publisher: { '@type': 'Organization', name: '돈표', url: SITE }, isPartOf: { '@type': 'WebSite', name: '돈표', url: SITE } };
+    const ld = { '@context': 'https://schema.org', '@type': 'Article', headline: title, description: g.desc, url: SITE + url, datePublished: g.published || '2026-09-06', dateModified: guideModified(g), inLanguage: 'ko', author: { '@type': 'Organization', name: '돈표' }, publisher: { '@type': 'Organization', name: '돈표', url: SITE }, isPartOf: { '@type': 'WebSite', name: '돈표', url: SITE } };
     const body = `
 ${crumb([['/guide/', '서재'], [null, title]])}
 <h1 class="title">${title}</h1>
-<p class="meta">${YEAR}년 요율 기준 · 예시 숫자는 빌드 때마다 다시 계산 · 갱신 ${BUILD_ISO}</p>
+<p class="meta">${YEAR}년 요율 기준 · 예시 숫자는 계산기와 같은 엔진으로 계산 · 갱신 ${guideModified(g)}</p>
 <div class="doc">${g.body(c)}</div>
 ${ad()}
 ${section('계산해 보기', null, list((g.links || KIND_LINKS[g.kind] || []).map((k) => ({ href: k.href, title: k.title }))))}
@@ -3554,7 +3603,7 @@ docs();
 
 /* noindex 페이지(위젯·약관·연봉 축 부가 페이지)는 사이트맵에서 뺀다 */
 const indexable = urls.filter((u) => !NOINDEX.has(u) && !['/terms/', '/privacy/'].includes(u));
-fs.writeFileSync(path.join(OUT, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${indexable.map((u) => `<url><loc>${SITE}${u}</loc><lastmod>${BUILD_ISO}</lastmod></url>`).join('\n')}\n</urlset>\n`);
+fs.writeFileSync(path.join(OUT, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${indexable.map((u) => `<url><loc>${SITE}${u}</loc><lastmod>${u === '/' ? BUILD_ISO : CONTENT_DATE}</lastmod></url>`).join('\n')}\n</urlset>\n`);
 fs.writeFileSync(path.join(OUT, 'robots.txt'), `User-agent: *\nAllow: /\nSitemap: ${SITE}/sitemap.xml\n`);
 fs.writeFileSync(path.join(OUT, 'CNAME'), 'donpyo.com\n');   /* 스킴 없이 도메인만 — 생일첩에서 'http://'가 섞여 인증서가 멈췄던 전례 */
 console.log(`돈표 빌드 완료: 페이지 ${urls.length}장, ${((Date.now() - t0) / 1000).toFixed(1)}s`);

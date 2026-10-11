@@ -119,8 +119,10 @@ ${o.bare ? o.body : `<div class="app">
   <span class="year-pill">${YEAR} 요율</span>
 </header>
 ${o.body}
-<footer class="foot">
-  <div class="frow"><span>© 돈표 · ${YEAR}년 1월 요율 · 갱신 ${CONTENT_DATE}</span><nav><a href="/guide/">서재</a><a href="/method/">계산 기준</a><a href="/about/">소개</a><a href="/updates/">업데이트 기록</a><a href="/embed/">위젯</a><a href="/terms/">이용약관</a><a href="/privacy/">개인정보</a><a href="https://bodyzip.com/">바디집</a></nav></div>
+<footer class="foot foot2">
+  <p class="flabel">계산 찾아보기</p>
+  <nav class="fgrid" aria-label="계산 찾아보기"><a href="/salary/">연봉 실수령액</a><a href="/monthly/">월급 실수령액</a><a href="/loan/">대출 상환</a><a href="/retire/">퇴직금</a><a href="/unemployment/">실업급여</a><a href="/hourly/">알바 월급</a><a href="/guide/">서재</a><a href="/method/">계산 기준</a><a href="/updates/">업데이트 기록</a></nav>
+  <div class="frow2"><nav><a href="/about/">소개</a><a href="/embed/">위젯</a><a href="/terms/">이용약관</a><a href="/privacy/">개인정보</a><a href="https://bodyzip.com/">바디집</a></nav><span>© 돈표 · ${YEAR}년 1월 요율 · 갱신 ${CONTENT_DATE}</span></div>
   <p class="fnote">계산 결과는 참고용입니다. 회사의 비과세 항목·상여·연말정산, 은행별 계산 방식에 따라 실제 금액과 다를 수 있습니다.</p>
 </footer>
 </div>`}
@@ -608,11 +610,7 @@ ${section('가족·생활', null, `<div class="dict">
 </div>`)}
 ${section('많이 보는 연봉표', null, list(popular))}
 ${section('읽을거리', '계산 뒤에 있는 규칙을 풀어 쓴 글', list(GUIDES.slice(0, 6).map((g) => ({ href: guideUrl(g.slug), title: gtitle(g) }))) + `<p class="sub" style="margin-top:8px"><a href="/guide/">서재 전체 보기 →</a></p>`)}
-${section('돈표는 이렇게 계산해요', null, `<div class="doc">
-<p>숫자는 모두 공식 기준으로 직접 계산합니다. 소득세는 국세청 근로소득 간이세액표 원문을 그대로 조회하고, 4대보험은 ${YEAR}년 고시 요율을, 세금·수당·연금은 법령 조문의 산식을 씁니다. 금액별 표와 계산기는 같은 계산 엔진에서 나오고, 공식 계산 사례와 원 단위까지 맞는지 확인하는 자동 테스트를 배포할 때마다 돌립니다.</p>
-<p>요율이 바뀌면 다시 계산합니다. 최저임금·4대보험 요율·구직급여 상한·기준금리는 매달 공식 발표를 확인하고, 바뀐 값은 모든 페이지에 한 번에 반영됩니다. 결과는 참고용이며 상여·수당 구조나 개인별 공제에 따라 실제 금액은 다를 수 있습니다.</p>
-<p><a href="/method/">계산 기준과 출처</a> · <a href="/guide/">서재 — 숫자 뒤의 규칙</a> · <a href="/about/">돈표 소개</a></p>
-</div>`)}
+<section class="section intro"><p class="intro-label">돈표 이야기</p><h2>돈표는 이렇게 계산해요</h2><ol class="steps"><li><i aria-hidden="true">1</i><div><b>공식 기준으로 직접 계산합니다</b><p>소득세는 국세청 근로소득 간이세액표 원문을 그대로 조회하고, 4대보험은 ${YEAR}년 고시 요율을, 세금·수당·연금은 법령 조문의 산식을 씁니다.</p></div></li><li><i aria-hidden="true">2</i><div><b>원 단위까지 맞춰 봅니다</b><p>금액별 표와 계산기는 같은 계산 엔진에서 나옵니다. 공식 계산 사례와 원 단위까지 맞는지 확인하는 자동 테스트를 배포할 때마다 돌립니다.</p></div></li><li><i aria-hidden="true">3</i><div><b>요율이 바뀌면 다시 계산합니다</b><p>최저임금·4대보험 요율·구직급여 상한·기준금리는 매달 공식 발표를 확인하고, 바뀐 값은 모든 페이지에 한 번에 반영됩니다. 결과는 참고용이며 상여·수당 구조나 개인별 공제에 따라 실제 금액은 다를 수 있습니다.</p></div></li></ol><div class="intro-links"><a href="/method/">계산 기준과 출처</a><a href="/guide/">서재: 숫자 뒤의 규칙</a><a href="/about/">돈표 소개</a></div></section>
 ${section(`${YEAR}년에 달라진 것`, null, `<div class="callout"><b>국민연금 근로자 부담 ${pct(RATES[PREV].pension, 2)} → ${pct(R0.pension, 2)}</b>, 건강보험 근로자 부담 ${pct(RATES[PREV].health, 3)} → ${pct(R0.health, 3)}, 최저임금 ${num(RATES[PREV].minWage)}원 → ${num(R0.minWage)}원. 같은 연봉이라도 실수령액이 작년보다 조금 줄었습니다. 각 연봉 페이지에서 ${PREV}년과 비교할 수 있습니다.</div>`)}`;
   write('/', shell({ url: '/', title: `돈표 — 연봉 실수령액·대출 상환·퇴직금·알바 월급 계산 사전 (${YEAR}년)`, desc: `${YEAR}년 요율로 연봉별 실수령액, 대출 월 상환액과 총 이자, 퇴직금 세후, 알바 주휴수당까지 금액별로 미리 계산한 돈 계산 사전.`, body }));
 }

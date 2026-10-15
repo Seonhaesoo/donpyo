@@ -228,6 +228,48 @@ function pensionSchedule(annual) {
   return table(['연도', '근로자 부담률', '국민연금', '월 실수령'], rows);
 }
 
+/* 2026-10-15 네이버 유입이 많은 월급·실수령 역산·알바 페이지 보강 — 연봉 페이지에만 있던 위치·나이대·할 수 있는 것·대출 한도를 같이 보여 주고,
+ * 그 금액으로 많이 묻는 질문에 답한다(답의 숫자는 모두 같은 계산 엔진에서) */
+const faqDoc = (qas) => section('자주 묻는 것', null, `<div class="doc">${qas.map(([q, a]) => `<p><b>${q}</b> ${a}</p>`).join('\n')}</div>`);
+function whereBlock(annual, gross) {
+  const rk = RK.rank(annual);
+  return section('근로소득자 중 어디쯤', `국세청 ${RK.STAT.year}년 귀속 연말정산 통계(중위 ${manwon(RK.STAT.median)} · 평균 ${manwon(RK.STAT.mean)})에 맞춘 추정 · 연봉 ${manwon(annual)} 기준`, `<div class="tiles"><div class="tile"><small>근로소득자 중</small><span class="num">상위 ${rk.topPct}%</span></div><div class="tile"><small>중위 연봉</small>${n(RK.STAT.median)}</div><div class="tile"><small>평균 연봉</small>${n(RK.STAT.mean)}</div></div>` + list([{ href: '/rank/', title: '연봉 순위표', sub: '상위 1%·10%·30%의 연봉 경계와 계산 방법' }]))
+    + '\n' + section('내 나이대와 비교', `통계청 ${AGE.year}년 임금근로일자리 소득의 월평균 보수(세전)와 세전 월급 ${won(gross)} 비교`, table(['나이대', '평균 월소득', '나와 차이', '그 나이대에서 내 위치'], AGE.groups.filter((g) => !['10s', '70s'].includes(g.key)).map((g) => { const r = AG.ageRank(gross, g.key); const diff = gross - g.mean; return { cells: [g.label, num(g.mean), (diff >= 0 ? '+' : '−') + num(Math.abs(diff)), `상위 ${r.topPct}%`] }; })));
+}
+function useBlock(p, annual) {
+  const hn = p.net / MONTH_HOURS, g30 = Math.round(p.net * 0.3), sm = nearest(SALARIES, Math.round(annual / 10000));
+  return section('이 월급으로 할 수 있는 것', null, `<div class="tiles"><div class="tile"><small>세후 시급</small>${n(Math.round(hn))}</div><div class="tile"><small>치킨 한 마리는</small><span class="num">${hoursText(CHICKEN / hn)}</span></div><div class="tile"><small>실수령 30% 저축 → 1억까지</small><span class="num">${GO.fmtMonths(GO.monthsToGoal(100000000, g30, 0.03))}</span></div></div>` + list([
+    { href: `/goal/10000/${nearest(SAVE_M, Math.round(p.net * 0.3 / 10000))}/`, title: '1억 모으기 시계', sub: '저축액·금리별 도달 기간, 물가 반영' },
+    { href: `/negotiate/${sm}/`, title: '연봉 협상 근거 만들기', sub: '상위 %, 나이대 평균, 물가·최저임금 인상률을 한 장으로' },
+    { href: `/yearend/?a=${sm}`, title: '연말정산 미리보기', sub: '카드·의료비·연금저축을 넣으면 환급인지 추가 납부인지' },
+  ]));
+}
+function loanBlock(annual, net) {
+  const dsr = L.dsrLimit(annual, 0.045, 360);
+  const loanAmt = nearest(LOAN_AMOUNTS, Math.round(dsr.principal / 10000));
+  return section('이 소득의 대출 한도', `DSR 40% 기준(연간 원리금 상환액이 연소득의 40%를 넘지 않는 선) · 연소득 ${manwon(annual)} · 다른 대출이 없다고 가정`, tiles([{ label: '월 상환 여력', value: dsr.monthlyCap }, { label: '연 4.5%·30년 원리금균등', value: dsr.principal }, { label: '연 3.5%·30년', value: L.dsrLimit(annual, 0.035, 360).principal }]) + list([{ href: loanUrl(loanAmt, 30, 0.045), title: `대출 ${manwon(loanAmt * 10000)} 30년 4.5% 상환표`, sub: `월 ${won(L.annuityPayment(loanAmt * 10000, 0.045, 360))} · 실수령의 ${pct(L.annuityPayment(loanAmt * 10000, 0.045, 360) / net, 0)}` }]));
+}
+function monthlyFaq(gross, p) {
+  const p0 = netPay({ monthly: gross, nontax: 0 });
+  const p2 = netPay({ monthly: gross, nontax: NT, dependents: 2 });
+  const Y2 = YEAR + 1, nx = RATES[Y2] ? netPay({ monthly: gross, nontax: NT, year: Y2 }) : null;
+  return [
+    [`월급 ${manwon(gross)}이면 연봉으로 얼마인가요?`, `세전 월급 × 12 = 연봉 ${manwon(gross * 12)}입니다(상여·성과급 제외). 퇴직금을 연봉에 넣어 13으로 나눠 주는 회사라면 같은 월급이 연봉 ${manwon(gross * 13)}으로 표시됩니다.`],
+    ['식대 비과세가 없으면 실수령이 얼마인가요?', `비과세 식대 20만원이 없으면 그만큼 보험료와 세금이 붙어 월 ${won(p0.net)}을 받습니다. 비과세가 있을 때보다 ${won(p.net - p0.net)} 적습니다.`],
+    ['부양가족이 있으면 달라지나요?', `소득세가 줄어 실수령이 늘어납니다. 본인 포함 2인이면 월 ${won(p2.net)}으로 ${won(p2.net - p.net)} 많습니다. 4대보험은 가족 수와 상관없이 같습니다.`],
+    nx ? [`${Y2}년에는 얼마나 달라지나요?`, `${Y2}년에는 국민연금 근로자 부담이 ${pct(R0.pension, 2)}에서 ${pct(RATES[Y2].pension, 2)}로 오릅니다. 다른 요율과 세금이 그대로라면 같은 월급의 실수령은 ${won(nx.net)}으로 ${won(p.net - nx.net)} 줄어듭니다.`] : null,
+  ].filter(Boolean);
+}
+function netFaq(target, g1) {
+  const g0 = grossForNet(target, { nontax: 0 });
+  const free = Math.ceil(target / 0.967 / 1000) * 1000;
+  return [
+    [`실수령 ${manwon(target)}이면 연봉 얼마인가요?`, `본인 1인·식대 비과세 20만원 기준으로 연봉 약 ${won(g1 * 12)}입니다. 세전 월급 ${won(g1)}에서 4대보험과 세금 ${won(g1 - target)}이 빠집니다.`],
+    ['식대 비과세가 없는 회사라면요?', `비과세 식대가 없으면 세전 월급 ${won(g0)}, 연봉 ${won(g0 * 12)}이 필요해 ${won((g0 - g1) * 12)} 더 높아야 합니다.`],
+    [`프리랜서(3.3%)로 월 ${manwon(target)}을 받으려면요?`, `사업소득 3.3% 원천징수만 떼므로 계약금액이 월 ${won(free)}이면 됩니다. 다만 4대보험은 지역가입자로 따로 내고, 다음 해 5월 종합소득세 신고로 세금을 정산합니다. <a href="/freelance/">프리랜서 3.3% 계산</a>`],
+  ];
+}
+
 /* ---------- 연봉 페이지 ---------- */
 function salaryPage(m) {
   const annual = m * 10000;
@@ -308,8 +350,14 @@ ${crumb([['/monthly/', '월급 실수령액'], [null, `${num(Math.floor(m / 100)
 ${lead(`월급 ${manwon(gross)}은 4대보험 ${won(p.insurance)}과 소득세·지방소득세 ${won(p.taxTotal)}을 빼면 ${won(p.net)}이 통장에 들어옵니다. 연봉으로는 ${manwon(gross * 12)}이고 연말정산 근로소득자 가운데 상위 ${RK.rank(gross * 12).topPct}% 수준입니다. 부양가족이 많으면 실수령이 늘고, 식대 비과세가 없으면 줄어듭니다. 아래에서 바꿔 보세요.`)}
 ${payVariants(gross * 12)}
 ${section('이웃 월급', null, chips(nb.map((v) => ({ label: short(v * 10000), value: netPay({ monthly: v * 10000, nontax: NT }).net, href: monthlyUrl(v), on: v === m }))))}
+${whereBlock(gross * 12, gross)}
+${section('월급이 오르면 손에 오는 돈', '세전 인상분 가운데 4대보험과 세금을 뺀 몫만 손에 옵니다', table(['인상', '새 월급', '월 실수령', '월 증가'], [10, 20, 30, 50].map((r) => { const q = netPay({ monthly: gross + r * 10000, nontax: NT }); return { cells: [`+${r}만원`, num(gross + r * 10000), num(q.net), num(q.net - p.net)] }; })))}
+${useBlock(p, gross * 12)}
+${section('시급·일급으로 보면', `월 ${MONTH_HOURS}시간(주 40시간 + 주휴) 기준`, `<div class="tiles"><div class="tile"><small>시급</small>${n(Math.round(gross / MONTH_HOURS))}</div><div class="tile"><small>일급 (8시간)</small>${n(Math.round(gross / MONTH_HOURS * 8))}</div><div class="tile"><small>최저임금 ${num(R0.minWage)}원 대비</small><span class="num">${(gross / MONTH_HOURS / R0.minWage).toFixed(2)}배</span></div></div>`)}
 ${section('국민연금 인상 일정에 따른 변화', '국민연금 근로자 부담이 매년 0.25%p씩 오를 때의 월 실수령액', pensionSchedule(gross * 12))}
 ${ad()}
+${loanBlock(gross * 12, p.net)}
+${faqDoc(monthlyFaq(gross, p))}
 ${section('이어서 계산하기', null, list([
   { href: salaryUrl(annualNear), title: `연봉 ${manwon(annualNear * 10000)} 실수령액`, sub: '연봉 기준 상세 표 · 인상 시 변화 · 대출 한도' },
   { href: netUrl(nearest(NETS, Math.round(p.net / 10000))), title: `월 ${manwon(nearest(NETS, Math.round(p.net / 10000)) * 10000)} 실수령하려면`, sub: '필요한 세전 월급 역산' },
@@ -354,7 +402,11 @@ ${ledger('이때의 공제 내역', '월 기준 · 원', [
 ], { label: '공제 합계', value: p.deductions })}
 ${section('부양가족·비과세에 따라', '가족이 많으면 같은 실수령액에 필요한 연봉이 줄고, 비과세 식대가 없으면 늘어납니다', table(['조건', '세전 월급', '연봉', '실수령'], rows.concat(rowsNt)))}
 ${section('이웃 실수령액', '칩의 숫자는 필요한 연봉(원)', chips(nb.map((v) => ({ label: short(v * 10000), value: grossForNet(v * 10000, { nontax: NT }) * 12, href: netUrl(v), on: v === m }))))}
+${section('실수령을 더 받으려면', '실수령을 늘리고 싶을 때 필요한 연봉 · 늘어나는 실수령보다 연봉이 더 많이 올라야 합니다', table(['목표 실수령', '필요한 연봉', '지금보다'], [10, 20, 30, 50].map((d) => { const g = grossForNet(target + d * 10000, { nontax: NT }); return { cells: [`월 ${manwon(target + d * 10000)}`, num(g * 12), '+' + num((g - g1) * 12)] }; })))}
+${whereBlock(g1 * 12, g1)}
 ${ad()}
+${loanBlock(g1 * 12, target)}
+${faqDoc(netFaq(target, g1))}
 ${section('이어서 계산하기', null, list([
   { href: salaryUrl(nearest(SALARIES, Math.round(g1 * 12 / 10000))), title: `연봉 ${manwon(nearest(SALARIES, Math.round(g1 * 12 / 10000)) * 10000)} 실수령액`, sub: '가장 가까운 연봉 페이지' },
   { href: monthlyUrl(nearest(MONTHLIES, Math.round(g1 / 10000))), title: `월급 ${manwon(nearest(MONTHLIES, Math.round(g1 / 10000)) * 10000)} 실수령액`, sub: '가장 가까운 월급 페이지' },
@@ -524,6 +576,16 @@ ${section('4대보험과 실수령', insured ? `월 ${monthHours.toFixed(0)}시�
 ${section('시간이 바뀌면', `시급 ${num(w)}원`, cells(HOURLY_HOURS.map((x) => { const el = x >= 15; const wk = w * x + (el ? Math.round(w * Math.min(x, 40) / 40 * 8) : 0); return { label: `주 ${x}시간`, value: Math.round(wk * WEEKS_PER_MONTH), href: hourlyUrl(w, x), on: x === h }; }), 3))}
 ${ad()}
 ${section('시급이 바뀌면', `주 ${h}시간`, cells(HOURLY_WAGES.map((x) => { const wk = x * h + (eligible ? Math.round(x * Math.min(h, 40) / 40 * 8) : 0); return { label: `${num(x)}원${x === R0.minWage ? ' (최저)' : ''}`, value: Math.round(wk * WEEKS_PER_MONTH), href: hourlyUrl(x, h), on: x === w }; }), 3))}
+${(() => {
+  const Y2 = YEAR + 1, W2 = RATES[Y2] && RATES[Y2].minWage;
+  const m2 = W2 ? Math.round((W2 * h + (eligible ? Math.round(W2 * Math.min(h, 40) / 40 * 8) : 0)) * WEEKS_PER_MONTH) : 0;
+  return faqDoc([
+    ['주휴수당은 언제 받나요?', `1주 소정근로시간이 15시간 이상이고 그 주를 개근하면 하루치 임금을 더 받습니다. 주 ${h}시간이면 ${eligible ? `한 주에 ${won(weeklyHoliday)}, 한 달이면 약 ${won(Math.round(weeklyHoliday * WEEKS_PER_MONTH))}입니다` : '15시간 미만이라 받지 못합니다'}.`],
+    ['4대보험에 들어가나요?', `한 달 60시간 이상 일하면 국민연금·건강보험·고용보험 가입 대상입니다. 주 ${h}시간은 한 달 약 ${monthHours.toFixed(0)}시간이라 ${insured ? `가입 대상이고, 보험료와 세금을 빼면 월 ${won(p.net)}을 받습니다` : '의무 가입 대상이 아닙니다. 다만 3개월 이상 계속 일하면 고용보험은 가입합니다'}.`],
+    W2 ? [`${Y2}년 최저임금으로는 얼마인가요?`, w < W2 ? `${Y2}년 최저임금은 시급 ${num(W2)}원입니다. 같은 주 ${h}시간이면 월 약 ${won(m2)}으로, 지금보다 ${won(m2 - monthly)} 많아집니다. <a href="/minimum-wage/${Y2}/">${Y2}년 최저임금</a>` : `${Y2}년 최저임금은 시급 ${num(W2)}원이라 시급 ${num(w)}원은 그보다 높습니다. <a href="/minimum-wage/${Y2}/">${Y2}년 최저임금</a>`] : null,
+    ['야간·연장 수당도 들어 있나요?', '들어 있지 않습니다. 상시 5명 이상 사업장에서 하루 8시간·주 40시간을 넘겨 일하거나 밤 10시부터 아침 6시 사이에 일하면 그 시간은 시급의 50%를 더 받습니다.'],
+  ].filter(Boolean));
+})()}
 ${guideLinks(['weekly-holiday-pay'])}
 <p class="note">주휴수당은 1주 소정근로시간 15시간 이상이고 그 주를 개근했을 때 하루치(주 40시간 기준 8시간) 임금을 더 받는 제도입니다. 연장·야간·휴일 근로수당(1.5배)은 포함하지 않았습니다. <a href="/method/">계산 기준 보기</a></p>`;
   write(url, shell({ url, title, desc, body, nav: 'hourly' }));

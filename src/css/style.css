@@ -282,3 +282,18 @@ body.bare { background: transparent; }
 .frow2 a { color: var(--muted); }
 .frow2 a:hover { color: var(--green); }
 .foot2 .fnote { margin-top: 12px; color: var(--faint); }
+
+/* ===== PC 첫 화면 (2026-10-16) — 1024px 이상에서 첫 화면만 넓게: 제목 | 검색창 2단, 바로가기 3개 가로, 계산 카드 4열, 목록 두 개는 나란히. 계산 페이지는 읽기 좋은 지금 폭 그대로 ===== */
+@media (min-width: 1024px) {
+  .app:has(> .home-hero) { max-width: 1160px; padding: 0 40px 40px; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); column-gap: 24px; align-content: start; grid-auto-flow: row dense; }
+  .app:has(> .home-hero) > * { grid-column: 1 / -1; min-width: 0; }
+  .app:has(> .home-hero) > .home-hero { grid-column: 1 / 4; padding: 56px 24px 0 0; }
+  .app:has(> .home-hero) > .quick { grid-column: 4 / 7; margin-top: 40px; align-self: start; }
+  .app:has(> .home-hero) > .feature { grid-column: span 2; margin-top: 28px; }
+  .app:has(> .home-hero) .home-hero h1 { font-size: 46px; line-height: 1.25; }
+  .app:has(> .home-hero) .home-hero p { font-size: 16px; }
+  .app:has(> .home-hero) .dict { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .app:has(> .home-hero) > section.section:has(> .list) { grid-column: span 3; }
+  .app:has(> .home-hero) > .foot.foot2 { margin: 48px -40px -40px; padding-left: 40px; padding-right: 40px; }
+  .app:has(> .home-hero) .fgrid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}

@@ -58,6 +58,7 @@ const BUILD_ISO = kst.toISOString().slice(0, 10);
 const t0 = Date.now();
 const urls = [];
 const NOINDEX = new Set();   /* shell({ noindex }) 로 쓴 주소 — 사이트맵에서 뺀다 */
+const GOOGLE_ONLY = new Set();   /* 그중 구글에만 뺀 주소 — 네이버용 사이트맵(sitemap-naver.xml)에는 넣는다 */
 /* 본문을 마지막으로 고친 날 — 사이트맵 lastmod·푸터·서재 날짜. 글·요율을 고칠 때만 바꾼다(빌드 날짜를 쓰면 매번 '새 글'처럼 보여 검색엔진이 날짜를 믿지 않는다) */
 const CONTENT_DATE = '2026-10-08';
 /* 색인 정리(2026-10-08, 애드센스 '가치가 별로 없는 콘텐츠' 대응): 금액만 바뀌는 계산 페이지는 실제 수요가 있던 주소(data/index-keep.json:
@@ -84,8 +85,11 @@ function write(url, html) {
 }
 
 function shell(o) {
-  if (!o.noindex && o.url && thinPage(o.url)) o.noindex = true;
+  /* 금액 조합 페이지는 구글에만 뺀다('google' → googlebot noindex). 네이버 유입 대부분이 이 페이지들이라
+   * robots noindex(모든 검색엔진)로 두면 네이버에서도 빠진다 (2026-10-24 감사). noindex: true 는 약관·위젯·부가 페이지처럼 어디서도 뺄 것 */
+  if (!o.noindex && o.url && thinPage(o.url)) o.noindex = 'google';
   if (o.noindex) NOINDEX.add(o.url);
+  if (o.noindex === 'google') GOOGLE_ONLY.add(o.url);
   const GA = GA_ID ? `<script async src="https://www.googletagmanager.com/gtag/js?id=${GA_ID}"></script><script>if(location.hostname.indexOf('localhost')<0&&location.hostname.indexOf('127.0.0.1')<0&&location.protocol!=='file:'&&!navigator.webdriver&&!/bot|crawl|spider|slurp|yeti|daumoa|bingpreview|headless|lighthouse|scrap|facebookexternalhit|compatible;|mediapartners|adsbot/i.test(navigator.userAgent)){window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${GA_ID}');}</script>\n` : '';
   const ADS = ADSENSE && !o.bare ? `<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE}" crossorigin="anonymous"></script>\n` : '';
   const ld = o.ld || { '@context': 'https://schema.org', '@type': 'WebPage', name: o.title, description: o.desc, url: SITE + o.url, inLanguage: 'ko', isPartOf: { '@type': 'WebSite', name: '돈표', url: SITE } };
@@ -99,7 +103,7 @@ ${GA}${ADS}<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="${esc(o.desc)}">
 <link rel="canonical" href="${SITE}${o.url}">
 <meta name="naver-site-verification" content="4b97280869fc76ad09530d1871a862771b9c1bdf">
-${o.noindex ? '<meta name="robots" content="noindex">\n' : '<meta name="robots" content="max-image-preview:large">\n'}<link rel="alternate" type="application/rss+xml" title="새 글" href="/rss.xml">
+${o.noindex === 'google' ? '<meta name="robots" content="max-image-preview:large">\n<meta name="googlebot" content="noindex">\n' : o.noindex ? '<meta name="robots" content="noindex">\n' : '<meta name="robots" content="max-image-preview:large">\n'}<link rel="alternate" type="application/rss+xml" title="새 글" href="/rss.xml">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -122,7 +126,7 @@ ${o.body}
 <footer class="foot foot2">
   <p class="flabel">계산 찾아보기</p>
   <nav class="fgrid" aria-label="계산 찾아보기"><a href="/salary/">연봉 실수령액</a><a href="/monthly/">월급 실수령액</a><a href="/loan/">대출 상환</a><a href="/retire/">퇴직금</a><a href="/unemployment/">실업급여</a><a href="/hourly/">알바 월급</a><a href="/guide/">서재</a><a href="/method/">계산 기준</a><a href="/updates/">업데이트 기록</a></nav>
-  <div class="frow2"><nav><a href="/about/">소개</a><a href="/embed/">위젯</a><a href="/terms/">이용약관</a><a href="/privacy/">개인정보</a><a href="https://bodyzip.com/">바디집</a></nav><span>© 돈표 · ${YEAR}년 1월 요율 · 갱신 ${CONTENT_DATE}</span></div>
+  <div class="frow2"><nav><a href="/about/">소개</a><a href="/embed/">위젯</a><a href="/terms/">이용약관</a><a href="/privacy/">개인정보</a></nav><span>© 돈표 · ${YEAR}년 1월 요율 · 갱신 ${CONTENT_DATE}</span></div>
   <p class="fnote">계산 결과는 참고용입니다. 회사의 비과세 항목·상여·연말정산, 은행별 계산 방식에 따라 실제 금액과 다를 수 있습니다.</p>
 </footer>
 </div>`}
@@ -467,7 +471,7 @@ ${guideLinks(['loan-types', 'dsr'])}
 <p class="note">이자는 매달 남은 원금에 연이율의 12분의 1을 곱해 원 단위로 반올림했습니다. 실제 대출은 금리 변동, 거치기간, 중도상환수수료, 은행의 일할 계산 방식에 따라 달라집니다. <a href="/method/">계산 기준 보기</a></p>`;
   /* 색인은 흔한 조합(10·20·30년 × 연 3.0~5.0%)만 — 995장을 모두 내놓으니 구글이 '발견했지만 색인 안 함'으로 두고 크롤을 아꼈다(2026-09-23 URL 검사). 나머지는 noindex(사이트맵에서도 빠짐), 링크와 계산은 그대로 */
   const core = [10, 20, 30].includes(y) && r >= 0.03 - 1e-9 && r <= 0.05 + 1e-9;
-  write(url, shell({ url, title, desc, body, nav: 'loan', noindex: !core, scripts: ['/js/engine.js', '/js/live.js'] }));
+  write(url, shell({ url, title, desc, body, nav: 'loan', noindex: core ? false : 'google', scripts: ['/js/engine.js', '/js/live.js'] }));
 }
 
 function loanAmountIndex(a) {
@@ -3665,6 +3669,9 @@ docs();
 const indexable = urls.filter((u) => !NOINDEX.has(u) && !['/terms/', '/privacy/'].includes(u));
 fs.writeFileSync(path.join(OUT, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${indexable.map((u) => `<url><loc>${SITE}${u}</loc><lastmod>${u === '/' ? BUILD_ISO : CONTENT_DATE}</lastmod></url>`).join('\n')}\n</urlset>\n`);
 fs.writeFileSync(path.join(OUT, 'robots.txt'), `User-agent: *\nAllow: /\nSitemap: ${SITE}/sitemap.xml\n`);
+/* 네이버용 전체 목록 — 구글에만 뺀 금액 조합 페이지까지. robots.txt 에는 적지 않고(구글이 보지 않게) 네이버 서치어드바이저에 직접 제출한다 */
+const naverList = urls.filter((u) => (!NOINDEX.has(u) || GOOGLE_ONLY.has(u)) && !['/terms/', '/privacy/'].includes(u));
+fs.writeFileSync(path.join(OUT, 'sitemap-naver.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${naverList.map((u) => `<url><loc>${SITE}${u}</loc></url>`).join('\n')}\n</urlset>\n`);
 fs.writeFileSync(path.join(OUT, 'CNAME'), 'donpyo.com\n');   /* 스킴 없이 도메인만 — 생일첩에서 'http://'가 섞여 인증서가 멈췄던 전례 */
 console.log(`돈표 빌드 완료: 페이지 ${urls.length}장, ${((Date.now() - t0) / 1000).toFixed(1)}s`);
 

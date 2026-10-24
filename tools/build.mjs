@@ -61,6 +61,51 @@ const NOINDEX = new Set();   /* shell({ noindex }) 로 쓴 주소 — 사이트�
 const GOOGLE_ONLY = new Set();   /* 그중 구글에만 뺀 주소 — 네이버용 사이트맵(sitemap-naver.xml)에는 넣는다 */
 /* 본문을 마지막으로 고친 날 — 사이트맵 lastmod·푸터·서재 날짜. 글·요율을 고칠 때만 바꾼다(빌드 날짜를 쓰면 매번 '새 글'처럼 보여 검색엔진이 날짜를 믿지 않는다) */
 const CONTENT_DATE = '2026-10-08';
+/* 출처 원문 대조일 — 아래 SOURCES 의 공식 페이지를 직접 열어 data/·engine/ 의 수치와 맞춰 본 날. 대조할 때마다 바꾼다 */
+const SOURCE_CHECKED = '2026-10-24';
+/* 공식 출처 링크 — 모두 SOURCE_CHECKED 에 열리는 것을 확인한 주소. 뉴스 기사 대신 법제처·공단·부처 원문만 */
+const SOURCES = {
+  ganyiPdf: 'https://www.law.go.kr/LSW/flDownload.do?flSeq=164357181&bylClsCd=110201',            /* 소득세법 시행령 별표 2 근로소득간이세액표 (2026.2.27 개정) PDF */
+  lawIncomeDecree: 'https://www.law.go.kr/법령/소득세법시행령',
+  lawIncome: 'https://www.law.go.kr/법령/소득세법',
+  ntsWithholding: 'https://www.nts.go.kr/nts/cm/cntnts/cntntsView.do?mi=6583&cntntsId=7862',     /* 국세청 근로소득 원천징수방법(간이세액표) */
+  ntsPercentile: 'https://www.data.go.kr/data/15082063/fileData.do',                              /* 국세청 근로소득 백분위(천분위) 자료 — 2024년 귀속, 2025.12.31 */
+  tasis: 'https://tasis.nts.go.kr/',                                                              /* 국세통계포털 */
+  npsLimits: 'https://www.nps.or.kr/pnsgdnc/newgdnc/getOHAE0001M1.do?pstId=ZZ202600000000000147', /* 국민연금공단 2026년도 기준소득월액 상·하한액 조정 안내 (2026.2.13) */
+  npsRates: 'https://www.nps.or.kr/pnsinfo/ntpsklg/getOHAF0038M0.do',                            /* 국민연금공단 연금보험료 — 보험료율 9.5%→13% 일정, 상·하한 */
+  lawPension: 'https://www.law.go.kr/법령/국민연금법',
+  mohwHealth: 'https://www.mohw.go.kr/board.es?act=view&bid=0027&list_no=1487279&mid=a10503000000', /* 보건복지부 2026년 건강보험료율 7.19%로 결정 (2025.8.28) */
+  nhisRates: 'https://www.nhis.or.kr/nhis/together/wbhaea01000m01.do?mode=view&articleNo=11008009', /* 국민건강보험공단 2026년도 보험료율 기준 안내 (2025.12.26) — 장기요양 0.9448%, 부과점수당 211.5원 */
+  lawHealthDecree: 'https://www.law.go.kr/법령/국민건강보험법시행령',
+  lawHealth: 'https://www.law.go.kr/법령/국민건강보험법',
+  lawCare: 'https://www.law.go.kr/법령/노인장기요양보험법',
+  minWageBoard: 'https://www.minimumwage.go.kr/minWage/policy/decisionMain.do',                   /* 최저임금위원회 연도별 최저임금 결정현황 (2026 10,320 · 2027 10,700) */
+  moelMinWage: 'https://www.moel.go.kr/news/enews/report/enewsView.do?news_seq=18144',           /* 고용노동부 2026년 적용 최저임금 시간급 10,320원 고시 (2025.8.5) */
+  lawMinWageNotice: 'https://www.law.go.kr/행정규칙/2026년적용최저임금고시',
+  lawMinWage: 'https://www.law.go.kr/법령/최저임금법',
+  moelUi: 'https://www.moel.go.kr/news/enews/report/enewsView.do?news_seq=18736',                /* 고용노동부 고용보험법 시행령 개정 국무회의 의결 (2025.12.16) — 임금일액 상한 11만→11만3,500원, 구직급여 상한 66,000→68,100원 */
+  lawEiDecree: 'https://www.law.go.kr/법령/고용보험법시행령',                                     /* 제68조 임금일액 상한, 육아휴직 급여 — 대통령령 제35934호(2025.12.23 공포, 2026.1.1 시행) */
+  lawEi: 'https://www.law.go.kr/법령/고용보험법',
+  lawLabor: 'https://www.law.go.kr/법령/근로기준법',
+  lawLaborDecree: 'https://www.law.go.kr/법령/근로기준법시행령',
+  kostatAge: 'https://mods.go.kr/board.es?mid=a10301030500&bid=11113&act=view&list_no=443648',    /* 국가데이터처(통계청) 2024년 임금근로일자리 소득(보수) 결과 (2026.2.23) */
+  kostatAgeKr: 'https://www.korea.kr/briefing/pressReleaseView.do?newsId=156745446',             /* 같은 보도자료 — 정책브리핑 사본 */
+  lawLease: 'https://www.law.go.kr/법령/주택임대차보호법',
+  lawSupply: 'https://www.law.go.kr/법령/주택공급에관한규칙',
+  lawSpecialTax: 'https://www.law.go.kr/법령/조세특례제한법',
+  lawLocalTax: 'https://www.law.go.kr/법령/지방세법',
+  lawLocalTaxSpecial: 'https://www.law.go.kr/법령/지방세특례제한법',
+  lawInheritGift: 'https://www.law.go.kr/법령/상속세및증여세법',
+  lawJongbu: 'https://www.law.go.kr/법령/종합부동산세법',
+  lawBrokerRule: 'https://www.law.go.kr/법령/공인중개사법시행규칙',
+};
+/* 본문을 고친 날이 CONTENT_DATE 와 다른 페이지 — 사이트맵 lastmod 에만 쓴다 (고치지 않은 페이지의 날짜는 올리지 않는다) */
+const PAGE_LASTMOD = [
+  [/^\/(method|updates|rates|2027|2027\/rates)\/$/, SOURCE_CHECKED],
+  [/^\/unemployment\/\d+\/\d+\/$/, SOURCE_CHECKED],   /* 월급·가입기간 페이지의 출처 문구만 고쳤다. /unemployment/ 허브는 그대로 */
+  [/^\/minimum-wage\//, SOURCE_CHECKED],
+  [/^\/guide\/(withholding-table|insurance-rates)\/$/, SOURCE_CHECKED],
+];
 /* 색인 정리(2026-10-08, 애드센스 '가치가 별로 없는 콘텐츠' 대응): 금액만 바뀌는 계산 페이지는 실제 수요가 있던 주소(data/index-keep.json:
  * 2026-09-06~10-08 GA4 방문 또는 구글 노출 10회 이상)만 색인하고 나머지는 noindex — 페이지·링크·계산은 그대로 둔다.
  * 허브(1단계 주소)·서재·2027·최저임금·관계별 증여세/상속세 표·전기차 자동차세는 늘 색인. 수요가 새로 생긴 주소는 index-keep.json 에 더한다. */
@@ -686,17 +731,18 @@ function docs() {
   const method = `
 ${crumb([['/', '홈'], [null, '계산 기준']])}
 <h1 class="title">계산 기준과 요율</h1>
+<p class="meta">원문 대조일: ${SOURCE_CHECKED} · 아래 출처 목록의 링크는 그날 직접 열어 이 사이트의 수치와 대조한 공식 페이지·법령·PDF입니다</p>
 <div class="doc">
 <h2>실수령액</h2>
 <p>실수령액 = 세전 월급 − (국민연금 + 건강보험 + 장기요양보험 + 고용보험 + 소득세 + 지방소득세). 보험료와 세금은 세전 월급에서 비과세(식대 등)를 뺀 과세 급여를 기준으로 계산합니다. 연봉 페이지는 연봉 ÷ 12를 세전 월급으로 봅니다.</p>
 ${table(['항목', `${PREV}년`, `${YEAR}년`, '비고'], [
-  { cells: ['국민연금 (근로자)', pct(R1.pension, 2), pct(R0.pension, 2), `기준소득월액 ${num(R0.pensionMin)}~${num(R0.pensionMax)}원`] },
-  { cells: ['건강보험 (근로자)', pct(R1.health, 3), pct(R0.health, 3), '보험료율의 절반'] },
-  { cells: ['장기요양', pct(R1.care, 2), pct(R0.care, 2), '건강보험료에 곱함'] },
-  { cells: ['고용보험 (근로자)', pct(R1.employment, 1), pct(R0.employment, 1), ''] },
-  { cells: ['최저임금 (시급)', num(R1.minWage), num(R0.minWage), '고용노동부 고시'] },
+  { cells: ['국민연금 (근로자)', pct(R1.pension, 2), pct(R0.pension, 2), `기준소득월액 ${num(R0.pensionMin)}~${num(R0.pensionMax)}원 (${R0.pensionLimitPeriod} 적용 · ${YEAR}년 1~6월은 ${num(R0.pensionMinH1)}~${num(R0.pensionMaxH1)}원) · <a href="${SOURCES.npsLimits}" target="_blank" rel="noopener">국민연금공단 안내</a>`] },
+  { cells: ['건강보험 (근로자)', pct(R1.health, 3), pct(R0.health, 3), `보험료율 ${pct(R0.health * 2, 2)}의 절반 · <a href="${SOURCES.mohwHealth}" target="_blank" rel="noopener">보건복지부 결정</a>`] },
+  { cells: ['장기요양', pct(R1.care, 2), pct(R0.care, 2), `건강보험료에 곱함 (소득 대비 0.9448% ÷ 7.19%) · <a href="${SOURCES.nhisRates}" target="_blank" rel="noopener">건보공단 안내</a>`] },
+  { cells: ['고용보험 (근로자)', pct(R1.employment, 1), pct(R0.employment, 1), `<a href="${SOURCES.lawEiDecree}" target="_blank" rel="noopener">고용보험법 시행령</a>`] },
+  { cells: ['최저임금 (시급)', num(R1.minWage), num(R0.minWage), `<a href="${SOURCES.minWageBoard}" target="_blank" rel="noopener">최저임금위원회 결정현황</a> · <a href="${SOURCES.moelMinWage}" target="_blank" rel="noopener">고용노동부 고시 보도자료</a>`] },
 ])}
-<p>소득세는 국세청 <b>근로소득 간이세액표</b>(소득세법 시행령 별표 2, 2024년 2월 개정)를 그대로 조회합니다. 월급여 1,000만원 초과 구간은 별표가 정한 계산식을 적용하고, 8세 이상 20세 이하 자녀가 있으면 자녀 수별 금액을 뺍니다. 회사는 간이세액의 80%·100%·120% 중 하나를 원천징수할 수 있는데 여기서는 기본인 100%를 씁니다. 지방소득세는 소득세의 10%입니다.</p>
+<p>소득세는 국세청 <b>근로소득 간이세액표</b>(<a href="${SOURCES.lawIncomeDecree}" target="_blank" rel="noopener">소득세법 시행령</a> 별표 2)를 그대로 조회합니다. 표의 금액은 2024년 2월 29일 개정(대통령령 제34265호) 것이며, 2026년 2월 27일 개정(제36129호, 2026년 3월 1일 이후 원천징수분)은 표의 금액은 그대로 두고 자녀 공제액만 올렸습니다 — <a href="${SOURCES.ganyiPdf}" target="_blank" rel="noopener">법제처 별표 2 PDF(2026.2.27 개정)</a>의 646개 구간 × 11열을 이 사이트의 표와 전부 대조해 같음을 확인했습니다(${SOURCE_CHECKED}). 월급여 1,000만원 초과 구간은 별표가 정한 계산식을 적용하고, 8세 이상 20세 이하 자녀가 있으면 1명 20,830원·2명 45,830원·3명부터 1명당 33,330원을 더 뺍니다(2026년 2월까지는 12,500·29,160·25,000원). 회사는 간이세액의 80%·100%·120% 중 하나를 원천징수할 수 있는데 여기서는 기본인 100%를 씁니다(<a href="${SOURCES.ntsWithholding}" target="_blank" rel="noopener">국세청 원천징수 방법 안내</a>). 지방소득세는 소득세의 10%입니다.</p>
 <p>공제대상가족 수에는 본인이 들어갑니다. "2인"은 본인 + 배우자(또는 부양가족 1명)입니다. 기본값은 식대 비과세 월 20만원을 포함한 값이며(대부분의 회사가 적용하는 한도), 식대가 없으면 각 페이지에서 "없음"을 고르세요.</p>
 <h2>국민연금 인상 일정</h2>
 <p>2025년 3월 개정된 국민연금법에 따라 보험료율이 9%에서 매년 0.5%p씩 올라 2033년 13%가 됩니다. 근로자 부담은 그 절반입니다. 연봉 페이지의 "인상 일정" 표는 다른 요율과 세금이 올해 그대로라고 가정한 값입니다.</p>
@@ -709,7 +755,7 @@ ${table(['항목', `${PREV}년`, `${YEAR}년`, '비고'], [
 <h2>알바</h2>
 <p>주휴수당은 1주 소정근로시간이 15시간 이상이고 개근했을 때 발생하며, 주 40시간 기준 8시간(그 미만이면 비례)의 시급을 더 받습니다. 한 달은 365 ÷ 7 ÷ 12 = 4.345주로 환산했습니다. 월 60시간 이상이면 4대보험 가입 대상으로 보고 근로자 부담분을 뺐습니다.</p>
 <h2>실업급여</h2>
-<p>구직급여일액 = 퇴직 전 3개월 평균임금(1일) × 60%. ${YEAR}년 상한액 ${won(U.UPPER[YEAR])}, 하한액은 최저시급 × 80% × 8시간 = ${won(Math.round(R0.minWage * 0.8 * 8))}. 소정급여일수는 피보험기간(1년 미만·1~3년·3~5년·5~10년·10년 이상)과 퇴직 당시 나이(50세 기준)로 120~270일. 한 달 수령액은 30일 기준 근사값입니다.</p>
+<p>구직급여일액 = 퇴직 전 3개월 평균임금(1일) × 60%. ${YEAR}년 상한액 ${won(U.UPPER[YEAR])}, 하한액은 최저시급 × 80% × 8시간 = ${won(Math.round(R0.minWage * 0.8 * 8))}. 소정급여일수는 피보험기간(1년 미만·1~3년·3~5년·5~10년·10년 이상)과 퇴직 당시 나이(50세 기준)로 120~270일. 한 달 수령액은 30일 기준 근사값입니다. 상한액의 근거는 <a href="${SOURCES.lawEiDecree}" target="_blank" rel="noopener">고용보험법 시행령</a> 제68조제1항의 임금일액 상한(11만 3,500원 × 60% = 68,100원)으로, 대통령령 제35934호(2025년 12월 23일 공포, 2026년 1월 1일 시행)가 11만원에서 올렸습니다(<a href="${SOURCES.moelUi}" target="_blank" rel="noopener">고용노동부 보도자료 2025.12.16</a>). 2025년 12월 31일 이전에 이직했으면 종전 상한 66,000원이 적용됩니다(부칙 제4조).</p>
 <h2>전세 vs 월세</h2>
 <p>전세대출 월 이자 = 대출금 × 연이율 ÷ 12(만기일시, 이자만 납부). 월세 전환액 = 줄이는 보증금 × 전환율 ÷ 12이며 법정 전환율 상한은 기준금리(${fmtRate(R0.baseRate)}) + 2%p = ${fmtRate(CONVERSION_CAP)}입니다(갱신 계약에 적용, 신규 계약은 시장 전환율).</p>
 <h2>적금</h2>
@@ -753,7 +799,7 @@ ${table(['항목', `${PREV}년`, `${YEAR}년`, '비고'], [
 <h2>대출 한도 (DSR)</h2>
 <p>DSR 40% = 모든 대출의 연간 원리금 상환액 ÷ 연소득 ≤ 40%. 월 상환 여력 = 연소득 × 40% ÷ 12이고, 그 여력으로 갚을 수 있는 원리금균등 원금을 한도로 봅니다. 스트레스 DSR은 실제 금리에 가산금리(수도권 주담대 1.5%p)를 더해 계산합니다.</p>
 <h2>연봉 순위</h2>
-<p>국세청 ${RK.STAT.year}년 귀속 근로소득 연말정산 통계의 공식 요약값(신고 ${num(RK.STAT.workers)}명, 중위 ${won(RK.STAT.median)}, 평균 ${won(RK.STAT.mean)}, 1억원 초과 ${pct(RK.STAT.over100m)})에 맞춘 로그정규 분포로 상위 비율을 추정합니다. 세 값을 모두 재현하는 분포이지만 백분위 원자료 그대로는 아니므로 ±몇 %p의 오차가 있을 수 있습니다. 근로소득 연말정산 대상자 기준이라 자영업자·일용직은 포함되지 않습니다.</p>
+<p>국세청 ${RK.STAT.year}년 귀속 근로소득 연말정산 통계의 공식 요약값(신고 ${num(RK.STAT.workers)}명, 중위 ${won(RK.STAT.median)}, 평균 ${won(RK.STAT.mean)}, 1억원 초과 ${pct(RK.STAT.over100m)})에 맞춘 로그정규 분포로 상위 비율을 추정합니다. 세 값을 모두 재현하는 분포이지만 백분위 원자료 그대로는 아니므로 ±몇 %p의 오차가 있을 수 있습니다. 근로소득 연말정산 대상자 기준이라 자영업자·일용직은 포함되지 않습니다. 국세청은 2025년 12월 31일 <a href="${SOURCES.ntsPercentile}" target="_blank" rel="noopener">2024년 귀속 근로소득 백분위 자료</a>(신고 21,078,535명, 평균 총급여 약 4,475만원)를 공개했으나 중위값과 1억원 초과 인원의 공식 요약값은 아직 확인하지 못해, 이 표는 ${RK.STAT.year}년 귀속 요약값으로 두고 확인되는 대로 갱신합니다(${SOURCE_CHECKED} 확인).</p>
 <h2>최저임금</h2>
 <p>월급 = 시급 × 209시간(주 40시간 + 주휴 8시간, 한 달 4.345주). 주 15시간 이상 일하면 주휴수당이 붙고, 1년 이상 계약의 수습 3개월은 90%까지 줄일 수 있습니다. 5인 미만 사업장도 최저임금은 똑같이 적용됩니다.</p>
 <h2>연장·야간·휴일수당과 연차</h2>
@@ -769,8 +815,31 @@ ${table(['항목', `${PREV}년`, `${YEAR}년`, '비고'], [
 <h2>나이대 비교</h2>
 <p>통계청 「${AGE.year}년 임금근로일자리 소득(보수) 결과」의 연령대별 월평균 소득과 소득구간 분포(10구간)를 씁니다. ${AGE.year}년 12월 한 달 동안 사회보험에 신고된 임금근로일자리의 세전 보수라서 연말정산 연봉 통계(연봉 순위)와 대상·기준이 다릅니다. "그 나이대에서 내 위치"는 연봉 ÷ 12를 소득구간 안에서 선형 보간해 구하고, 1,000만원 이상 구간은 3,000만원까지 고르게 퍼져 있다고 가정합니다.</p>
 <h2>출처</h2>
-<ul><li>통계청 ${AGE.year}년 임금근로일자리 소득(보수) 결과 (연령대별·성별 평균소득, 소득구간 분포)</li><li>국세청 근로소득 간이세액표 (소득세법 시행령 별표 2), 국세통계 근로소득 연말정산 신고 현황</li><li>국민연금공단·국민건강보험공단 보험료율 고시</li><li>고용노동부 최저임금 고시, 근로기준법 시행령(주휴·퇴직금), 고용보험법(구직급여)</li><li>주택임대차보호법(전월세전환율), 소득세법(이자소득세)</li><li>주택공급에 관한 규칙 별표 1(청약 가점), 고용보험법 시행령(육아휴직 급여, 2025.1.1 시행), 보건복지부 부모급여·아동수당·첫만남이용권 안내, 한국전력 전기요금표(주택용 저압·고압)</li><li>조세특례제한법 제100조의2~제100조의13·국세청 근로장려금 안내(2025년 귀속·2026년 신청), 국민연금법 제51조·제63조·국민연금공단 A값 고시(2026년)·기준소득월액 상·하한(2026년 7월), 소득세법 제89조·제95조·제103조·제104조(양도소득세), 한국석유공사 오피넷 평균 유가(자동차 유지비 기본 단가)</li>
-<li>근로기준법 제49조·제60조·제61조(연차 유급휴가·사용 촉진·소멸시효), 소득세법 제84조·제127조·제129조·시행령 제87조(사업소득 3.3%·기타소득 8.8%), 국민건강보험법 제69조~제73조·시행령·노인장기요양보험법 제9조와 국민건강보험공단 ${YEAR}년 보험료 부과 기준(부과점수당 ${NH.POINT_VALUE}원, 월 보험료 하한 ${num(NH.PREMIUM_MIN)}원·상한 ${num(NH.PREMIUM_MAX)}원)</li></ul>
+<p><b>원문 대조일: ${SOURCE_CHECKED}</b> — 아래 링크는 이 날 직접 열어 사이트의 요율·표와 대조한 공식 페이지입니다. 법령은 법제처 국가법령정보센터(law.go.kr) 현행 조문으로 연결하며, 뉴스 기사는 출처로 쓰지 않습니다.</p>
+<h3>실수령액 (소득세·4대보험·최저임금)</h3>
+<ul>
+<li>근로소득 간이세액표 — <a href="${SOURCES.ganyiPdf}" target="_blank" rel="noopener">법제처 소득세법 시행령 별표 2 PDF (2026.2.27 개정, 대통령령 제36129호)</a> · <a href="${SOURCES.lawIncomeDecree}" target="_blank" rel="noopener">소득세법 시행령 현행 조문</a> · <a href="${SOURCES.ntsWithholding}" target="_blank" rel="noopener">국세청 근로소득 원천징수 방법(간이세액표·80/100/120%)</a></li>
+<li>국민연금 — <a href="${SOURCES.npsLimits}" target="_blank" rel="noopener">국민연금공단 ${YEAR}년도 기준소득월액 상·하한액 조정 안내 (${R0.pensionLimitPeriod} 하한 ${num(R0.pensionMin)}원·상한 ${num(R0.pensionMax)}원)</a> · <a href="${SOURCES.npsRates}" target="_blank" rel="noopener">국민연금공단 연금보험료 (보험료율 9.5%, 2033년 13%까지 인상 일정)</a> · <a href="${SOURCES.lawPension}" target="_blank" rel="noopener">국민연금법</a></li>
+<li>건강보험·장기요양 — <a href="${SOURCES.mohwHealth}" target="_blank" rel="noopener">보건복지부 ${YEAR}년 건강보험료율 7.19%로 결정 (2025.8.28 건정심)</a> · <a href="${SOURCES.nhisRates}" target="_blank" rel="noopener">국민건강보험공단 ${YEAR}년도 보험료율 기준 안내 (장기요양 0.9448%, 부과점수당 ${NH.POINT_VALUE}원)</a> · <a href="${SOURCES.lawHealth}" target="_blank" rel="noopener">국민건강보험법</a> 제69조~제73조·<a href="${SOURCES.lawHealthDecree}" target="_blank" rel="noopener">시행령</a>(월 보험료 하한 ${num(NH.PREMIUM_MIN)}원·상한 ${num(NH.PREMIUM_MAX)}원) · <a href="${SOURCES.lawCare}" target="_blank" rel="noopener">노인장기요양보험법</a> 제9조</li>
+<li>고용보험·구직급여 — <a href="${SOURCES.lawEiDecree}" target="_blank" rel="noopener">고용보험법 시행령</a> 제68조(임금일액 상한 11만 3,500원 → 구직급여 상한 ${num(U.UPPER[YEAR])}원, 대통령령 제35934호 2026.1.1 시행)·육아휴직 급여(2025.1.1 시행) · <a href="${SOURCES.moelUi}" target="_blank" rel="noopener">고용노동부 보도자료 2025.12.16</a> · <a href="${SOURCES.lawEi}" target="_blank" rel="noopener">고용보험법</a> 제45·46·50조</li>
+<li>최저임금 — <a href="${SOURCES.minWageBoard}" target="_blank" rel="noopener">최저임금위원회 연도별 최저임금 결정현황 (${YEAR}년 ${num(R0.minWage)}원 · ${YEAR + 1}년 ${num(RATES[YEAR + 1].minWage)}원)</a> · <a href="${SOURCES.moelMinWage}" target="_blank" rel="noopener">고용노동부 ${YEAR}년 적용 최저임금 고시 보도자료 (2025.8.5)</a> · <a href="${SOURCES.lawMinWageNotice}" target="_blank" rel="noopener">${YEAR}년 적용 최저임금 고시(법제처 행정규칙)</a> · <a href="${SOURCES.lawMinWage}" target="_blank" rel="noopener">최저임금법</a></li>
+<li>주휴수당·퇴직금·연차·연장수당 — <a href="${SOURCES.lawLabor}" target="_blank" rel="noopener">근로기준법</a> 제49조·제55조·제56조·제60조·제61조 · <a href="${SOURCES.lawLaborDecree}" target="_blank" rel="noopener">근로기준법 시행령</a></li>
+</ul>
+<h3>통계</h3>
+<ul>
+<li>연봉 순위 — 국세청 국세통계 근로소득 연말정산 신고 현황(${RK.STAT.year}년 귀속 요약값) · <a href="${SOURCES.tasis}" target="_blank" rel="noopener">국세통계포털 TASIS</a> · <a href="${SOURCES.ntsPercentile}" target="_blank" rel="noopener">국세청 근로소득 백분위(천분위) 자료 — 2024년 귀속 (2025.12.31 공개)</a></li>
+<li>나이대별 평균 월급 — <a href="${SOURCES.kostatAge}" target="_blank" rel="noopener">국가데이터처(통계청) ${AGE.year}년 임금근로일자리 소득(보수) 결과 (2026.2.23)</a> · <a href="${SOURCES.kostatAgeKr}" target="_blank" rel="noopener">정책브리핑 사본</a></li>
+</ul>
+<h3>세금·부동산·생활</h3>
+<ul>
+<li><a href="${SOURCES.lawIncome}" target="_blank" rel="noopener">소득세법</a> — 이자소득세(제129조), 양도소득세(제89조·제95조·제103조·제104조), 사업소득 3.3%·기타소득 8.8%(제84조·제127조·제129조·시행령 제87조), 종합소득세 기본세율(제55조)</li>
+<li><a href="${SOURCES.lawInheritGift}" target="_blank" rel="noopener">상속세 및 증여세법</a> — 증여재산공제·일괄공제·배우자상속공제·세율·세대생략 할증·신고세액공제</li>
+<li><a href="${SOURCES.lawLocalTax}" target="_blank" rel="noopener">지방세법</a> — 주택 취득세(제11조), 재산세(제110~112조), 자동차세(제127·128·130조), 지방소득세(제103조의13) · <a href="${SOURCES.lawLocalTaxSpecial}" target="_blank" rel="noopener">지방세특례제한법</a> 제36조의3(생애최초 취득세 감면) · <a href="${SOURCES.lawJongbu}" target="_blank" rel="noopener">종합부동산세법</a></li>
+<li><a href="${SOURCES.lawSpecialTax}" target="_blank" rel="noopener">조세특례제한법</a> 제100조의2~제100조의13(근로장려금·자녀장려금)·제126조의2(신용카드 소득공제), 국세청 근로장려금 안내(2025년 귀속·2026년 신청)</li>
+<li><a href="${SOURCES.lawLease}" target="_blank" rel="noopener">주택임대차보호법</a>(전월세전환율 상한 = 기준금리 + 2%p), 한국은행 기준금리</li>
+<li><a href="${SOURCES.lawSupply}" target="_blank" rel="noopener">주택공급에 관한 규칙</a> 제28조·별표 1(청약 가점) · <a href="${SOURCES.lawBrokerRule}" target="_blank" rel="noopener">공인중개사법 시행규칙</a> 별표 1(중개보수 상한요율)</li>
+<li>국민연금법 제51조·제63조·국민연금공단 A값 고시(${YEAR}년), 보건복지부 부모급여·아동수당·첫만남이용권 안내, 한국전력 전기요금표(주택용 저압·고압), 한국석유공사 오피넷 평균 유가(자동차 유지비 기본 단가) — 각 계산기 페이지의 기준일(ASOF) 표기를 따릅니다</li>
+</ul>
 </div>`;
   write('/method/', shell({ url: '/method/', title: '계산 기준과 요율 — 돈표', desc: '돈표의 실수령액·대출·퇴직금·알바 월급 계산 방식과 연도별 4대보험 요율, 출처를 정리했습니다.', body: method }));
 
@@ -872,7 +941,7 @@ ${section('이어서 계산하기', null, list([
   { href: salaryUrl(nearest(SALARIES, pm * 12)), title: `연봉 ${manwon(nearest(SALARIES, pm * 12) * 10000)} 실수령액`, sub: '다니던 회사 기준 월 실수령' },
 ]))}
 ${guideLinks(['unemployment-benefit', 'severance-tax'])}
-<p class="note">구직급여일액은 평균임금의 60%이며 ${YEAR}년 상한액 ${won(d.upper)}·하한액 ${won(d.lower)}을 적용했습니다. 한 달 수령액은 30일 기준 근사값이고 실제로는 실업인정일마다 그 기간의 일수만큼 지급됩니다. 연장급여·조기재취업수당은 포함하지 않았습니다. <a href="/method/">계산 기준 보기</a></p>`;
+<p class="note">구직급여일액은 평균임금의 60%이며 ${YEAR}년 상한액 ${won(d.upper)}(<a href="${SOURCES.lawEiDecree}" target="_blank" rel="noopener">고용보험법 시행령</a> 제68조 임금일액 상한 11만 3,500원 × 60%, 2026년 1월 1일 이후 이직자 · <a href="${SOURCES.moelUi}" target="_blank" rel="noopener">고용노동부 보도자료</a>)·하한액 ${won(d.lower)}(최저시급 × 80% × 8시간)을 적용했습니다. 2025년 12월 31일 이전 이직자는 종전 상한 66,000원입니다. 한 달 수령액은 30일 기준 근사값이고 실제로는 실업인정일마다 그 기간의 일수만큼 지급됩니다. 연장급여·조기재취업수당은 포함하지 않았습니다. <a href="/method/">계산 기준 보기</a></p>`;
   write(url, shell({ url, title, desc, body, nav: 'unemployment' }));
 }
 
@@ -1090,7 +1159,7 @@ ${section('이어서 계산하기', null, list([
   { href: '/rates/', title: `${YEAR}년 4대보험 요율표`, sub: '국민연금·건강보험·고용보험' },
 ]))}
 ${guideLinks(['weekly-holiday-pay', 'net-pay-steps'])}
-<p class="note">고용노동부 최저임금 고시 기준. 주휴수당·월 209시간 환산은 근로기준법과 고용노동부 행정해석을 따랐습니다. <a href="/method/">계산 기준 보기</a></p>`;
+<p class="note">고용노동부 최저임금 고시 기준(<a href="${SOURCES.minWageBoard}" target="_blank" rel="noopener">최저임금위원회 연도별 결정현황</a> · <a href="${SOURCES.moelMinWage}" target="_blank" rel="noopener">2026년 적용 최저임금 고시 보도자료</a>, 원문 대조 ${SOURCE_CHECKED}). 주휴수당·월 209시간 환산은 <a href="${SOURCES.lawLabor}" target="_blank" rel="noopener">근로기준법</a>과 고용노동부 행정해석을 따랐습니다. <a href="/method/">계산 기준 보기</a></p>`;
   write(url, shell({ url, title, desc, body, nav: 'hourly' }));
 }
 
@@ -1140,8 +1209,8 @@ ${section('무엇이 확정됐나', null, `<div class="doc">
 </div>`)}
 ${section('아직 안 정해진 것', null, `<div class="doc">
 <p><b>장기요양보험료율</b>: 장기요양위원회가 10월 이후 결정합니다. 이 사이트의 2027년 계산은 2026년 값(건강보험료의 ${pct(R2.care, 2)})을 가정했으며, 확정되면 바꿉니다.</p>
-<p><b>국민연금 기준소득월액 상·하한</b>: 매년 7월에 조정됩니다(지금 하한 ${num(R2.pensionMin)}원·상한 ${num(R2.pensionMax)}원). 상한을 넘는 고소득자의 연금 보험료는 7월에 조금 더 오릅니다.</p>
-<p><b>근로소득 간이세액표</b>: 세법이 바뀌면 국세청이 2월쯤 개정합니다. 지금은 2024년 2월 개정표로 계산합니다.</p>
+<p><b>국민연금 기준소득월액 상·하한</b>: 매년 7월에 조정됩니다(지금 하한 ${num(R2.pensionMin)}원·상한 ${num(R2.pensionMax)}원은 ${R0.pensionLimitPeriod} 적용값, <a href="${SOURCES.npsLimits}" target="_blank" rel="noopener">국민연금공단 안내</a>). 상한을 넘는 고소득자의 연금 보험료는 7월에 조금 더 오릅니다.</p>
+<p><b>근로소득 간이세액표</b>: 세법이 바뀌면 국세청이 2월쯤 개정합니다. 지금은 2026년 2월 27일 개정표(표의 금액은 2024년 개정과 같고 자녀 공제액만 인상)로 계산합니다.</p>
 </div>`)}
 ${section('내 월급은 얼마나 달라지나', '2027년 요율 · 부양가족 본인 1인 · 식대 비과세 20만원 포함', table(['월급', '2026년 실수령', '2027년 실수령', '차이'], [200, 250, 300, 350, 400, 450, 500, 600, 700, 800].map((m) => { const a = netPay({ monthly: m * 10000, nontax: NT }), b = net2({ monthly: m * 10000, nontax: NT }); return { cells: [`<a href="${monthlyUrl(m)}">${manwon(m * 10000)}</a>`, won(a.net), `<b>${won(b.net)}</b>`, won(b.net - a.net)] }; })))}
 ${section('이어서 계산하기', null, link2027('/2027/'))}
@@ -1181,7 +1250,7 @@ ${section('월급 300만원의 공제 예시', `비과세 없음 · 본인 1인 
 ], { label: '실수령', value: ex.net }))}
 ${section('이어서 계산하기', null, link2027('/2027/rates/'))}
 ${guideLinks(['insurance-rates', 'health-insurance-guide', 'pension-guide'])}
-<p class="note">국민연금법 개정 일정, 보건복지부 건강보험정책심의위원회(2026.9.8) 결정, 고용노동부 고시 기준. ${ASSUME} <a href="/method/">계산 기준 보기</a></p>`;
+<p class="note"><a href="${SOURCES.lawPension}" target="_blank" rel="noopener">국민연금법</a> 개정 일정(<a href="${SOURCES.npsRates}" target="_blank" rel="noopener">국민연금공단 연금보험료 안내</a>), 보건복지부 건강보험정책심의위원회(2026.9.8) 결정, 고용노동부 고시 기준. ${ASSUME} <a href="/method/">계산 기준 보기</a></p>`;
     write('/2027/rates/', shell({ url: '/2027/rates/', title: `2027년 4대보험 요율표 — 국민연금 10%(근로자 ${pct(R2.pension, 2)})·건강보험 7.19% 동결·고용보험 0.9%`, desc: `2027년 4대보험 근로자 부담: 국민연금 ${pct(R2.pension, 2)}(합계 10%), 건강보험 ${pct(R2.health, 3)}(7.19% 동결), 장기요양·고용보험. 2026년과 비교표, 국민연금 인상 일정, 월급 300만원 공제 예시.`, body, nav: 'salary' }));
   }
 
@@ -1475,7 +1544,7 @@ function ratesPage() {
     { cells: ['장기요양', pct(R1.care, 2), pct(R0.care, 2), '건강보험료에 곱함'] },
     { cells: ['고용보험 (근로자)', pct(R1.employment, 1), pct(R0.employment, 1), '사업주는 0.9% + 고용안정 0.25~0.85%'] },
     { cells: ['산재보험', '-', '-', '사업주 전액, 업종별 요율'] },
-    { cells: ['국민연금 기준소득 상한', num(R1.pensionMax), num(R0.pensionMax), '하한 ' + num(R0.pensionMin) + '원 · 매년 7월 조정'] },
+    { cells: ['국민연금 기준소득 상한', num(R1.pensionMax), num(R0.pensionMax), `하한 ${num(R0.pensionMin)}원 · ${R0.pensionLimitPeriod} 적용(${YEAR}년 1~6월은 ${num(R0.pensionMinH1)}~${num(R0.pensionMaxH1)}원) · 매년 7월 조정`] },
     { cells: ['최저임금 (시급)', num(R1.minWage), num(R0.minWage), `월급 ${num(R0.minWage * MONTH_HOURS)}원`] },
     { cells: ['구직급여 상한 (1일)', num(U.UPPER[PREV]), num(U.UPPER[YEAR]), `하한 ${num(Math.round(R0.minWage * 0.8 * 8))}원`] },
   ];
@@ -1502,7 +1571,7 @@ ${section('이어서 계산하기', null, list([
   { href: '/minimum-wage/', title: `${YEAR}년 최저임금`, sub: `시급 ${num(R0.minWage)}원 · 월급 ${num(R0.minWage * MONTH_HOURS)}원` },
   { href: '/2027/rates/', title: '2027년 4대보험 요율표', sub: '국민연금 10% · 건강보험 7.19% 동결' },
 ]))}
-<p class="note">국민연금공단·국민건강보험공단·고용노동부 고시 기준. 건강보험 보수월액 상한, 국민연금 기준소득월액 상하한은 매년 바뀝니다. <a href="/method/">계산 기준 보기</a></p>`;
+<p class="note">출처(원문 대조 ${SOURCE_CHECKED}): <a href="${SOURCES.npsLimits}" target="_blank" rel="noopener">국민연금공단 ${YEAR}년도 기준소득월액 상·하한액 조정 안내</a> · <a href="${SOURCES.npsRates}" target="_blank" rel="noopener">국민연금공단 연금보험료(보험료율 인상 일정)</a> · <a href="${SOURCES.mohwHealth}" target="_blank" rel="noopener">보건복지부 ${YEAR}년 건강보험료율 7.19% 결정</a> · <a href="${SOURCES.nhisRates}" target="_blank" rel="noopener">국민건강보험공단 ${YEAR}년도 보험료율 기준 안내</a> · <a href="${SOURCES.moelMinWage}" target="_blank" rel="noopener">고용노동부 ${YEAR}년 최저임금 고시</a> · <a href="${SOURCES.moelUi}" target="_blank" rel="noopener">고용노동부 구직급여 상한액 개정(2025.12.16)</a>. 건강보험 보수월액 상한, 국민연금 기준소득월액 상하한은 매년 바뀝니다. <a href="/method/">계산 기준 보기</a></p>`;
   write('/rates/', shell({ url: '/rates/', title: `${YEAR}년 4대보험 요율표 — 국민연금·건강보험·고용보험 근로자 부담과 인상 일정`, desc: `${YEAR}년 국민연금 ${pct(R0.pension, 2)}(근로자), 건강보험 ${pct(R0.health * 2, 2)}(총 보험료율, 근로자는 절반), 장기요양 ${pct(R0.care, 2)}, 고용보험 ${pct(R0.employment, 1)}. ${PREV}년과 비교하고 2033년까지 국민연금 인상 일정을 정리했습니다.`, body, nav: 'salary' }));
 }
 
@@ -1556,6 +1625,7 @@ const guideModified = (g) => g.modified || ((g.published || '2026-09-06') > '202
 
 /* 업데이트 기록 — 이용자에게 보이는 변경만, 최근 것부터. 글·요율을 고칠 때 맨 위에 한 줄 더한다 */
 const UPDATES = [
+  { date: '2026-10-24', text: '모든 요율의 원문을 공식 페이지와 대조했습니다(계산 기준 페이지에 출처 링크와 원문 대조일 표기). 근로소득 간이세액표는 2026년 2월 27일 개정(대통령령 제36129호)이 있어 법제처 별표 2 PDF와 646개 구간을 전부 대조한 결과 표의 금액은 같고 8세 이상 20세 이하 자녀 공제액만 올라(1명 12,500→20,830원, 2명 29,160→45,830원, 3명째부터 25,000→33,330원) 2026년 3월 지급분 기준으로 반영했습니다 — 자녀 공제를 고른 계산만 바뀌고 기본 표는 그대로입니다. 국민연금 기준소득월액 상·하한(41만~659만원)이 2026년 7월~2027년 6월 적용값임을, 구직급여 상한 68,100원의 근거(고용보험법 시행령 제68조, 2026년 1월 1일 이후 이직자)를 함께 적었습니다. 4대보험 요율(국민연금 4.75%·건강보험 7.19%·장기요양 0.9448%·고용보험 0.9%)과 최저임금 10,320원은 원문과 같음을 확인했습니다.' },
   { date: '2026-10-08', text: '서재에 2027년 실업급여, 2027년 월급에서 더 빠지는 돈, 퇴사할 때 받는 돈 계산 순서를 더했습니다. 실업급여 계산표에 2027년 하한액(하루 68,480원)과 미정인 상한액을 안내했습니다.' },
   { date: '2026-10-03', text: '서재와 계산기 안내 문장을 읽기 쉽게 다듬었습니다(약 140곳).' },
   { date: '2026-09-23', text: '2027년 달라지는 돈(최저임금 10,700원, 국민연금 10%, 건강보험료율 동결) 페이지를 열고, 연말정산 2026년 귀속 일정을 더했으며, 자동차세 연납 공제율을 5%로 바로잡았습니다.' },
@@ -1582,6 +1652,7 @@ ${UPDATES.map((x) => `<li><b>${x.date}</b> ${x.text}</li>`).join('\n')}
 <ul>
 <li>2027년 장기요양보험료율 결정(보통 10~11월) — 2027년 실수령액에 반영</li>
 <li>구직급여 상한액과 고용보험료율 개편안 확정 — 실업급여 계산표와 2027년 실수령액에 반영</li>
+<li>연봉 순위표 — 국세청 2024년 귀속 근로소득 통계(2025년 12월 공개)의 중위·1억원 초과 요약값이 확인되는 대로 2023년 귀속에서 갱신</li>
 <li>2027년 1월 — 새해 요율로 모든 표의 기준 연도 변경</li>
 </ul>
 <p>틀린 숫자를 발견하면 인스타그램 <a href="https://www.instagram.com/sajucheop/" target="_blank" rel="noopener">@sajucheop</a> 다이렉트 메시지로 알려 주세요. 확인해서 고치고 이 기록에 남깁니다.</p>
@@ -3667,7 +3738,9 @@ docs();
 
 /* noindex 페이지(위젯·약관·연봉 축 부가 페이지)는 사이트맵에서 뺀다 */
 const indexable = urls.filter((u) => !NOINDEX.has(u) && !['/terms/', '/privacy/'].includes(u));
-fs.writeFileSync(path.join(OUT, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${indexable.map((u) => `<url><loc>${SITE}${u}</loc><lastmod>${u === '/' ? BUILD_ISO : CONTENT_DATE}</lastmod></url>`).join('\n')}\n</urlset>\n`);
+/* lastmod — 홈은 빌드일, 특정 날짜에 본문을 고친 페이지는 PAGE_LASTMOD, 나머지는 CONTENT_DATE(고치지 않은 페이지의 날짜를 올리지 않는다) */
+const pageLastmod = (u) => u === '/' ? BUILD_ISO : (PAGE_LASTMOD.find(([re]) => re.test(u))?.[1] || CONTENT_DATE);
+fs.writeFileSync(path.join(OUT, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${indexable.map((u) => `<url><loc>${SITE}${u}</loc><lastmod>${pageLastmod(u)}</lastmod></url>`).join('\n')}\n</urlset>\n`);
 fs.writeFileSync(path.join(OUT, 'robots.txt'), `User-agent: *\nAllow: /\nSitemap: ${SITE}/sitemap.xml\n`);
 /* 네이버용 전체 목록 — 구글에만 뺀 금액 조합 페이지까지. robots.txt 에는 적지 않고(구글이 보지 않게) 네이버 서치어드바이저에 직접 제출한다 */
 const naverList = urls.filter((u) => (!NOINDEX.has(u) || GOOGLE_ONLY.has(u)) && !['/terms/', '/privacy/'].includes(u));

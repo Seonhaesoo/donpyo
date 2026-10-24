@@ -4,7 +4,9 @@
 
 import { YEAR, RATES } from '../data/rates.mjs';
 
-export const UPPER = { 2025: 66000, 2026: 68100 };   /* 1일 상한액 — 2026년 7년 만에 인상 */
+/* 1일 상한액 = 임금일액 상한(고용보험법 시행령 제68조제1항) × 60%. 2026년 68,100원은 대통령령 제35934호(2025.12.23 공포, 2026.1.1 시행)가
+ * 임금일액 상한을 11만원→11만3,500원으로 올린 결과(2025.12.16 국무회의, 고용노동부 보도자료 news_seq=18736). 부칙 제4조: 시행 전(2025.12.31 이전) 이직자는 종전 66,000원. 원문 대조 2026-10-24 */
+export const UPPER = { 2025: 66000, 2026: 68100 };
 
 export function dailyBenefit(monthlyPay, year = YEAR) {
   const R = RATES[year] || RATES[YEAR];

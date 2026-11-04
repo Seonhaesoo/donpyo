@@ -461,6 +461,22 @@ ok(EI.childCredit(10000000, 'single').raw === 0 && EI.eitc({ type: 'single', wag
   ok(JB.jongbu(6000000000).installment === Math.floor(JB.jongbu(6000000000).tax / 2) && JB.jongbu(2500000000).installment === JB.jongbu(2500000000).tax - 2500000, '분납 — 500만 이하 250만 초과분 · 넘으면 절반');
   ok(JB.jongbu(2000000000, { type: 'corp' }).calc === 32400000 && JB.jongbu(2000000000, { type: 'corp', three: true }).calc === 60000000, '법인 공제 0 · 2.7%·5.0% 단일');
 }
+/* 상여 원천징수 — 소득세법 시행령 제146조 (월평균 × 월수 − 기납부) */
+{
+  const BN = await import('../engine/bonus.mjs');
+  const b = BN.bonusWithholding({ monthly: 3500000, nontax: 200000, bonus: 3500000, months: 12 });
+  /* 과세 월급 330만 · 상여 350만 · 12개월: 월평균 3,591,666원 → 간이세액 137,000 × 12 − 102,770 × 12 = 410,760 */
+  ok(b.avg === 3591666 && b.avgTax === 137000 && b.regularTax === 102770 && b.tax === 410760 && b.local === 41070, '상여 350만·12개월 소득세 410,760', JSON.stringify(b));
+  ok(b.health === 125820 && b.care === 16530 && b.employment === 31500 && b.net === 3500000 - 410760 - 41070 - 173850, '상여 4대보험(건강·요양·고용)과 실수령');
+  const b1 = BN.bonusWithholding({ monthly: 3500000, nontax: 200000, bonus: 3500000, months: 1 });
+  ok(b1.tax === b1.lump && b1.tax === incomeTax(6800000).tax - incomeTax(3300000).tax, '지급대상기간 1개월 = 그 달 급여에 더한 것과 같음');
+  ok(b1.tax > BN.bonusWithholding({ monthly: 3500000, nontax: 200000, bonus: 3500000, months: 6 }).tax && BN.bonusWithholding({ monthly: 3500000, nontax: 200000, bonus: 3500000, months: 6 }).tax >= b.tax, '지급대상기간이 길수록 원천징수가 줄어든다');
+  ok(BN.bonusWithholding({ monthly: 3500000, nontax: 200000, bonus: 3500000, months: 24 }).months === 12 && BN.bonusWithholding({ monthly: 3500000, bonus: 100000, months: 0 }).months === 1, '지급대상기간 1~12개월로 자름');
+  const hi = BN.bonusWithholding({ monthly: 8000000, nontax: 200000, bonus: 10000000, months: 12 });
+  ok(hi.pensionCapped && hi.pensionMonthly === 0, '월급 800만은 국민연금 상한(659만)이라 상여로 보험료가 늘지 않음');
+  ok(b.pensionMonthly === Math.floor(Math.floor((3300000 + 3500000 / 12) / 1000) * 1000 * RATES[YEAR].pension / 10) * 10 - Math.floor(3300000 * RATES[YEAR].pension / 10) * 10 && b.pensionYear === b.pensionMonthly * 12, '국민연금 다음 해 기준소득월액 증가분');
+  ok(BN.bonusWithholding({ monthly: 3500000, nontax: 200000, bonus: 0, months: 12 }).tax === 0 && BN.bonusWithholding({ monthly: 3500000, nontax: 200000, bonus: 0 }).net === 0, '상여 0이면 0');
+}
 /* 브라우저 엔진 묶음 = 서버 엔진 (같은 소스에서 생성되는지 확인) */
 {
   const vm = await import('node:vm');
@@ -488,6 +504,7 @@ ok(EI.childCredit(10000000, 'single').raw === 0 && EI.eitc({ type: 'single', wag
   ok(B.withholding(3000000).net === FR.withholding(3000000).net && B.withholding(3000000, 'other').net === 2736000 && B.grossUp(2901000).gross === 3000000 && Object.keys(B.FREE_TYPES).join() === 'business,other' && Object.keys(B.TYPES).join() === 'single,one,dual', '번들 withholding · grossUp — 기타소득 TYPES 가 근로장려금 TYPES 를 덮지 않음');
   ok(B.nhisEmployee(3000000).employee === NH.employee(3000000).employee && B.nhisLocal({ income: 30000000 }).total === 203360 && B.propertyPoints(300000000) === 100 && B.POINT_VALUE === 211.5, '번들 nhisEmployee · nhisLocal · propertyPoints');
   ok(B.jongbu(2000000000).total === 2275200 && B.jongbu(3000000000, { age: 70, years: 10 }).total === JB.jongbu(3000000000, { age: 70, years: 10 }).total && B.propertyTax(1500000000).total === 3429000, '번들 jongbu · propertyTax');
+  ok(B.bonusWithholding({ monthly: 3500000, nontax: 200000, bonus: 3500000, months: 12 }).tax === 410760 && B.bonusWithholding({ monthly: 3500000, nontax: 200000, bonus: 3500000, months: 12 }).net === 2874320 && B.BONUS_LAW === '소득세법 시행령 제146조', '번들 bonusWithholding');
 }
 
 console.log(`test: ${pass} pass, ${fail} fail`);

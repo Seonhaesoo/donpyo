@@ -177,6 +177,11 @@
       var rs = G.loanR || ['4.5']; var lr = rs.reduce(function (p, q) { return Math.abs(parseFloat(q) - (rate || 4.5)) < Math.abs(parseFloat(p) - (rate || 4.5)) ? q : p; });
       return { href: '/loan/' + la + '/' + ly + '/' + lr + '/', label: '대출 ' + fmtMan(la) + '원 · ' + ly + '년 · ' + lr + '% 월 상환액' };
     }
+    if (/성과급|상여|보너스|인센티브/.test(t)) {
+      var bm = /연봉/.test(t) ? null : (A.filter(function (x) { return x.man >= 100 && x.man < 1500; })[0] || {}).man;
+      var bb = A.filter(function (x) { return x.man !== bm; })[0];
+      return { href: '/bonus/' + (bm ? '?m=' + bm + (bb ? '&b=' + bb.man : '') : (first ? '?a=' + man(first) : '')), label: '성과급·상여금 실수령 계산기' };
+    }
     if (/연말|환급/.test(t)) return { href: '/yearend/' + (first ? '?a=' + man(first) : ''), label: '연말정산 미리보기' };
     if (!first) return null;
     var v = man(first);

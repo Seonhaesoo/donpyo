@@ -22,7 +22,7 @@ export function makeBundle(NT = 200000) {
   const parts = [
     `const YEAR = ${YEAR}; const RATES = ${JSON.stringify(rates)}; const AGE_INCOME = ${JSON.stringify(AGE_INCOME)}; const __TABLE__ = ${JSON.stringify(table)};`,
     wrap('F', strip(read('fmt.mjs')), ['num', 'won', 'manwon', 'short', 'pct', 'rate']),
-    wrap('T', tax, ['insurance', 'incomeTax', 'netPay', 'grossForNet']),
+    wrap('T', tax + '\n' + strip(read('bonus.mjs')), ['insurance', 'incomeTax', 'netPay', 'grossForNet', 'bonusWithholding', 'BONUS_LAW']),
     wrap('L', strip(read('loan.mjs')), ['annuityPayment', 'schedule', 'summary', 'loanForPayment', 'dsrLimit', 'refinance', 'extraPayment']),
     wrap('K', strip(read('rank.mjs')), ['rank', 'incomeAt', 'STAT']),
     wrap('A', strip(read('age.mjs')), ['ageRank', 'medianOf']),

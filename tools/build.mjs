@@ -39,6 +39,7 @@ import * as CC from '../engine/carcost.mjs';
 import * as AN from '../engine/annual.mjs';
 import * as FR from '../engine/freelance.mjs';
 import * as NH from '../engine/nhis.mjs';
+import * as BN from '../engine/bonus.mjs';
 import { makeBundle } from './bundle.mjs';
 import { guideContext as makeGuideContext } from './guide-context.mjs';
 import { num, won, manwon, short, pct, rate as fmtRate, rateSlug } from '../engine/fmt.mjs';
@@ -99,8 +100,12 @@ const SOURCES = {
   lawJongbu: 'https://www.law.go.kr/법령/종합부동산세법',
   lawBrokerRule: 'https://www.law.go.kr/법령/공인중개사법시행규칙',
 };
-/* 본문을 고친 날이 CONTENT_DATE 와 다른 페이지 — 사이트맵 lastmod 에만 쓴다 (고치지 않은 페이지의 날짜는 올리지 않는다) */
+/* 2026-11-05: 월급·실수령 역산·연봉 페이지에 '2027년 1월부터 달라지는 내 월급' 표, 성과급·상여금 계산기(/bonus/), 연말정산 기납부세액 입력을 더한 날 */
+const UPDATED = '2026-11-05';
+/* 본문을 고친 날이 CONTENT_DATE 와 다른 페이지 — 사이트맵 lastmod 에만 쓴다 (고치지 않은 페이지의 날짜는 올리지 않는다). 앞에 있는 규칙이 먼저 맞는다 */
 const PAGE_LASTMOD = [
+  [/^\/(monthly|net|salary)\/\d+\/$/, UPDATED],         /* 2027년 비교표를 더한 금액 페이지 */
+  [/^\/(bonus|yearend|method|updates)\/$/, UPDATED],
   [/^\/(method|updates|rates|2027|2027\/rates)\/$/, SOURCE_CHECKED],
   [/^\/unemployment\/\d+\/\d+\/$/, SOURCE_CHECKED],   /* 월급·가입기간 페이지의 출처 문구만 고쳤다. /unemployment/ 허브는 그대로 */
   [/^\/minimum-wage\//, SOURCE_CHECKED],
@@ -277,6 +282,42 @@ function pensionSchedule(annual) {
   return table(['연도', '근로자 부담률', '국민연금', '월 실수령'], rows);
 }
 
+/* ---------- 2027년 1월부터 달라지는 내 월급 ----------
+ * 이 페이지의 세전 월급을 data/rates.mjs 의 RATES[YEAR+1] 로 다시 계산해 항목별로 나란히 둔다(/2027/ 페이지와 같은 요율, 새로 정한 값 없음).
+ * 아직 확정되지 않은 요율(RATES[YEAR+1].check)은 표 아래에 그대로 적는다. 다음 해 데이터가 없으면(연금 일정으로 만든 가상 연도만 있으면) 비운다 */
+const PROV_LABEL = { care: '장기요양보험료율(10월 이후 결정)', employment: '고용보험료율(인상안 논의 중, 시행령 개정 전)', health: '건강보험료율', pension: '국민연금 보험료율', minWage: '최저임금' };
+function provisionalNote(R2, Y2) {
+  const keys = R2.check || [];
+  const labels = keys.filter((k) => PROV_LABEL[k]).map((k) => PROV_LABEL[k]);
+  const lim = keys.includes('pensionMin') || keys.includes('pensionMax');
+  if (!labels.length && !lim) return '';
+  return `${labels.length ? `${labels.join('과 ')}은 ${Y2}년 값이 아직 확정되지 않아 ${YEAR}년 값으로 계산했고` : ''}${lim ? `${labels.length ? ', ' : ''}국민연금 기준소득월액 상·하한(${num(R2.pensionMin)}~${num(R2.pensionMax)}원)은 ${Y2}년 7월에 조정됩니다` : ''}. 간이세액표도 지금 표(2026년 2월 개정)를 그대로 썼습니다. 확정되는 대로 갱신합니다.`;
+}
+function nextYearBlock(gross, { nontax = NT, dependents = 1, tail = '' } = {}) {
+  const Y2 = YEAR + 1, R2 = RATES[Y2];
+  if (!R2 || !R2.minWage) return '';
+  const a = netPay({ monthly: gross, nontax, dependents }), b = netPay({ monthly: gross, nontax, dependents, year: Y2 });
+  const items = [['국민연금', 'pension'], ['건강보험', 'health'], ['장기요양', 'care'], ['고용보험', 'employment'], ['소득세·지방소득세', 'taxTotal']];
+  const diff = (k) => b[k] - a[k];
+  const sgn = (v) => v === 0 ? '0' : (v > 0 ? '+' : '−') + num(Math.abs(v));
+  const rows = items.map(([l, k]) => ({ cells: [l, num(a[k]), `<b>${num(b[k])}</b>`, sgn(diff(k))] }));
+  rows.push({ cls: 'sum', cells: ['월 실수령', num(a.net), `<b>${num(b.net)}</b>`, sgn(b.net - a.net)] });
+  const biggest = items.map(([l, k]) => ({ l, k, d: diff(k) })).sort((x, y) => Math.abs(y.d) - Math.abs(x.d))[0];
+  const others = items.filter(([, k]) => k !== 'pension').reduce((s, [, k]) => s + diff(k), 0);
+  const base = Math.floor(a.taxable / 1000) * 1000;
+  let why;
+  if (biggest.d === 0) why = `이 월급에서는 ${Y2}년에도 공제 항목이 달라지지 않습니다.`;
+  else if (biggest.k !== 'pension') why = `가장 큰 변화는 ${biggest.l}(${sgn(biggest.d)}원)입니다.`;
+  else if (base >= R2.pensionMax) why = `가장 큰 변화는 국민연금입니다. 과세 급여 ${won(a.taxable)}이 기준소득월액 상한 ${won(R2.pensionMax)}을 넘어 상한에 걸리므로, 보험료율이 ${pct(R0.pension, 2)}에서 ${pct(R2.pension, 2)}로 올라도 인상분은 월급과 상관없이 ${won(diff('pension'))}(${won(R2.pensionMax)} × 0.25%p)으로 고정됩니다.`;
+  else if (base <= R2.pensionMin) why = `가장 큰 변화는 국민연금입니다. 과세 급여가 기준소득월액 하한 ${won(R2.pensionMin)} 이하라 하한 기준으로 ${won(diff('pension'))}이 더 나갑니다.`;
+  else why = `가장 큰 변화는 국민연금입니다. 보험료율이 ${pct(R0.pension, 2)}에서 ${pct(R2.pension, 2)}로 0.25%p 오르면서 과세 급여 ${won(a.taxable)} × 0.25%p = ${won(diff('pension'))}이 매달 더 나가고, 건강보험료율(7.19%)과 간이세액표는 그대로라 나머지 공제는 ${others === 0 ? '변하지 않습니다' : `합쳐 ${sgn(others)}원 달라집니다`}.`;
+  const prov = provisionalNote(R2, Y2);
+  return section(`${Y2}년 1월부터 달라지는 내 월급`, `세전 월급 ${won(gross)}이 그대로일 때 · ${Y2}년 요율 · 부양가족 ${dependents === 1 ? '본인' : dependents + '인'} · 비과세 ${nontax ? won(nontax) : '없음'} · 월 기준 · 원`,
+    table(['항목', `${YEAR}년`, `${Y2}년`, '차이'], rows)
+    + `<p class="sub" style="margin-top:8px">${why}${prov ? ' ' + prov : ''}</p>${tail}`
+    + list([{ href: '/2027/rates/', title: `${Y2}년 4대보험 요율표`, sub: `국민연금 ${pct(R2.pension * 2, 0)} · 건강보험 7.19% 동결 · 무엇이 확정됐는지` }]));
+}
+
 /* 2026-10-15 네이버 유입이 많은 월급·실수령 역산·알바 페이지 보강 — 연봉 페이지에만 있던 위치·나이대·할 수 있는 것·대출 한도를 같이 보여 주고,
  * 그 금액으로 많이 묻는 질문에 답한다(답의 숫자는 모두 같은 계산 엔진에서) */
 const faqDoc = (qas) => section('자주 묻는 것', null, `<div class="doc">${qas.map(([q, a]) => `<p><b>${q}</b> ${a}</p>`).join('\n')}</div>`);
@@ -357,6 +398,7 @@ ${section('연봉이 오르면 손에 오는 돈', '인상액 가운데 4대보�
 ${section('인상률로 보면', '연봉 협상에서 %로 이야기할 때 참고하세요. 새 연봉은 만원 단위로 반올림했습니다', table(['인상률', '새 연봉', '월 실수령', '월 증가'], [3, 5, 7, 10, 15, 20].map((r) => { const a2 = Math.round(annual * (1 + r / 100) / 10000) * 10000; const q = netPay({ annual: a2, nontax: NT }); return { cells: [`+${r}%`, num(a2), num(q.net), num(q.net - p.net)] }; })))}
 ${section('국민연금 인상 일정에 따른 변화', `연금개혁으로 보험료율이 매년 0.5%p씩(근로자 부담은 0.25%p씩) 올라 ${Math.max(...Object.keys(PENSION_SCHEDULE).map(Number))}년 근로자 부담 6.5%가 됩니다. 다른 요율과 세금이 그대로라고 가정한 값입니다`, pensionSchedule(annual))}
 ${section(`${PREV}년과 비교`, null, tiles([{ label: `${PREV}년 월 실수령`, value: prev.net }, { label: `${YEAR}년 월 실수령`, value: p.net }, { label: '차이', value: p.net - prev.net }]))}
+${nextYearBlock(p.gross)}
 ${section('시급·일급으로 보면', `월 ${MONTH_HOURS}시간(주 40시간 + 주휴) 기준`, `<div class="tiles"><div class="tile"><small>시급</small>${n(Math.round(hourly))}</div><div class="tile"><small>일급 (8시간)</small>${n(Math.round(hourly * 8))}</div><div class="tile"><small>최저임금 ${num(R0.minWage)}원 대비</small><span class="num">${(hourly / R0.minWage).toFixed(2)}배</span></div></div>`)}
 ${ad()}
 ${section('이 연봉의 대출 한도', `DSR 40% 기준(연간 원리금 상환액이 연봉의 40%를 넘지 않는 선). 다른 대출이 없다고 가정`, tiles([{ label: '월 상환 여력', value: dsr.monthlyCap }, { label: '연 4.5%·30년 원리금균등', value: dsr.principal }, { label: '연 3.5%·30년', value: L.dsrLimit(annual, 0.035, 360).principal }]) + list([{ href: loanUrl(loanAmt, 30, 0.045), title: `대출 ${manwon(loanAmt * 10000)} 30년 4.5% 상환표`, sub: `월 ${won(L.annuityPayment(loanAmt * 10000, 0.045, 360))} · 실수령의 ${pct(L.annuityPayment(loanAmt * 10000, 0.045, 360) / p.net, 0)}` }]))}
@@ -364,6 +406,7 @@ ${section('이어서 계산하기', null, list([
   { href: monthlyUrl(nearest(MONTHLIES, Math.round(p.gross / 10000))), title: `월급 ${manwon(nearest(MONTHLIES, Math.round(p.gross / 10000)) * 10000)} 실수령액`, sub: '월급 기준으로 다시 보기' },
   { href: netUrl(nearest(NETS, Math.round(p.net / 10000))), title: `월 ${manwon(nearest(NETS, Math.round(p.net / 10000)) * 10000)} 실수령하려면`, sub: '필요한 연봉 역산' },
   { href: retireUrl(nearest(RETIRE_PAYS, Math.round(p.gross / 500000) * 50), 10), title: `월급 ${manwon(nearest(RETIRE_PAYS, Math.round(p.gross / 500000) * 50) * 10000)} 퇴직금`, sub: '10년 근속 세전·세후' },
+  { href: `/bonus/?a=${m}`, title: '성과급·상여금을 받으면 손에 얼마', sub: '지급대상기간 방식 원천징수 · 4대보험' },
 ]))}
 ${guideLinks(['net-pay-steps', 'withholding-table', 'dependents'])}
 <p class="note">국세청 근로소득 간이세액표(100% 기준)와 ${YEAR}년 1월 4대보험 요율로 계산했습니다. 회사의 비과세 항목·상여·연말정산에 따라 실제 급여명세서와 차이가 날 수 있습니다. <a href="/method/">계산 기준 보기</a></p>`;
@@ -404,6 +447,7 @@ ${section('월급이 오르면 손에 오는 돈', '세전 인상분 가운데 4
 ${useBlock(p, gross * 12)}
 ${section('시급·일급으로 보면', `월 ${MONTH_HOURS}시간(주 40시간 + 주휴) 기준`, `<div class="tiles"><div class="tile"><small>시급</small>${n(Math.round(gross / MONTH_HOURS))}</div><div class="tile"><small>일급 (8시간)</small>${n(Math.round(gross / MONTH_HOURS * 8))}</div><div class="tile"><small>최저임금 ${num(R0.minWage)}원 대비</small><span class="num">${(gross / MONTH_HOURS / R0.minWage).toFixed(2)}배</span></div></div>`)}
 ${section('국민연금 인상 일정에 따른 변화', '국민연금 근로자 부담이 매년 0.25%p씩 오를 때의 월 실수령액', pensionSchedule(gross * 12))}
+${nextYearBlock(gross)}
 ${ad()}
 ${loanBlock(gross * 12, p.net)}
 ${faqDoc(monthlyFaq(gross, p))}
@@ -411,6 +455,7 @@ ${section('이어서 계산하기', null, list([
   { href: salaryUrl(annualNear), title: `연봉 ${manwon(annualNear * 10000)} 실수령액`, sub: '연봉 기준 상세 표 · 인상 시 변화 · 대출 한도' },
   { href: netUrl(nearest(NETS, Math.round(p.net / 10000))), title: `월 ${manwon(nearest(NETS, Math.round(p.net / 10000)) * 10000)} 실수령하려면`, sub: '필요한 세전 월급 역산' },
   { href: retireUrl(nearest(RETIRE_PAYS, Math.round(gross / 500000) * 50), 5), title: `월급 ${manwon(nearest(RETIRE_PAYS, Math.round(gross / 500000) * 50) * 10000)} 퇴직금`, sub: '5년 근속 세전·세후' },
+  { href: `/bonus/?m=${m}`, title: `월급 ${manwon(gross)}에 성과급을 받으면`, sub: '상여 원천징수(지급대상기간 방식)와 4대보험을 뺀 실수령' },
 ]))}
 ${guideLinks(['net-pay-steps', 'insurance-rates'])}
 <p class="note">국세청 근로소득 간이세액표(100% 기준)와 ${YEAR}년 1월 4대보험 요율로 계산했습니다. <a href="/method/">계산 기준 보기</a></p>`;
@@ -450,6 +495,7 @@ ${ledger('이때의 공제 내역', '월 기준 · 원', [
   { label: '국민연금', value: p.pension }, { label: '건강보험', value: p.health }, { label: '장기요양', value: p.care }, { label: '고용보험', value: p.employment }, { label: '소득세', value: p.tax }, { label: '지방소득세', value: p.local },
 ], { label: '공제 합계', value: p.deductions })}
 ${section('부양가족·비과세에 따라', '가족이 많으면 같은 실수령액에 필요한 연봉이 줄고, 비과세 식대가 없으면 늘어납니다', table(['조건', '세전 월급', '연봉', '실수령'], rows.concat(rowsNt)))}
+${(() => { const Y2 = YEAR + 1; if (!RATES[Y2] || !RATES[Y2].minWage) return ''; const g2 = grossForNet(target, { nontax: NT, year: Y2 }); return nextYearBlock(g1, { tail: `<p class="sub" style="margin-top:6px">월 ${manwon(target)}을 ${Y2}년에도 그대로 손에 쥐려면 세전 월급 ${won(g2)}, 연봉 ${won(g2 * 12)}이 필요합니다${g2 > g1 ? `(지금보다 연 ${won((g2 - g1) * 12)} 더)` : ''}.</p>` }); })()}
 ${section('이웃 실수령액', '칩의 숫자는 필요한 연봉(원)', chips(nb.map((v) => ({ label: short(v * 10000), value: grossForNet(v * 10000, { nontax: NT }) * 12, href: netUrl(v), on: v === m }))))}
 ${section('실수령을 더 받으려면', '실수령을 늘리고 싶을 때 필요한 연봉 · 늘어나는 실수령보다 연봉이 더 많이 올라야 합니다', table(['목표 실수령', '필요한 연봉', '지금보다'], [10, 20, 30, 50].map((d) => { const g = grossForNet(target + d * 10000, { nontax: NT }); return { cells: [`월 ${manwon(target + d * 10000)}`, num(g * 12), '+' + num((g - g1) * 12)] }; })))}
 ${whereBlock(g1 * 12, g1)}
@@ -459,6 +505,7 @@ ${faqDoc(netFaq(target, g1))}
 ${section('이어서 계산하기', null, list([
   { href: salaryUrl(nearest(SALARIES, Math.round(g1 * 12 / 10000))), title: `연봉 ${manwon(nearest(SALARIES, Math.round(g1 * 12 / 10000)) * 10000)} 실수령액`, sub: '가장 가까운 연봉 페이지' },
   { href: monthlyUrl(nearest(MONTHLIES, Math.round(g1 / 10000))), title: `월급 ${manwon(nearest(MONTHLIES, Math.round(g1 / 10000)) * 10000)} 실수령액`, sub: '가장 가까운 월급 페이지' },
+  { href: `/bonus/?m=${Math.round(g1 / 10000)}`, title: '성과급·상여금을 받으면 손에 얼마', sub: '지급대상기간 방식 원천징수 · 4대보험' },
 ]))}
 <p class="note">1,000원 단위로 맞춘 근사값입니다. 연봉 협상 때 "실수령 얼마"를 세전으로 옮길 때 참고하세요. <a href="/method/">계산 기준 보기</a></p>`;
   write(url, shell({ url, title, desc, body, nav: 'monthly' }));
@@ -683,6 +730,7 @@ ${section('급여와 일', null, `<div class="dict">
 <a href="/negotiate/"><b>연봉 협상 근거</b><span>상위 %·나이대 평균·물가·최저임금으로 <span class="num">한 장</span> 정리</span></a>
 <a href="/tax-receipt/"><b>내 세금 영수증</b><span>연봉 4,200만 → 1년 <span class="num">${num(s42.annualDeductions)}</span>원, 회사 부담까지 더 있음</span></a>
 <a href="/yearend/"><b>연말정산 미리보기</b><span>카드·의료비·연금저축 넣으면 <span class="num">환급 · 추가 납부</span> 예상액</span></a>
+<a href="/bonus/"><b>성과급·상여금 실수령</b><span>월급 350만에 성과급 350만 → 손에 <span class="num">${num(BN.bonusWithholding({ monthly: 3500000, nontax: NT, bonus: 3500000, months: 12 }).net)}</span>원 · 세금은 지급대상기간 방식</span></a>
 <a href="/history/"><b>실수령 6년 변화</b><span>2020년 → ${YEAR}년, 같은 연봉의 실수령이 얼마나 줄었나</span></a>
 <a href="/goal/"><b>1억 모으기 시계</b><span>월 100만·연 3% → <span class="num">${GO.fmtMonths(GO.monthsToGoal(100000000, 1000000, 0.03))}</span></span></a>
 </div>`)}
@@ -748,6 +796,8 @@ ${table(['항목', `${PREV}년`, `${YEAR}년`, '비고'], [
 <p>2025년 3월 개정된 국민연금법에 따라 보험료율이 9%에서 매년 0.5%p씩 올라 2033년 13%가 됩니다. 근로자 부담은 그 절반입니다. 연봉 페이지의 "인상 일정" 표는 다른 요율과 세금이 올해 그대로라고 가정한 값입니다.</p>
 <h2>연말정산 미리보기</h2>
 <p>총급여(연봉 − 비과세)에서 근로소득공제·기본공제(1인 150만원)·국민연금·건강·고용보험료·신용카드 등 소득공제를 뺀 과세표준에 기본세율(6~45%)을 적용해 산출세액을 구하고, 근로소득세액공제·자녀세액공제(첫째 25만·둘째 30만·셋째부터 40만원)·연금계좌(연 900만원 한도, 총급여 5,500만원 이하 15%·초과 12%)·보장성보험료(100만원 한도 12%)·의료비(총급여 3% 초과분 15%)·교육비(15%)·월세(총급여 5,500만원 이하 17%·8,000만원 이하 15%, 연 1,000만원 한도)를 뺀 값이 결정세액입니다. 항목별 공제가 표준세액공제 13만원보다 적으면 13만원을 씁니다. 미리 낸 세금은 간이세액표 기준 12개월분으로 보고, 둘의 차이를 환급 또는 추가 납부 예상액으로 보여줍니다. 신용카드 공제는 총급여의 25%를 신용카드 사용분부터 차감한 뒤 신용카드 15%·체크카드/현금영수증 30%로 계산하며 한도는 총급여 7,000만원 이하 300만원, 초과 250만원입니다(조세특례제한법 제126조의2, 2023년 사용분부터). 주택청약·주택자금·기부금·전통시장/대중교통 추가 한도·경로우대·장애인·한부모 공제는 반영하지 않으므로 실제와 다를 수 있습니다.</p>
+<h2>성과급·상여금 원천징수</h2>
+<p><a href="/bonus/">성과급·상여금 실수령 계산기</a>는 <a href="${SOURCES.lawIncomeDecree}" target="_blank" rel="noopener">소득세법 시행령</a> 제146조(상여등에 대한 징수세액)의 <b>지급대상기간 방식</b>으로 계산합니다. 지급대상기간이 있는 상여는 (상여 + 지급대상기간의 상여 외 급여 합계) ÷ 지급대상기간 월수를 월평균 급여로 보고 간이세액표를 조회한 세액에 월수를 곱한 뒤, 그 기간의 상여 외 급여에 대해 이미 원천징수한 세액을 뺀 금액이 상여에 대한 소득세입니다(제1항 제1호). 지급대상기간이 정해져 있지 않으면 그해 1월 1일부터 지급하는 달까지, 같은 해 두 번째 상여부터는 직전 상여를 받은 달의 다음 달부터 이번 지급 달까지를 지급대상기간으로 봅니다(제1항 제2호). 지급대상기간이 1년을 넘으면 1년으로, 1개월 미만은 1개월로 보므로 1~12개월만 받습니다. 지방소득세는 소득세의 10%입니다. <b>가정</b>: 지급대상기간 동안 월급(과세 급여)이 같았고 회사가 간이세액의 100%를 뗐으며, 상여 금액과 지급대상기간을 미리 정해 매달 나눠 과세하는 방식(제1항 제3호)과 잉여금 처분에 따른 상여(기본세율), 퇴직 뒤 받는 상여는 다루지 않습니다. 4대보험은 건강보험·장기요양·고용보험을 상여 금액에 요율대로 적용해 지급 달에 떼는 것으로 보여 줍니다(회사가 당월에 떼지 않으면 다음 해 4월 보수총액 정산에서 같은 금액이 나갑니다). 국민연금은 기준소득월액이 매년 7월 전년 소득총액으로 정해져 상여를 받는 달에 더 떼지 않으므로, (과세 월급 × 12 + 상여) ÷ 12를 새 기준소득월액으로 보고 상·하한(${num(R0.pensionMin)}~${num(R0.pensionMax)}원)을 적용한 다음 해 보험료 증가분을 따로 적습니다. 원천징수는 미리 내는 세금이라 상여를 어떤 방식으로 떼었든 연말정산에서 같은 결정세액으로 정산됩니다.</p>
 <h2>대출</h2>
 <p>이자 = 매달 남은 원금 × 연이율 ÷ 12, 원 단위 반올림. 원리금균등은 매달 같은 금액, 원금균등은 원금을 균등 분할해 이자가 줄어드는 방식, 만기일시는 이자만 내다 만기에 원금을 갚는 방식입니다. 고정금리·거치 없음·매달 말 상환을 가정했고, 갈아타기 표의 중도상환수수료는 0.6%(2025년 1월 이후 은행권 주택담보대출 수준)로 두었습니다. DSR 한도는 연간 원리금 상환액이 연소득의 40%를 넘지 않는 원금이며 기존 대출은 없다고 봅니다.</p>
 <h2>퇴직금</h2>
@@ -818,7 +868,7 @@ ${table(['항목', `${PREV}년`, `${YEAR}년`, '비고'], [
 <p><b>원문 대조일: ${SOURCE_CHECKED}</b> — 아래 링크는 이 날 직접 열어 사이트의 요율·표와 대조한 공식 페이지입니다. 법령은 법제처 국가법령정보센터(law.go.kr) 현행 조문으로 연결하며, 뉴스 기사는 출처로 쓰지 않습니다.</p>
 <h3>실수령액 (소득세·4대보험·최저임금)</h3>
 <ul>
-<li>근로소득 간이세액표 — <a href="${SOURCES.ganyiPdf}" target="_blank" rel="noopener">법제처 소득세법 시행령 별표 2 PDF (2026.2.27 개정, 대통령령 제36129호)</a> · <a href="${SOURCES.lawIncomeDecree}" target="_blank" rel="noopener">소득세법 시행령 현행 조문</a> · <a href="${SOURCES.ntsWithholding}" target="_blank" rel="noopener">국세청 근로소득 원천징수 방법(간이세액표·80/100/120%)</a></li>
+<li>근로소득 간이세액표 — <a href="${SOURCES.ganyiPdf}" target="_blank" rel="noopener">법제처 소득세법 시행령 별표 2 PDF (2026.2.27 개정, 대통령령 제36129호)</a> · <a href="${SOURCES.lawIncomeDecree}" target="_blank" rel="noopener">소득세법 시행령 현행 조문</a>(제146조 상여등에 대한 징수세액 — 성과급·상여금 계산기) · <a href="${SOURCES.ntsWithholding}" target="_blank" rel="noopener">국세청 근로소득 원천징수 방법(간이세액표·80/100/120%)</a></li>
 <li>국민연금 — <a href="${SOURCES.npsLimits}" target="_blank" rel="noopener">국민연금공단 ${YEAR}년도 기준소득월액 상·하한액 조정 안내 (${R0.pensionLimitPeriod} 하한 ${num(R0.pensionMin)}원·상한 ${num(R0.pensionMax)}원)</a> · <a href="${SOURCES.npsRates}" target="_blank" rel="noopener">국민연금공단 연금보험료 (보험료율 9.5%, 2033년 13%까지 인상 일정)</a> · <a href="${SOURCES.lawPension}" target="_blank" rel="noopener">국민연금법</a></li>
 <li>건강보험·장기요양 — <a href="${SOURCES.mohwHealth}" target="_blank" rel="noopener">보건복지부 ${YEAR}년 건강보험료율 7.19%로 결정 (2025.8.28 건정심)</a> · <a href="${SOURCES.nhisRates}" target="_blank" rel="noopener">국민건강보험공단 ${YEAR}년도 보험료율 기준 안내 (장기요양 0.9448%, 부과점수당 ${NH.POINT_VALUE}원)</a> · <a href="${SOURCES.lawHealth}" target="_blank" rel="noopener">국민건강보험법</a> 제69조~제73조·<a href="${SOURCES.lawHealthDecree}" target="_blank" rel="noopener">시행령</a>(월 보험료 하한 ${num(NH.PREMIUM_MIN)}원·상한 ${num(NH.PREMIUM_MAX)}원) · <a href="${SOURCES.lawCare}" target="_blank" rel="noopener">노인장기요양보험법</a> 제9조</li>
 <li>고용보험·구직급여 — <a href="${SOURCES.lawEiDecree}" target="_blank" rel="noopener">고용보험법 시행령</a> 제68조(임금일액 상한 11만 3,500원 → 구직급여 상한 ${num(U.UPPER[YEAR])}원, 대통령령 제35934호 2026.1.1 시행)·육아휴직 급여(2025.1.1 시행) · <a href="${SOURCES.moelUi}" target="_blank" rel="noopener">고용노동부 보도자료 2025.12.16</a> · <a href="${SOURCES.lawEi}" target="_blank" rel="noopener">고용보험법</a> 제45·46·50조</li>
@@ -1286,6 +1336,70 @@ ${guideLinks(['net-pay-steps', 'withholding-table', 'weekly-holiday-pay'])}`;
   }
 }
 
+/* ---------- 성과급·상여금 실수령 — /bonus/ 허브 (계산기 + 빌드 때 계산한 표) ----------
+ * 소득세법 시행령 제146조 지급대상기간 방식(engine/bonus.mjs). 표의 숫자는 모두 같은 엔진에서 나온다 */
+function bonusPage() {
+  const url = '/bonus/';
+  const bw = (monthly, bonus, months = 12, o = {}) => BN.bonusWithholding({ monthly, nontax: NT, bonus, months, ...o });
+  const ex = bw(3500000, 3500000, 12);
+  const exBase = netPay({ monthly: 3500000, nontax: NT });
+  const byPay = [250, 300, 350, 400, 450, 500, 600, 700, 800].map((m) => { const r = bw(m * 10000, m * 10000); return { cls: m === 350 ? 'on' : '', cells: [`<a href="${monthlyUrl(m)}">${manwon(m * 10000)}</a>`, num(r.bonus), num(r.taxTotal), num(r.insurance), `<b>${num(r.net)}</b>`, pct(r.ratio, 1)] }; });
+  const byBonus = [100, 200, 300, 500, 700, 1000].map((b) => { const r = bw(3500000, b * 10000); return { cells: [manwon(b * 10000), num(r.taxTotal), num(r.insurance), `<b>${num(r.net)}</b>`, pct(r.effectiveRate, 1)] }; });
+  const byMonths = [1, 3, 6, 12].map((n) => { const r = bw(3500000, 3500000, n); return { cls: n === 12 ? 'on' : '', cells: [`${n}개월`, num(r.avg), num(r.avgTax), num(r.tax), num(r.local), `<b>${num(r.net)}</b>`] }; });
+  const r1 = bw(3500000, 3500000, 1);
+  const hi = bw(8000000, 10000000, 12), mid = bw(4000000, 4000000, 12);
+  const sel = (id, label, opts, def) => `<label class="ye-f"><span>${label}</span><select id="${id}">${opts.map(([v, t]) => `<option value="${v}"${String(v) === String(def) ? ' selected' : ''}>${t}</option>`).join('')}</select></label>`;
+  const inp = (id, label, value) => `<label class="ye-f"><span id="${id}-label">${label}</span><input id="${id}" type="text" inputmode="numeric" value="${value}"></label>`;
+  const body = `
+${crumb([['/', '홈'], [null, '성과급·상여금 실수령']])}
+<h1 class="title">성과급·상여금 실수령액 계산기 — 세금은 얼마나 떼나</h1>
+<p class="meta">${YEAR}년 요율 · 소득세법 시행령 제146조 지급대상기간 방식 · 건강·장기요양·고용보험 포함 · 국민연금 상한 영향 · 입력값은 이 기기 밖으로 나가지 않습니다</p>
+${lead(`상여·성과급의 소득세는 그 달 월급에 더해 세금표를 보는 게 아니라, <b>지급대상기간</b>(보통 성과 평가 기간)의 월급과 합쳐 월평균을 내고 그 평균의 간이세액에 월수를 곱한 뒤 이미 낸 세금을 빼는 방식으로 뗍니다. 월급 350만원(식대 20만원 포함)인 사람이 연간 성과급 350만원을 받으면 소득세·지방소득세 ${won(ex.taxTotal)}과 건강·장기요양·고용보험 ${won(ex.insurance)}을 떼고 <b>${won(ex.net)}</b>을 손에 쥡니다. 지급대상기간을 보지 않고 그 달 월급에 그냥 더했다면 소득세가 ${won(r1.tax)}으로 ${won(r1.tax - ex.tax)} 더 떼였을 것입니다 — 어느 쪽이든 연말정산에서 똑같이 정산됩니다.`)}
+<form class="quick ye-form" id="bn-form">
+<div class="ye-grid">
+${sel('bn-mode', '급여 입력 방식', [['monthly', '세전 월급'], ['annual', '연봉 ÷ 12']], 'monthly')}
+${inp('bn-pay', '세전 월급 (만원)', 350)}
+${inp('bn-bonus', '성과급·상여 금액 (만원)', 350)}
+${sel('bn-months', '지급대상기간', [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((n) => [n, `${n}개월${n === 12 ? ' (연간 성과급)' : n === 6 ? ' (반기)' : n === 3 ? ' (분기)' : n === 1 ? ' (그 달만)' : ''}`]), 12)}
+${inp('bn-dep', '부양가족 수 (본인 포함)', 1)}
+${inp('bn-kids', '8~20세 자녀 수', 0)}
+</div>
+<div class="ye-checks"><label><input type="checkbox" id="bn-meal" checked> 식대 비과세 월 20만원 포함</label></div>
+<p class="sub" style="margin-top:4px">지급대상기간이 정해져 있지 않으면 올해 1월부터 지급하는 달까지의 월수(12월 지급이면 12개월, 그해 두 번째 상여라면 직전 상여를 받은 달의 다음 달부터)를 넣습니다.</p>
+</form>
+<div class="hero"><div class="hero-label">상여 실수령액</div><div class="hero-num"><span class="num" id="bn-out">0</span><span class="unit">원</span></div><div class="hero-sub" id="bn-sub">계산 중</div></div>
+<div class="tiles"><div class="tile"><small>소득세·지방소득세</small><span class="num" id="bn-tile-tax">0</span></div><div class="tile"><small>건강·장기요양·고용보험</small><span class="num" id="bn-tile-ins">0</span></div><div class="tile"><small>그 달 총 실수령 (월급 + 상여)</small><span class="num" id="bn-tile-month">0</span></div></div>
+<div id="bn-tips"></div>
+<div class="ledger"><div class="lg-head"><h2>계산 흐름</h2><span>원</span></div><div id="bn-rows"></div></div>
+${section('월급별 — 성과급이 월급 한 달치일 때', `지급대상기간 12개월(연간 성과급) · 부양가족 본인 1인 · 식대 비과세 20만원 포함 · 원 · 마지막 열은 상여 중 손에 남는 비율`, table(['세전 월급', '성과급', '소득세·지방세', '건강·요양·고용', '상여 실수령', '남는 비율'], byPay))}
+${section('월급 350만원 · 성과급 금액별', `지급대상기간 12개월 · 본인 1인 · 마지막 열은 상여에 붙는 실효 세율(소득세 + 지방소득세)`, table(['성과급', '소득세·지방세', '건강·요양·고용', '상여 실수령', '실효 세율'], byBonus))}
+${ad()}
+${section('지급대상기간이 다르면 — 월급 350만원 · 성과급 350만원', '기간이 길수록 월평균 급여가 낮아져 간이세액표의 낮은 구간을 적용받습니다. 1개월은 상여를 그 달 월급에 더한 것과 같습니다', table(['지급대상기간', '월평균 급여', '월평균의 간이세액', '상여 소득세', '지방소득세', '상여 실수령'], byMonths))}
+${section('어떻게 계산하나', '소득세법 시행령 제146조 (상여등에 대한 징수세액)', `<div class="doc">
+<p><b>① 월평균 급여</b> = (상여 금액 + 지급대상기간의 상여 외 급여 합계) ÷ 지급대상기간 월수. 월급 350만원(과세 330만원)에 연간 성과급 350만원이면 (${num(ex.taxable)} × 12 + ${num(ex.bonus)}) ÷ 12 = <b>${won(ex.avg)}</b>입니다.</p>
+<p><b>② 월평균 급여의 간이세액</b>을 국세청 간이세액표(부양가족 수 반영)에서 찾습니다. ${won(ex.avg)}은 ${won(ex.avgTax)}, 평소 월급 ${won(ex.taxable)}의 간이세액은 ${won(ex.regularTax)}입니다.</p>
+<p><b>③ 상여 소득세</b> = ②의 세액 × 월수 − 지급대상기간에 이미 뗀 세액 = ${won(ex.avgTax)} × 12 − ${won(ex.regularTax)} × 12 = <b>${won(ex.tax)}</b>. 지방소득세는 그 10%인 ${won(ex.local)}입니다(제1항 제1호).</p>
+<p><b>④ 지급대상기간이 없는 상여</b>는 그해 1월 1일부터 지급하는 달까지를 지급대상기간으로 보고 같은 식으로 계산합니다. 같은 해에 두 번째 상여를 받으면 직전 상여를 받은 달의 다음 달부터 이번 지급 달까지입니다(제1항 제2호). 지급대상기간이 1년을 넘으면 1년, 1개월 미만은 1개월로 봅니다.</p>
+<p><b>⑤ 4대보험</b>: 상여도 보수라 건강보험 ${pct(R0.health, 3)}, 장기요양(건강보험료의 ${pct(R0.care, 2)}), 고용보험 ${pct(R0.employment, 1)}가 붙습니다 — ${won(ex.bonus)}이면 ${won(ex.insurance)}. 회사가 지급 달에 떼지 않았다면 다음 해 4월 보수총액 정산에서 같은 금액이 나갑니다. <b>국민연금은 상여 받는 달에 더 떼지 않습니다.</b> 보험료의 기준인 기준소득월액이 매년 7월 전년 소득총액으로 정해지기 때문에, 올해 상여는 다음 해 7월부터 1년간 보험료를 올립니다(월급 350만원·성과급 350만원이면 월 ${won(ex.pensionMonthly)}씩). 기준소득월액 상한이 ${won(R0.pensionMax)}이라 세전 월급이 그 이상이면(예: 월급 800만원에 성과급 1,000만원) 상여가 아무리 커도 국민연금은 ${won(hi.pensionMonthly)} 늘어납니다.</p>
+<p><b>⑥ 원천징수는 미리 내는 세금입니다.</b> 지급대상기간을 어떻게 잡았든, 회사가 간이세액의 80%·120%를 골랐든 연말정산에서 1년 총급여로 다시 계산한 결정세액과 정산되므로 최종 세금은 같습니다. 상여 때 많이 뗐으면 2월에 그만큼 돌려받습니다. <a href="/yearend/">연말정산 미리보기 →</a></p>
+</div>`)}
+${section('자주 묻는 것', null, `<div class="doc">
+<p><b>성과급 받은 달 세금이 유난히 많이 나왔어요.</b> 지급대상기간을 짧게 잡았거나(그 달 월급에 더해 한 번 조회) 월평균 급여가 간이세액표의 높은 구간으로 올라간 경우입니다. 월급 350만원에 성과급 350만원을 그 달 급여로 한 번에 조회하면 소득세 ${won(r1.tax)}, 12개월 평균으로 계산하면 ${won(ex.tax)}으로 ${won(r1.tax - ex.tax)} 차이가 납니다. 둘 다 연말정산에서 같은 결정세액으로 정산되니 손해는 아니고 돌려받는 시점이 다를 뿐입니다.</p>
+<p><b>성과급에도 4대보험이 붙나요?</b> 건강보험·장기요양·고용보험은 붙습니다(월급 400만원에 성과급 400만원이면 ${won(mid.insurance)}). 국민연금은 그 달에 더 떼지 않고 다음 해 기준소득월액에 반영되며, 월급이 이미 상한 ${won(R0.pensionMax)} 이상이면 오르지 않습니다.</p>
+<p><b>명절 상여·설 보너스도 같나요?</b> 상여의 성질이 있는 급여는 모두 같은 방식입니다. 정기상여처럼 금액과 지급대상기간이 미리 정해진 경우 회사가 매달 급여에 상여를 월수로 나눠 더해 매달 간이세액을 떼는 방식(제1항 제3호)을 쓸 수도 있는데, 그 방식은 이 계산기에 없습니다.</p>
+<p><b>성과급은 퇴직금에 들어가나요?</b> 세금과는 별개로, 취업규칙·단체협약에 지급 조건이 정해진 정기 성과급은 퇴직 전 3개월 평균임금 계산에 들어갈 수 있습니다(연간 지급액의 3/12). <a href="/retire/">퇴직금 계산표</a>는 상여가 없다고 가정한 값입니다.</p>
+</div>`)}
+${section('이어서 계산하기', null, list([
+  { href: monthlyUrl(350), title: '월급 350만원 실수령액', sub: `매달 ${won(exBase.net)} · 공제 내역` },
+  { href: '/yearend/', title: '연말정산 미리보기', sub: '상여 때 많이 뗀 세금을 돌려받는지' },
+  { href: '/salary/', title: '연봉 실수령액표', sub: '성과급을 뺀 기본 연봉 기준' },
+  { href: '/2027/rates/', title: '2027년 4대보험 요율표', sub: '내년 성과급에는 국민연금 10%' },
+]))}
+${guideLinks(['withholding-table', 'net-pay-steps', 'insurance-rates'])}
+<p class="note"><a href="${SOURCES.lawIncomeDecree}" target="_blank" rel="noopener">소득세법 시행령</a> 제146조(상여등에 대한 징수세액)와 국세청 근로소득 간이세액표(2026년 2월 개정, 100% 기준), ${YEAR}년 4대보험 요율로 계산했습니다. 가정: 지급대상기간 동안 월급이 같았고 회사가 간이세액의 100%를 뗐으며, 건강·장기요양·고용보험은 지급 달에 떼는 것으로 보았습니다. 잉여금 처분에 따른 상여(기본세율 적용), 퇴직 뒤 받는 상여, 매달 나눠 과세하는 방식은 다루지 않습니다. 참고용이며 실제 금액은 급여명세서와 회사 급여 담당자, 국세청 상담센터(126)에서 확인하세요. <a href="/method/">계산 기준 보기</a></p>`;
+  write(url, shell({ url, title: `성과급·상여금 실수령액 계산기 — 세금 얼마 떼나 (지급대상기간 방식 원천징수·4대보험, ${YEAR}년)`, desc: `성과급·상여금을 받으면 세금을 얼마나 떼는지 소득세법 시행령 제146조의 지급대상기간 방식으로 계산합니다. 월급 350만원에 성과급 350만원이면 소득세·지방소득세 ${won(ex.taxTotal)}과 건강·고용보험 ${won(ex.insurance)}을 떼고 ${won(ex.net)}. 월급별·금액별·지급대상기간별 표와 국민연금 상한 영향까지.`, body, nav: 'monthly', scripts: ['/js/engine.js', '/js/bonus.js'] }));
+}
+
 /* ---------- 프리랜서 3.3% 원천징수 ---------- */
 const FREE = [50]; for (let m = 100; m <= 1000; m += 50) FREE.push(m);
 const freeUrl = (m) => `/freelance/${m}/`;
@@ -1625,6 +1739,7 @@ const guideModified = (g) => g.modified || ((g.published || '2026-09-06') > '202
 
 /* 업데이트 기록 — 이용자에게 보이는 변경만, 최근 것부터. 글·요율을 고칠 때 맨 위에 한 줄 더한다 */
 const UPDATES = [
+  { date: '2026-11-05', text: '월급·연봉·실수령 역산 페이지마다 "2027년 1월부터 달라지는 내 월급" 표를 더했습니다 — 그 월급을 2027년 요율(국민연금 10%, 건강보험 동결)로 다시 계산해 국민연금·건강보험·장기요양·고용보험·소득세·실수령을 나란히 두고, 아직 확정되지 않은 요율은 표 아래에 적었습니다. 성과급·상여금 실수령 계산기(/bonus/)를 열었습니다 — 소득세법 시행령 제146조의 지급대상기간 방식(월평균 급여의 간이세액 × 월수 − 기납부세액)으로 원천징수를 계산하고 건강·장기요양·고용보험과 국민연금 상한 영향을 함께 보여 줍니다. 연말정산 미리보기에 급여명세서의 올해 원천징수 소득세 합계(기납부세액)를 직접 넣는 칸을 더했습니다.' },
   { date: '2026-10-24', text: '모든 요율의 원문을 공식 페이지와 대조했습니다(계산 기준 페이지에 출처 링크와 원문 대조일 표기). 근로소득 간이세액표는 2026년 2월 27일 개정(대통령령 제36129호)이 있어 법제처 별표 2 PDF와 646개 구간을 전부 대조한 결과 표의 금액은 같고 8세 이상 20세 이하 자녀 공제액만 올라(1명 12,500→20,830원, 2명 29,160→45,830원, 3명째부터 25,000→33,330원) 2026년 3월 지급분 기준으로 반영했습니다 — 자녀 공제를 고른 계산만 바뀌고 기본 표는 그대로입니다. 국민연금 기준소득월액 상·하한(41만~659만원)이 2026년 7월~2027년 6월 적용값임을, 구직급여 상한 68,100원의 근거(고용보험법 시행령 제68조, 2026년 1월 1일 이후 이직자)를 함께 적었습니다. 4대보험 요율(국민연금 4.75%·건강보험 7.19%·장기요양 0.9448%·고용보험 0.9%)과 최저임금 10,320원은 원문과 같음을 확인했습니다.' },
   { date: '2026-10-08', text: '서재에 2027년 실업급여, 2027년 월급에서 더 빠지는 돈, 퇴사할 때 받는 돈 계산 순서를 더했습니다. 실업급여 계산표에 2027년 하한액(하루 68,480원)과 미정인 상한액을 안내했습니다.' },
   { date: '2026-10-03', text: '서재와 계산기 안내 문장을 읽기 쉽게 다듬었습니다(약 140곳).' },
@@ -1942,7 +2057,7 @@ function yearendPage() {
   const body = `
 ${crumb([['/', '홈'], [null, '연말정산 미리보기']])}
 <h1 class="title">연말정산 미리보기 — 돌려받을까, 더 낼까</h1>
-<p class="meta">${YEAR}년 귀속 · ${YEAR + 1}년 1~2월 정산 · 연봉과 카드·의료비·연금저축 몇 가지만 넣으면 결정세액을 추정해 1년 동안 미리 낸 세금과 비교합니다 · 입력값은 이 기기 밖으로 나가지 않습니다</p>
+<p class="meta">${YEAR}년 귀속 · ${YEAR + 1}년 1~2월 정산 · 연봉과 카드·의료비·연금저축 몇 가지만 넣으면 결정세액을 추정해 1년 동안 미리 낸 세금과 비교합니다 · "13월의 월급" 추정치이며 입력값은 이 기기 밖으로 나가지 않습니다</p>
 <form class="quick ye-form" id="ye-form">
 <div class="ye-grid">
 ${inp('ye-annual', '연봉 (세전 · 만원)', 4200)}
@@ -1955,10 +2070,12 @@ ${inp('ye-ins', '보장성 보험료 (만원)', 0)}
 ${inp('ye-edu', '교육비 (만원)', 0)}
 ${inp('ye-rent', '월세 1년 합계 (만원)', 0)}
 ${inp('ye-pa', '연금저축·IRP 납입 (만원)', 0)}
+${inp('ye-prepaid', '올해 원천징수된 소득세 합계 (만원 · 선택)', '', ' placeholder="비우면 간이세액표 12개월분"')}
 </div>
 <div class="ye-checks"><label><input type="checkbox" id="ye-meal" checked> 식대 비과세 월 20만원 포함</label><label><input type="checkbox" id="ye-renter"> 무주택 세대주 (월세 세액공제 대상)</label></div>
+<p class="sub" style="margin-top:4px">기납부세액은 1~12월 급여명세서의 소득세(지방소득세 제외)를 더한 금액입니다. 상여를 받았거나 회사가 간이세액의 80%·120%를 골랐으면 간이세액표 12개월분과 다르니 직접 넣는 쪽이 정확합니다.</p>
 </form>
-<div class="hero"><div class="hero-label" id="ye-result-label">환급 예상</div><div class="hero-num"><span class="num" id="ye-result">0</span><span class="unit">원</span></div><div class="hero-sub" id="ye-result-sub">계산 중</div></div>
+<div class="hero"><div class="hero-label" id="ye-result-label">13월의 월급 — 환급 예상 (추정)</div><div class="hero-num"><span class="num" id="ye-result">0</span><span class="unit">원</span></div><div class="hero-sub" id="ye-result-sub">계산 중</div></div>
 <div id="ye-tips"></div>
 <div class="ledger"><div class="lg-head"><h2>계산 흐름</h2><span>원 · 1년</span></div><div id="ye-rows"></div></div>
 ${section(`${YEAR}년 귀속 연말정산 일정`, `${YEAR + 1}년 1~2월에 정산 · 국세청 홈택스`, table(['때', '무엇', '메모'], [
@@ -2001,7 +2118,8 @@ ${section('세액공제율 한눈에', `${YEAR}년 귀속`, table(['항목', '�
   { cells: ['신용카드 등 (소득공제)', '15% · 30%', '총급여 25% 초과분 · 한도 300만원(7천만원 이하) · 250만원(초과)'] },
 ]))}
 ${section('자주 묻는 것', null, `<div class="doc">
-<p><b>미리 낸 세금이 왜 결정세액보다 많은가요?</b> 간이세액표는 공제를 넉넉히 보지 않고 매달 떼기 때문에, 카드·보험·연금저축 같은 공제를 챙긴 사람은 대개 돌려받습니다. 반대로 부양가족을 실제보다 많이 신고해 두었거나 중도 입사·상여가 많으면 더 낼 수 있습니다.</p>
+<p><b>미리 낸 세금이 왜 결정세액보다 많은가요?</b> 간이세액표는 공제를 넉넉히 보지 않고 매달 떼기 때문에, 카드·보험·연금저축 같은 공제를 챙긴 사람은 대개 돌려받습니다. 반대로 부양가족을 실제보다 많이 신고해 두었거나 중도 입사·상여가 많으면 더 낼 수 있습니다. 상여를 받은 달에 뗀 세금이 궤도에서 벗어났는지는 <a href="/bonus/">성과급·상여금 실수령 계산기</a>로 확인할 수 있습니다.</p>
+<p><b>"13월의 월급"이 뭔가요?</b> 연말정산으로 돌려받는 환급금을 부르는 말입니다. 1년 동안 매달 간이세액표로 미리 뗀 소득세가 실제 결정세액보다 많으면 그 차액을 2월(회사에 따라 3월) 급여와 함께 받습니다. 위 결과는 입력한 몇 가지 공제만으로 어림한 <b>추정치</b>이고, 실제 금액은 홈택스 연말정산 미리보기(간소화 자료가 반영되는 1월 중순 이후가 더 정확)와 회사 정산 결과로 확인하세요.</p>
 <p><b>체크카드가 유리하다는데 왜 공제가 0원인가요?</b> 총급여의 25%까지는 어떤 카드를 써도 공제가 없습니다. 그 문턱을 넘긴 뒤부터 체크카드·현금영수증이 30%, 신용카드가 15%입니다. 문턱 아래에서는 혜택 좋은 신용카드를 쓰고, 넘긴 뒤에 체크카드로 바꾸는 것이 정석입니다.</p>
 <p><b>연금저축을 얼마나 넣으면 되나요?</b> 연 900만원(연금저축 600만원 + IRP 300만원)까지 15%를 세액공제받아 최대 135만원(총급여 5,500만원 초과는 108만원)입니다. 다만 55세 전에 깨면 16.5%를 물어내니 묶어둘 수 있는 돈만 넣으세요.</p>
 <p><b>맞벌이면 의료비·카드는 누구 앞으로?</b> 의료비는 총급여 3% 문턱이 있으니 소득이 적은 쪽으로 몰고, 카드도 문턱을 넘기기 쉬운 쪽에 몰아주는 것이 보통 유리합니다. 부양가족 기본공제는 소득세율이 높은 쪽이 받는 게 낫습니다.</p>
@@ -3713,7 +3831,7 @@ taxReceiptIndex(); SALARIES.forEach(taxReceiptPage);
 goalIndex(); GOALS.forEach((g) => SAVE_M.forEach((mm) => goalPage(g, mm)));
 negotiateIndex(); SALARIES.forEach(negotiatePage);
 historyIndex(); SALARIES.forEach(historyPage);
-yearendPage(); embedPages();
+yearendPage(); bonusPage(); embedPages();
 giftIndex(); GIFT_RELS.forEach((r) => { giftRelIndex(r); GIFT_AMOUNTS.forEach((m) => giftPage(r, m)); });
 bokbiIndex(); BOKBI.forEach(bokbiPage);
 acqIndex(); ACQ.forEach(acqPage);

@@ -17,18 +17,20 @@
     var monthlyTaxable = Math.round(gross / 12);
     var ins = D.insurance(monthlyTaxable);
     var withheld = D.incomeTax(monthlyTaxable, dep, kids);
+    var prepaidIn = val('ye-prepaid') * 10000;                 /* 급여명세서의 올해 소득세 합계를 직접 넣었으면 그 값, 아니면 간이세액표 12개월분 */
+    var prepaid = prepaidIn > 0 ? prepaidIn : withheld.tax * 12;
     var r = D.yearEnd({
       gross: gross, dependents: dep, children: kids,
       pension: ins.pension * 12, health: (ins.health + ins.care) * 12, employment: ins.employment * 12,
       creditCard: val('ye-credit') * 10000, checkCard: val('ye-check') * 10000,
       medical: val('ye-med') * 10000, insurance: val('ye-ins') * 10000, education: val('ye-edu') * 10000,
       rent: val('ye-rent') * 10000, renter: $('ye-renter').checked, pensionAccount: val('ye-pa') * 10000,
-      prepaid: withheld.tax * 12,
+      prepaid: prepaid,
     });
-    var sign = r.refund >= 0 ? '환급 예상' : '추가 납부 예상';
+    var sign = r.refund >= 0 ? '13월의 월급 — 환급 예상 (추정)' : '추가 납부 예상 (추정)';
     $('ye-result-label').textContent = sign;
     $('ye-result').textContent = num(Math.abs(r.refund));
-    $('ye-result-sub').textContent = '미리 낸 세금 ' + won(r.prepaidTotal) + ' − 결정세액 ' + won(r.total) + ' (지방소득세 포함)';
+    $('ye-result-sub').textContent = '미리 낸 세금 ' + won(r.prepaidTotal) + ' − 결정세액 ' + won(r.total) + ' (지방소득세 포함' + (prepaidIn > 0 ? ' · 기납부세액은 직접 넣은 값' : ' · 기납부세액은 간이세액표 12개월분으로 추정') + ')';
     var rows = [
       ['총급여', num(r.gross)], ['근로소득공제 후 근로소득금액', num(r.income)],
       ['기본공제 ' + dep + '인', '−' + num(r.basic)], ['국민연금 보험료', '−' + num(ins.pension * 12)],
@@ -38,7 +40,7 @@
     ];
     if (r.usedStandard) rows.push(['표준세액공제', '−' + num(r.standard)]);
     else rows.push(['보험료', '−' + num(r.ins)], ['의료비', '−' + num(r.med)], ['교육비', '−' + num(r.edu)], ['월세', '−' + num(r.rent)]);
-    rows.push(['결정세액 (소득세)', num(r.determined)], ['지방소득세', num(r.local)], ['미리 낸 세금 (간이세액 12개월 + 지방세)', num(r.prepaidTotal)]);
+    rows.push(['결정세액 (소득세)', num(r.determined)], ['지방소득세', num(r.local)], ['미리 낸 세금 (' + (prepaidIn > 0 ? '직접 넣은 소득세' : '간이세액 12개월') + ' + 지방세)', num(r.prepaidTotal)]);
     $('ye-rows').innerHTML = rows.map(function (x) { return '<div class="lg-row"><div class="lbl"><span>' + x[0] + '</span></div><span class="num">' + x[1] + '</span></div>'; }).join('');
     var tips = [];
     var th = Math.round(gross * 0.25);

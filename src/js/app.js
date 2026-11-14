@@ -39,6 +39,7 @@
     var man = function (v) { return (firstTok && firstTok.unit === '' && v >= 100000) ? Math.round(v / 10000) : v; };
     /* 단위가 붙었거나 100 이상인 금액만 — "3.3%", "8.8%" 같은 요율 숫자를 금액으로 읽지 않게 */
     var bigFirst = big.length ? man(big[0].man) : null;
+    if (/피부양/.test(t)) return { href: '/nhis/dependent/', label: '건강보험 피부양자 자격 판정기' };
     if (/건강보험|지역가입자|보수월액|장기요양|직장가입자/.test(t)) {
       var nhLocal = /지역|연소득|재산|프리|자영|퇴직|피부양/.test(t);
       if (bigFirst == null) return { href: '/nhis/' + (nhLocal ? '?t=local' : ''), label: nhLocal ? '지역가입자 건강보험료 계산기' : '건강보험료 계산기' };

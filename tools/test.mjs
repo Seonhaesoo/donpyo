@@ -23,6 +23,7 @@ import * as CC from '../engine/carcost.mjs';
 import * as AN from '../engine/annual.mjs';
 import * as FR from '../engine/freelance.mjs';
 import * as NH from '../engine/nhis.mjs';
+import * as DP2 from '../engine/dependent.mjs';
 import * as JB from '../engine/jongbu.mjs';
 import * as LBX from '../engine/labor.mjs';
 
@@ -476,6 +477,45 @@ ok(EI.childCredit(10000000, 'single').raw === 0 && EI.eitc({ type: 'single', wag
   ok(hi.pensionCapped && hi.pensionMonthly === 0, '월급 800만은 국민연금 상한(659만)이라 상여로 보험료가 늘지 않음');
   ok(b.pensionMonthly === Math.floor(Math.floor((3300000 + 3500000 / 12) / 1000) * 1000 * RATES[YEAR].pension / 10) * 10 - Math.floor(3300000 * RATES[YEAR].pension / 10) * 10 && b.pensionYear === b.pensionMonthly * 12, '국민연금 다음 해 기준소득월액 증가분');
   ok(BN.bonusWithholding({ monthly: 3500000, nontax: 200000, bonus: 0, months: 12 }).tax === 0 && BN.bonusWithholding({ monthly: 3500000, nontax: 200000, bonus: 0 }).net === 0, '상여 0이면 0');
+}
+/* 건강보험 피부양자 자격 — 시행규칙 별표 1·별표 1의2. 기준액 '이하'는 딱 그 금액까지 충족, 1원이라도 넘으면 불충족 */
+{
+  const d = (o) => DP2.dependent({ relation: 'parent', together: true, ...o });
+  ok(DP2.DEP_INCOME_LIMIT === 20000000 && DP2.DEP_FINANCE_FLOOR === 10000000 && DP2.DEP_BUSINESS_LIMIT === 5000000 && DP2.DEP_PROPERTY_LOW === 540000000 && DP2.DEP_PROPERTY_HIGH === 900000000 && DP2.DEP_PROPERTY_MID_INCOME === 10000000 && DP2.DEP_PROPERTY_SIBLING === 180000000, '피부양자 기준액 상수');
+  /* 소득 합계 2,000만원 */
+  ok(d({ pension: 20000000 }).verdict === 'pass' && d({ pension: 20000000 }).income.margin === 0, '피부양자 소득 정확히 2,000만원 → 충족');
+  ok(d({ pension: 20000001 }).verdict === 'fail' && d({ pension: 20000001 }).fails.join() === 'income' && d({ pension: 20000001 }).income.margin === -1, '피부양자 소득 2,000만 1원 → 불충족');
+  ok(d({ pension: 12000000, wage: 8000000 }).income.total === 20000000 && d({ pension: 12000000, wage: 8000000 }).income.ok, '피부양자 연금 + 근로 전액 합산');
+  /* 이자·배당 1,000만원 */
+  ok(d({ pension: 15000000, finance: 10000000 }).income.total === 15000000 && d({ pension: 15000000, finance: 10000000 }).verdict === 'pass', '피부양자 금융소득 정확히 1,000만원 → 합산 제외');
+  ok(d({ pension: 15000000, finance: 10000001 }).income.total === 25000001 && d({ pension: 15000000, finance: 10000001 }).verdict === 'fail', '피부양자 금융소득 1,000만 1원 → 전액 합산');
+  ok(d({ finance: 20000000 }).verdict === 'pass' && d({ finance: 20000001 }).verdict === 'fail', '피부양자 금융소득만 2,000만원 경계');
+  /* 사업소득 */
+  ok(d({ business: 1, bizReg: true }).verdict === 'fail' && d({ business: 1, bizReg: true }).income.bizCase === 'registered', '피부양자 사업자등록 + 사업소득 1원 → 불충족');
+  ok(d({ business: 0, bizReg: true }).verdict === 'pass', '피부양자 사업자등록만 있고 소득 0 → 충족');
+  ok(d({ business: 5000000 }).verdict === 'pass' && d({ business: 5000000 }).income.bizMargin === 0 && d({ business: 5000001 }).verdict === 'fail', '피부양자 미등록 사업소득 500만원 경계');
+  ok(d({ business: 3000000, rental: true }).verdict === 'fail' && d({ business: 3000000, rental: true }).income.bizCase === 'rental', '피부양자 주택임대소득은 미등록 예외 없음');
+  ok(d({ business: 5000000, bizReg: true, disabled: true }).verdict === 'pass' && d({ business: 5000001, bizReg: true, disabled: true }).verdict === 'fail' && d({ business: 3000000, rental: true, disabled: true }).verdict === 'pass', '피부양자 장애인·상이자는 등록 여부와 무관하게 500만원');
+  ok(d({ spouseOver: true }).verdict === 'fail' && d({ spouseOver: true }).fails.join() === 'income', '피부양자 기혼자는 부부 모두 소득요건');
+  ok(DP2.dependent({ relation: 'spouse', spouseOver: true }).verdict === 'pass', '피부양자 직장가입자의 배우자에게는 부부 조건을 묻지 않음');
+  /* 재산 */
+  ok(d({ property: 540000000, pension: 20000000 }).verdict === 'pass' && d({ property: 540000000 }).property.case === 'low' && d({ property: 540000000 }).property.margin === 0, '피부양자 재산 정확히 5.4억 → 소득 2,000만원까지');
+  ok(d({ property: 540000001, pension: 10000000 }).verdict === 'pass' && d({ property: 540000001, pension: 10000001 }).verdict === 'fail' && d({ property: 540000001, pension: 10000001 }).fails.join() === 'property', '피부양자 재산 5.4억 1원 → 소득 1,000만원 경계');
+  ok(d({ property: 900000000, pension: 10000000 }).verdict === 'pass' && d({ property: 900000000 }).property.case === 'mid' && d({ property: 900000001 }).verdict === 'fail' && d({ property: 900000001 }).property.case === 'high', '피부양자 재산 9억 경계');
+  ok(d({ property: 700000000, pension: 9000000, finance: 10000000 }).verdict === 'pass' && d({ property: 700000000, pension: 9000000, finance: 10000001 }).verdict === 'fail', '피부양자 5.4억~9억 구간의 소득 1,000만원도 금융소득 규칙을 따름');
+  const s = (o) => DP2.dependent({ relation: 'sibling', together: true, marital: 'single', ...o });
+  ok(s({ age: 29, property: 180000000 }).verdict === 'check' && s({ age: 29, property: 180000001 }).verdict === 'fail' && s({ age: 29, property: 180000001 }).property.case === 'sibling', '피부양자 형제자매 재산 1.8억 경계');
+  ok(s({ age: 30 }).verdict === 'fail' && s({ age: 30 }).fails.join() === 'support' && s({ age: 64 }).verdict === 'fail' && s({ age: 65 }).verdict === 'check' && s({ age: 29 }).verdict === 'check', '피부양자 형제자매 30세 미만·65세 이상 경계');
+  ok(s({ age: 40, disabled: true }).verdict === 'check' && s({ age: 29, marital: 'married' }).verdict === 'fail', '피부양자 형제자매 장애인 인정 · 기혼 불인정');
+  /* 부양요건 */
+  const sp = (relation, together, marital) => DP2.supportTest({ relation, together, marital }).status;
+  ok(sp('spouse', true) === 'pass' && sp('spouse', false) === 'pass', '부양요건 배우자');
+  ok(sp('parent', true) === 'pass' && sp('parent', false) === 'check' && sp('spouseParent', false) === 'check' && sp('grandparent', true) === 'pass', '부양요건 부모·조부모');
+  ok(sp('child', true, 'married') === 'pass' && sp('child', false, 'single') === 'pass' && sp('child', false, 'divorced') === 'check' && sp('child', false, 'married') === 'fail', '부양요건 자녀');
+  ok(sp('childSpouse', true) === 'pass' && sp('childSpouse', false) === 'fail' && sp('spouseChild', false, 'single') === 'fail' && sp('spouseChild', true, 'single') === 'pass' && sp('spouseChild', true, 'married') === 'fail', '부양요건 사위·며느리 · 배우자의 자녀');
+  ok(sp('grandchild', true, 'single') === 'check' && sp('grandchild', false, 'married') === 'fail', '부양요건 손자녀');
+  ok(DP2.dependent({ relation: 'childSpouse', together: false, pension: 30000000, property: 1000000000 }).fails.join() === 'support,income,property', '피부양자 불충족 요건 모두 표시');
+  ok(DP2.dependent().verdict === 'pass' && DP2.dependent({ pension: -5, property: 'x' }).income.total === 0, '피부양자 빈 입력·이상값');
 }
 /* 브라우저 엔진 묶음 = 서버 엔진 (같은 소스에서 생성되는지 확인) */
 {

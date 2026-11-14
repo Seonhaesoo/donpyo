@@ -27,6 +27,7 @@
 - 실업급여: https://donpyo.com/unemployment/
 - 국민연금 예상 수령액: https://donpyo.com/pension/
 - 건강보험료 계산: https://donpyo.com/nhis/
+- 건강보험 피부양자 자격 판정(소득 연 2,000만원·사업소득 500만원·재산세 과세표준 5.4억/9억·형제자매 1.8억, 시행규칙 별표 1·1의2, 참고용): https://donpyo.com/nhis/dependent/
 - 자동차세·연납: https://donpyo.com/car-tax/
 - 서재(설명 글 22편): https://donpyo.com/guide/
 - 사이트맵: https://donpyo.com/sitemap.xml · 새 글 RSS: https://donpyo.com/rss.xml

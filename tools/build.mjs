@@ -27,6 +27,7 @@ import * as IC from '../engine/income.mjs';
 import * as PT from '../engine/property.mjs';
 import * as JB from '../engine/jongbu.mjs';
 import { buildJongbu, JONGBU } from './pages-jongbu.mjs';
+import { buildDependent, depMethod, depSourceList, DEP_URL } from './pages-dependent.mjs';
 import * as CT from '../engine/cartax.mjs';
 import * as LV from '../engine/ltv.mjs';
 import * as SB from '../engine/subscription.mjs';
@@ -103,7 +104,12 @@ const SOURCES = {
 /* 2026-11-05: 월급·실수령 역산·연봉 페이지에 '2027년 1월부터 달라지는 내 월급' 표, 성과급·상여금 계산기(/bonus/), 연말정산 기납부세액 입력을 더한 날 */
 const UPDATED = '2026-11-05';
 /* 본문을 고친 날이 CONTENT_DATE 와 다른 페이지 — 사이트맵 lastmod 에만 쓴다 (고치지 않은 페이지의 날짜는 올리지 않는다). 앞에 있는 규칙이 먼저 맞는다 */
+/* 2026-11-14: 건강보험 피부양자 자격 판정기(/nhis/dependent/)를 더하고 건강보험료 계산기·계산 기준·서재 두 편에서 연결한 날 */
+const DEP_DATE = '2026-11-14';
 const PAGE_LASTMOD = [
+  [/^\/nhis\/(dependent\/)?$/, DEP_DATE],
+  [/^\/(method|updates)\/$/, DEP_DATE],
+  [/^\/guide\/(health-insurance-guide|pension-guide)\/$/, DEP_DATE],
   [/^\/(monthly|net|salary)\/\d+\/$/, UPDATED],         /* 2027년 비교표를 더한 금액 페이지 */
   [/^\/(bonus|yearend|method|updates)\/$/, UPDATED],
   [/^\/(method|updates|rates|2027|2027\/rates)\/$/, SOURCE_CHECKED],
@@ -115,7 +121,7 @@ const PAGE_LASTMOD = [
  * 2026-09-06~10-08 GA4 방문 또는 구글 노출 10회 이상)만 색인하고 나머지는 noindex — 페이지·링크·계산은 그대로 둔다.
  * 허브(1단계 주소)·서재·2027·최저임금·관계별 증여세/상속세 표·전기차 자동차세는 늘 색인. 수요가 새로 생긴 주소는 index-keep.json 에 더한다. */
 const INDEX_KEEP = new Set(JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'index-keep.json'), 'utf8')).keep);
-const ALWAYS_INDEX = /^\/(guide|2027|minimum-wage|updates)\/|^\/gift-tax\/[a-z]+\/$|^\/inheritance-tax\/[a-z0-9]+\/$|^\/car-tax\/ev\/$/;
+const ALWAYS_INDEX = /^\/(guide|2027|minimum-wage|updates)\/|^\/nhis\/dependent\/$|^\/gift-tax\/[a-z]+\/$|^\/inheritance-tax\/[a-z0-9]+\/$|^\/car-tax\/ev\/$/;
 const thinPage = (u) => u.split('/').filter(Boolean).length >= 2 && !ALWAYS_INDEX.test(u) && !INDEX_KEEP.has(u);
 const GUIDES = [...BASE_GUIDES, ...GUIDES_A, ...GUIDES_B, ...GUIDES_C];   /* 서재: 기본 10편 + 2026-09-13 추가분(세금·부동산, 연금·보험·생활) + 2026-10-08 2027·퇴사 3편 */
 
@@ -744,6 +750,7 @@ ${section('대출·저축·제도', null, `<div class="dict">
 <a href="/retire/"><b>퇴직금 세후</b><span>월급 350만·5년 → <span class="num">${num(R.severanceTax(R.severance(3500000, 5).amount, 5).net)}</span>원</span></a>
 <a href="/unemployment/"><b>실업급여</b><span>월급 350만·5년 → 하루 <span class="num">${num(U.dailyBenefit(3500000).daily)}</span>원 × ${U.benefitDays(5)}일</span></a>
 <a href="/nhis/"><b>건강보험료 (직장·지역)</b><span>보수월액 300만 → 근로자 <span class="num">${num(NH.employee(3000000).employee)}</span>원 · 지역가입자 연소득 3,000만 <span class="num">${num(NH.local({ income: 30000000 }).total)}</span>원</span></a>
+<a href="${DEP_URL}"><b>건강보험 피부양자 자격</b><span>소득 연 <span class="num">2,000만원</span> · 재산세 과세표준 <span class="num">5억 4,000만원</span> 이하인지 요건별 판정</span></a>
 <a href="/rates/"><b>${YEAR}년 4대보험 요율표</b><span>근로자 부담 국민연금 <span class="num">${pct(R0.pension, 2)}</span> · 건강보험 <span class="num">${pct(R0.health, 3)}</span></span></a>
 </div>`)}
 ${section('세금·부동산', null, `<div class="dict">
@@ -860,6 +867,8 @@ ${table(['항목', `${PREV}년`, `${YEAR}년`, '비고'], [
 <p>소득세법 제127조·제129조와 지방세법 제103조의13 기준입니다. 사업소득(인적용역) 원천징수는 소득세 3% + 지방소득세 0.3%(소득세의 10%) = 3.3%이고 실지급액은 계약금액 × 0.967, 세전 역산은 실수령 ÷ 0.967입니다. 기타소득(강연료·원고료·자문료 등 일시적인 용역)은 소득세법 시행령 제87조에 따라 필요경비 60%를 인정하므로 과세표준 = 총액 × 40%, 여기에 소득세 20% + 지방소득세 2%가 붙어 총액의 8.8%가 됩니다(역산은 ÷ 0.912). 건당 지급액 12만 5천원 이하(기타소득금액 5만원 이하)는 과세최저한이라 원천징수하지 않습니다(제84조). 각 세액은 10원 미만을 절사합니다. 사업소득이냐 기타소득이냐는 계속·반복성으로 가르며, 같은 일을 반복해 생계 수단으로 삼으면 사업소득, 일시적·우발적이면 기타소득입니다. 3.3%·8.8%는 미리 내는 세금이라 다음 해 5월 종합소득세 신고에서 수입 − 필요경비(업종별 단순경비율 또는 기준경비율, 아니면 실제 경비) − 공제로 다시 계산해 환급받거나 더 냅니다. 연 기타소득금액 300만원(총액 750만원) 이하는 분리과세를 고를 수 있습니다. 프리랜서는 직장가입자가 아니라 건강보험·국민연금을 지역가입자로 따로 내며 그 금액은 위 실수령에 들어 있지 않습니다. 정산 예시는 필요경비율 60·70·80%, 기본공제 150만원, 표준세액공제 7만원만 반영한 값입니다.</p>
 <h2>건강보험료 (직장가입자·지역가입자)</h2>
 <p>국민건강보험법 제69조~제73조·시행령과 노인장기요양보험법 제9조에 따릅니다. 요율과 상·하한, 부과점수 단가 모두 이 사이트의 연봉·월급 계산과 같은 <b>${YEAR}년 값</b>을 씁니다. 직장가입자 건강보험료 = 보수월액 × ${NH.HEALTH_PCT}이고 근로자와 사업주가 각 ${NH.HALF_PCT}씩 냅니다. 월 보험료 상한은 ${num(NH.PREMIUM_MAX)}원(근로자 몫 ${num(NH.PREMIUM_MAX / 2)}원, 보수월액으로 약 ${manwon(Math.round(NH.WAGE_MAX / 10000) * 10000)}), 하한은 ${num(NH.PREMIUM_MIN)}원입니다(시행령 제32조). 지역가입자는 2022년 9월 2단계 개편 이후 소득 정률제라 연소득 336만원 이하면 최저보험료 ${num(NH.LOCAL_MIN)}원(월 보험료 하한), 그보다 많으면 직장가입자와 같은 ${NH.HEALTH_PCT}를 적용해 월 보험료 = 연소득 × ${NH.HEALTH_PCT} ÷ 12로 계산합니다. 재산은 재산세 과세표준에서 기본공제 1억원을 뺀 금액을 재산등급표로 점수화하고 부과점수당 ${NH.POINT_VALUE}원(${YEAR}년)을 곱합니다. <b>공단의 재산등급표는 60등급이지만 이 사이트는 이를 0·22·60·100·150·200·250점의 6단계로 줄인 근사표를 씁니다.</b> 구간 경계에서 실제 보험료와 차이가 나므로 <a href="https://www.nhis.or.kr" target="_blank" rel="noopener">국민건강보험공단 모의계산</a>이 정확합니다(고객센터 1577-1000). 자동차는 2024년 2월 부과분부터 제외됐습니다. 장기요양보험료는 직장·지역 모두 건강보험료 × ${NH.CARE_PCT}이고 각 보험료는 10원 미만을 절사합니다. 소득월액보험료(보수 외 소득 연 2,000만원 초과), 피부양자 자격 판정, 임의계속가입, 섬·벽지·농어촌 경감, 4월 보수 정산은 반영하지 않았습니다.</p>
+${depMethod()}
+${depSourceList()}
 <h2>자동차 할부</h2>
 <p>차값 − 선수금을 원리금균등으로 나눈 월 납입액입니다. 취득세(약 7%)·보험료·등록비와 잔가 유예 할부는 반영하지 않았습니다.</p>
 <h2>나이대 비교</h2>
@@ -1739,6 +1748,7 @@ const guideModified = (g) => g.modified || ((g.published || '2026-09-06') > '202
 
 /* 업데이트 기록 — 이용자에게 보이는 변경만, 최근 것부터. 글·요율을 고칠 때 맨 위에 한 줄 더한다 */
 const UPDATES = [
+  { date: '2026-11-14', text: '<a href="/nhis/dependent/">건강보험 피부양자 자격 판정기</a>를 더했습니다 — 관계, 연금·근로·사업·이자·배당 소득, 사업자등록 여부, 재산세 과세표준을 넣으면 부양·소득·재산요건을 하나씩 판정하고 기준까지 남은 금액을 보여 줍니다(국민건강보험법 시행규칙 별표 1·별표 1의2, 참고용).' },
   { date: '2026-11-05', text: '월급·연봉·실수령 역산 페이지마다 "2027년 1월부터 달라지는 내 월급" 표를 더했습니다 — 그 월급을 2027년 요율(국민연금 10%, 건강보험 동결)로 다시 계산해 국민연금·건강보험·장기요양·고용보험·소득세·실수령을 나란히 두고, 아직 확정되지 않은 요율은 표 아래에 적었습니다. 성과급·상여금 실수령 계산기(/bonus/)를 열었습니다 — 소득세법 시행령 제146조의 지급대상기간 방식(월평균 급여의 간이세액 × 월수 − 기납부세액)으로 원천징수를 계산하고 건강·장기요양·고용보험과 국민연금 상한 영향을 함께 보여 줍니다. 연말정산 미리보기에 급여명세서의 올해 원천징수 소득세 합계(기납부세액)를 직접 넣는 칸을 더했습니다.' },
   { date: '2026-10-24', text: '모든 요율의 원문을 공식 페이지와 대조했습니다(계산 기준 페이지에 출처 링크와 원문 대조일 표기). 근로소득 간이세액표는 2026년 2월 27일 개정(대통령령 제36129호)이 있어 법제처 별표 2 PDF와 646개 구간을 전부 대조한 결과 표의 금액은 같고 8세 이상 20세 이하 자녀 공제액만 올라(1명 12,500→20,830원, 2명 29,160→45,830원, 3명째부터 25,000→33,330원) 2026년 3월 지급분 기준으로 반영했습니다 — 자녀 공제를 고른 계산만 바뀌고 기본 표는 그대로입니다. 국민연금 기준소득월액 상·하한(41만~659만원)이 2026년 7월~2027년 6월 적용값임을, 구직급여 상한 68,100원의 근거(고용보험법 시행령 제68조, 2026년 1월 1일 이후 이직자)를 함께 적었습니다. 4대보험 요율(국민연금 4.75%·건강보험 7.19%·장기요양 0.9448%·고용보험 0.9%)과 최저임금 10,320원은 원문과 같음을 확인했습니다.' },
   { date: '2026-10-08', text: '서재에 2027년 실업급여, 2027년 월급에서 더 빠지는 돈, 퇴사할 때 받는 돈 계산 순서를 더했습니다. 실업급여 계산표에 2027년 하한액(하루 68,480원)과 미정인 상한액을 안내했습니다.' },
@@ -3792,6 +3802,7 @@ ${section('자주 묻는 것', null, `<div class="doc">
 </div>`)}
 ${section('알아두면 좋은 것', null, NHIS_TIPS)}
 ${section('이어서 계산하기', null, list([
+  { href: DEP_URL, title: '피부양자 자격 판정기', sub: '가족 밑으로 들어갈 수 있는지 소득·재산·부양요건 확인' },
   { href: '/monthly/', title: '월급 실수령액표', sub: '건강보험을 포함한 4대보험을 다 뗀 금액' },
   { href: '/freelance/', title: '프리랜서 3.3% 계산기', sub: '지역가입자가 되는 경우' },
   { href: '/rates/', title: `${YEAR}년 4대보험 요율표`, sub: '국민연금·고용보험까지' },
@@ -3851,6 +3862,7 @@ capIndex(); CAP_SALES.forEach((s) => capCosts(s).forEach((c) => capPage(s, c)));
 carcostIndex(); CARCOST_P.forEach(carcostPage);
 annualIndex(); ANNUAL_YEARS.forEach(annualYearPage); ANNUAL_PAYS.forEach(annualPayPage);
 nhisIndex(); NHIS_E.forEach(nhisEmpPage); NHIS_L.forEach(nhisLocalPage);
+buildDependent({ write, shell, crumb, lead, section, table, list, ad, YEAR });
 fs.writeFileSync(path.join(OUT, 'js', 'engine.js'), makeBundle(NT));
 docs();
 

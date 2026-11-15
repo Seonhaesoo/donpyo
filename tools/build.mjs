@@ -107,6 +107,7 @@ const UPDATED = '2026-11-05';
 /* 2026-11-14: 건강보험 피부양자 자격 판정기(/nhis/dependent/)를 더하고 건강보험료 계산기·계산 기준·서재 두 편에서 연결한 날 */
 const DEP_DATE = '2026-11-14';
 const PAGE_LASTMOD = [
+  [/^\/car-tax\/$/, '2026-11-16'],                   /* 연납 시기별 표를 더한 날 */
   [/^\/nhis\/(dependent\/)?$/, DEP_DATE],
   [/^\/(method|updates)\/$/, DEP_DATE],
   [/^\/guide\/(health-insurance-guide|pension-guide)\/$/, DEP_DATE],
@@ -2689,6 +2690,21 @@ ${CAR_NOTE}`;
   write(url, shell({ url, title: `전기차 자동차세 — 연 ${won(t.total)} (정액 10만원 + 교육세, ${YEAR}년)`, desc: '전기차·수소차 자동차세는 배기량과 관계없이 연 10만원에 지방교육세 3만원을 더한 13만원입니다. 휘발유차와 비교, 납부 시기, 연납.', body, nav: 'loan' }));
 }
 
+/* 2026-11-16 겨울 시즌: 연납은 1월만이 아니다 — 3·6·9월에 내면 남은 달만큼만 공제. 신청은 각 달 16일~말일(위택스·이택스·구청).
+ * 공제율은 행안부 고시(시행령)라 다음 해 값은 12월 개정으로 정해진다 — 표는 저장소 값(ANNUAL_DISCOUNT)으로 계산하고 확정 전이면 그렇게 적는다 */
+function carTaxPrepaySection() {
+  const ny = YEAR + 1, rate = CT.ANNUAL_DISCOUNT[ny] ?? CT.ANNUAL_DISCOUNT[YEAR] ?? 0;
+  const months = [[1, 11, '2~12월분'], [3, 9, '4~12월분'], [6, 6, '7~12월분'], [9, 3, '10~12월분']];
+  const cc = 1999, base = CT.carTax(cc, { year: ny }).total;
+  const rows = months.map(([m, n, span]) => ({ cells: [`${m}월 16일~말일`, span, pct(rate * n / 12, 2), num(Math.floor(base * rate * n / 12)), num(base - Math.floor(base * rate * n / 12))] }));
+  return section(`${ny}년 연납 — 언제 내면 얼마 덜 내나`, `1,999cc 1~2년차 연 ${num(base)}원 기준`, table(['신청·납부 기간', '공제 대상', '실제 할인', '덜 내는 돈', '내는 돈'], rows) + `<div class="doc">
+<p><b>1월이 가장 크고, 늦을수록 줄어듭니다.</b> 공제율 ${pct(rate, 0)}를 남은 달 수만큼 나눠 적용하므로 1월은 연세액의 약 ${pct(rate * 11 / 12, 1)}, 9월은 약 ${pct(rate * 3 / 12, 2)}입니다. 6월에 이미 1기분(상반기)을 냈다면 6월·9월 연납은 남은 하반기분에만 적용됩니다.</p>
+<p><b>어디서 신청하나요?</b> 위택스(서울은 이택스)나 관할 시·군·구청 세무과에서 신청하고 그 달 말일까지 냅니다. 한 번 1월 연납을 하면 다음 해부터는 1월에 연납 고지서가 자동으로 나옵니다.</p>
+<p><b>연납한 뒤 차를 팔거나 폐차하면?</b> 소유권을 넘긴 날 이후 남은 기간의 세금은 일할 계산해 돌려받습니다(신청 또는 자동 환급 — 관할 지자체 안내 확인).</p>
+<p><b>${ny}년 공제율은 확정됐나요?</b> 공제율은 지방세법 시행령으로 정하고 해마다 연말에 바뀔 수 있습니다. 이 표는 ${ny}년에도 ${pct(rate, 0)}를 가정해 계산했습니다 — 1월 고지서나 위택스에 나온 금액이 정확합니다.</p>
+</div>`);
+}
+
 function carTaxIndex() {
   const rows = CARS.map((cc) => { const t = CT.carTax(cc, { year: YEAR }), t5 = CT.carTax(cc, { age: 5, year: YEAR }); return { cells: [`<a href="${carTaxUrl(cc)}">${num(cc)}cc</a>${CAR_EX[cc] ? `<br><small>${CAR_EX[cc]}</small>` : ''}`, `${t.unit}원`, num(t.tax), num(t.educ), num(t.total), num(t.prepaid), num(t5.total)] }; });
   const body = `
@@ -2698,9 +2714,10 @@ ${crumb([['/', '홈'], [null, '자동차세']])}
 ${lead(`자동차세는 배기량에 cc당 세액(1,000cc 이하 80원, 1,600cc 이하 140원, 초과 200원)을 곱하고 지방교육세 30%를 더합니다. 경차 998cc는 연 ${won(CT.carTax(998).total)}, 1,598cc는 ${won(CT.carTax(1598).total)}, 1,999cc는 ${won(CT.carTax(1999).total)}입니다. 등록 3년차부터 해마다 5%씩 줄어 12년차에는 절반이 되고, 전기차는 정액 ${won(CT.carTax(0, { ev: true }).total)}입니다.`)}
 ${section('배기량별', '원 · 배기량을 누르면 연식별 표', table(['배기량', 'cc당', '자동차세', '교육세', '연 합계 (1~2년차)', '연납 시', '5년차 합계'], rows))}
 ${ad()}
+${carTaxPrepaySection()}
 ${section('전기차·수소차', null, list([{ href: '/car-tax/ev/', title: '전기차 자동차세', sub: '배기량 없이 정액 10만원 + 교육세', value: CT.carTax(0, { ev: true }).total }]))}
 ${section('자주 묻는 것', null, `<div class="doc">
-<p><b>연납하면 얼마나 이득인가요?</b> ${YEAR}년 공제율 ${pct(CT.ANNUAL_DISCOUNT[YEAR] || 0, 0)}를 2~12월분에 적용하니 실제 할인은 연세액의 약 ${pct((CT.ANNUAL_DISCOUNT[YEAR] || 0) * 11 / 12, 1)}입니다. 1,999cc면 약 ${won(CT.carTax(1999, { year: YEAR }).prepay)}입니다. 공제율은 2027년 폐지 예정입니다.</p>
+<p><b>연납하면 얼마나 이득인가요?</b> ${YEAR}년 공제율 ${pct(CT.ANNUAL_DISCOUNT[YEAR] || 0, 0)}를 2~12월분에 적용하니 실제 할인은 연세액의 약 ${pct((CT.ANNUAL_DISCOUNT[YEAR] || 0) * 11 / 12, 1)}입니다. 1,999cc면 약 ${won(CT.carTax(1999, { year: YEAR }).prepay)}입니다. 다음 해 공제율은 연말 시행령 개정으로 정해지니 1월 고지서 금액을 확인하세요.</p>
 <p><b>차령은 어떻게 세나요?</b> 최초 등록 연도를 1년차로 보고 해가 바뀔 때마다 1년씩 더합니다. 3년차 5%, 4년차 10% … 12년차 이상 50%입니다. 중고차도 최초 등록일 기준입니다.</p>
 <p><b>자동차 취득세와 다른가요?</b> 취득세는 살 때 한 번(승용차 7%), 자동차세는 보유하는 동안 해마다 내는 세금입니다.</p>
 </div>`)}

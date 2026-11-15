@@ -320,3 +320,9 @@ body.bare { background: transparent; }
 .dep-tbl th, .dep-tbl td { text-align: left; vertical-align: top; white-space: normal; font-family: var(--sans); line-height: 1.6; }
 .dep-tbl td:first-child, .dep-tbl th:first-child { min-width: 5.4em; padding-right: 10px; color: var(--ink); font-weight: 600; }
 .dep-tbl td:nth-child(2):has(.dep-badge) { white-space: nowrap; }
+/* 2026-11-16 쿠팡 다이나믹 배너 — 칸 높이를 미리 잡아 글이 밀리지 않게 */
+.cp-dyn { margin: 26px 0 8px; padding: 14px 16px; border: 1px solid var(--line, #e5e5e5); border-radius: 14px; }
+.cp-dyn .cp-h { margin: 0 0 10px; font-size: 15px; font-weight: 700; }
+.cp-dyn .cp-dyn-slot { min-height: 140px; overflow: hidden; }
+.cp-dyn .cp-dyn-slot iframe { max-width: 100%; display: block; }
+.cp-dyn .cp-note { margin: 10px 0 0; font-size: 12px; opacity: .7; line-height: 1.6; }

@@ -141,6 +141,11 @@ function write(url, html) {
   urls.push(url);
 }
 
+/* 2026-11-16 쿠팡 다이나믹 배너 '고객 관심 기반 추천'(파트너스 배너 1019568, subId donpyo) — 본문 끝·바닥글 위에 한 번.
+ * 보는 사람이 쿠팡에서 본 상품을 띄워 고정 상자보다 클릭이 잘 나온다. 폭은 화면에 맞춰 최대 680px, 대가성 문구 함께. 소개·약관·개인정보·계산 방법에는 넣지 않는다 */
+const CP_DISCLOSURE = '이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.';
+const DYN_BANNER = `<aside class="cp-dyn"><p class="cp-h">쿠팡 추천 상품</p><div class="cp-dyn-slot"><script src="https://ads-partners.coupang.com/g.js"></script><script>(function(){var s=document.currentScript,w=Math.min(680,Math.max(280,(s.parentNode&&s.parentNode.clientWidth)||680));new PartnersCoupang.G({"id":1019568,"trackingCode":"AF3659962","subId":"donpyo","template":"carousel","width":String(w),"height":"140"});})();</script></div><p class="cp-note">${CP_DISCLOSURE}</p></aside>`;
+
 function shell(o) {
   /* 금액 조합 페이지는 구글에만 뺀다('google' → googlebot noindex). 네이버 유입 대부분이 이 페이지들이라
    * robots noindex(모든 검색엔진)로 두면 네이버에서도 빠진다 (2026-10-24 감사). noindex: true 는 약관·위젯·부가 페이지처럼 어디서도 뺄 것 */
@@ -180,6 +185,7 @@ ${o.bare ? o.body : `<div class="app">
   <span class="year-pill">${YEAR} 요율</span>
 </header>
 ${o.body}
+${o.noDyn || /^\/(about|terms|privacy|method)\//.test(o.url) ? '' : DYN_BANNER}
 <footer class="foot foot2">
   <p class="flabel">계산 찾아보기</p>
   <nav class="fgrid" aria-label="계산 찾아보기"><a href="/salary/">연봉 실수령액</a><a href="/monthly/">월급 실수령액</a><a href="/loan/">대출 상환</a><a href="/retire/">퇴직금</a><a href="/unemployment/">실업급여</a><a href="/hourly/">알바 월급</a><a href="/guide/">서재</a><a href="/method/">계산 기준</a><a href="/updates/">업데이트 기록</a></nav>

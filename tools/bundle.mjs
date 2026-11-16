@@ -27,7 +27,7 @@ export function makeBundle(NT = 200000) {
     wrap('K', strip(read('rank.mjs')), ['rank', 'incomeAt', 'STAT']),
     wrap('A', strip(read('age.mjs')), ['ageRank', 'medianOf']),
     wrap('G', strip(read('goal.mjs')), ['monthsToGoal', 'balanceAfter', 'fmtMonths']),
-    wrap('Y', strip(read('retire.mjs')) + '\n' + strip(read('yearend.mjs')), ['basicTax', 'severance', 'severanceTax', 'yearEnd', 'cardDeduction', 'earnedIncomeDeduction']),
+    wrap('Y', strip(read('retire.mjs')) + '\n' + strip(read('yearend.mjs')), ['basicTax', 'severance', 'severanceTax', 'yearEnd', 'cardDeduction', 'cardCap', 'earnedIncomeDeduction']),
     wrap('S', strip(read('subscription.mjs')), ['subscriptionScore', 'homelessScore', 'familyScore', 'accountScore', 'subGrade', 'maxForFamily', 'SUB_MAX', 'HOMELESS_TABLE', 'FAMILY_TABLE', 'ACCOUNT_TABLE']),
     wrap('P', strip(read('parental.mjs')), ['parentalLeave', 'monthPay', 'bothTotal', 'babyBenefits', 'benefitTimeline', 'ageMonths', 'MODES', 'BENEFITS', 'BOTH_CAPS', 'NORMAL_CAPS', 'LEAVE_MIN']),
     wrap('E', strip(read('electric.mjs')), ['electricBill', 'marginalPerKwh', 'PLANS', 'SEASONS']),

@@ -182,6 +182,15 @@ ok(YE.earnedIncomeTaxCredit(1000000, 30000000) === 550000, '근로소득세액�
   ok(q.refund === q.prepaidTotal - q.total, '환급 = 기납부 − 결정세액');
   const z = YE.yearEnd({ gross: 90000000, dependents: 1, renter: true, rent: 12000000, pensionAccount: 9000000 });
   ok(z.rent === 0 && z.pa === 1080000, '총급여 8천만 초과 월세 공제 없음 · 연금 12%', JSON.stringify([z.rent, z.pa]));
+  /* 2026년 사용분부터 — 조특법 제126조의2제10항 자녀 수별 카드 한도, 제87조 주택청약, 소득세법 제59조의4제4항 기부금 */
+  ok(YE.cardCap(40000000, 0) === 3000000 && YE.cardCap(40000000, 1) === 3500000 && YE.cardCap(40000000, 3) === 4000000 && YE.cardCap(90000000, 1) === 2750000 && YE.cardCap(90000000, 2) === 3000000, '카드 한도 자녀 1명 350/275만, 2명 이상 400/300만');
+  ok(YE.cardDeduction(40000000, 10000000, 12500000, 2) === 3750000 && YE.cardDeduction(40000000, 10000000, 12500000) === 3000000, '자녀 2명 카드공제 375만(한도 400만 안)', YE.cardDeduction(40000000, 10000000, 12500000, 2));
+  ok(YE.housingSavingDeduction(50000000, 3600000, true) === 1200000 && YE.housingSavingDeduction(50000000, 3000000, false) === 0 && YE.housingSavingDeduction(75000000, 3000000, true) === 0, '주택청약 300만 한도 40% · 무주택 세대주 · 총급여 7천만 이하');
+  ok(YE.donationCredit(1000000) === 150000 && YE.donationCredit(12000000) === 2100000, '기부금 15% · 1천만 초과 30%', YE.donationCredit(12000000));
+  const h = YE.yearEnd({ gross: 47600000, dependents: 1, homeless: true, housingSaving: 3000000 }), h0 = YE.yearEnd({ gross: 47600000, dependents: 1 });
+  ok(h.housing === 1200000 && h0.base - h.base === 1200000 && h.usedStandard === true, '주택청약은 과세표준에서 빼고 표준세액공제와 함께', JSON.stringify([h.housing, h0.base - h.base, h.usedStandard]));
+  const k = YE.yearEnd({ gross: 40000000, dependents: 3, children: 1, creditCard: 10000000, checkCard: 15000000 });
+  ok(k.card === 3500000, '8~20세 자녀는 cardKids 없이도 카드 한도에 반영', k.card);
 }
 
 /* 증여세 */

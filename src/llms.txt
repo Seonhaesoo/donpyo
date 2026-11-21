@@ -14,9 +14,9 @@
 - 2027년 4대보험 요율표: https://donpyo.com/2027/rates/
 - 2027년 연봉 실수령액표: https://donpyo.com/2027/salary/
 - 2027년 월급 실수령액표: https://donpyo.com/2027/monthly/
-- 2026년 연봉 실수령액표: https://donpyo.com/salary/ (연봉별 상세는 /salary/4200/ 처럼 만원 단위)
-- 2026년 월급 실수령액표: https://donpyo.com/monthly/ (월급별 상세는 /monthly/350/)
-- 실수령으로 연봉 역산: https://donpyo.com/net/
+- 연봉 실수령액표(2027년·2026년 나란히): https://donpyo.com/salary/ (연봉별 상세는 /salary/4200/ 처럼 만원 단위)
+- 월급 실수령액표(2027년·2026년 나란히): https://donpyo.com/monthly/ (월급별 상세는 /monthly/350/)
+- 실수령으로 연봉 역산(2027년·2026년 필요 연봉): https://donpyo.com/net/
 - 2026년 4대보험 요율표: https://donpyo.com/rates/
 - 2026년 최저임금: https://donpyo.com/minimum-wage/
 - 알바 월급·주휴수당: https://donpyo.com/hourly/

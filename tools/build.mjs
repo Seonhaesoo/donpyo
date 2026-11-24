@@ -164,6 +164,22 @@ function write(url, html) {
 const CP_DISCLOSURE = '이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.';
 const DYN_BANNER = `<aside class="cp-dyn"><p class="cp-h">쿠팡 추천 상품</p><div class="cp-dyn-slot"><script src="https://ads-partners.coupang.com/g.js"></script><script>(function(){var s=document.currentScript,w=Math.min(680,Math.max(280,(s.parentNode&&s.parentNode.clientWidth)||680));new PartnersCoupang.G({"id":1019568,"trackingCode":"AF3659962","subId":"donpyo","template":"carousel","width":String(w),"height":"140"});})();</script></div><p class="cp-note">${CP_DISCLOSURE}</p></aside>`;
 
+/* 2026-11-25 쿠팡 다이나믹 배너를 본문 중간으로 — 휴대폰에서 맨 아래까지 내려오는 사람이 적다(사용자 요청).
+ * 본문 30% 뒤에서 처음 시작하는 구역·소제목 바로 앞에 넣는다. 그런 자리가 없으면 null — 그때는 맨 아래에 둔다 */
+function midInsert(body, html) {
+  const s = String(body || '');
+  // 구역(<section)이 둘 이상이면 앞에서 40% 쯤 되는 구역 앞에, 아니면 소제목(<h2) 기준으로 같은 자리에.
+  // 글자 수로 재지 않는다 — 본문 끝에 큰 스크립트가 붙은 페이지에서 자리가 맨 아래로 밀렸다
+  for (const re of [/<section\b/g, /<h2\b/g]) {
+    const at = [...s.matchAll(re)].map((m) => m.index);
+    if (at.length >= 2) {
+      const i = at[Math.max(1, Math.floor(at.length * 0.4))];
+      return s.slice(0, i) + '\n' + html + '\n' + s.slice(i);
+    }
+  }
+  return null;
+}
+
 function shell(o) {
   /* 금액 조합 페이지는 구글에만 뺀다('google' → googlebot noindex). 네이버 유입 대부분이 이 페이지들이라
    * robots noindex(모든 검색엔진)로 두면 네이버에서도 빠진다 (2026-10-24 감사). noindex: true 는 약관·위젯·부가 페이지처럼 어디서도 뺄 것 */
@@ -174,6 +190,8 @@ function shell(o) {
   const ADS = ADSENSE && !o.bare ? `<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE}" crossorigin="anonymous"></script>\n` : '';
   const ld = o.ld || { '@context': 'https://schema.org', '@type': 'WebPage', name: o.title, description: o.desc, url: SITE + o.url, inLanguage: 'ko', isPartOf: { '@type': 'WebSite', name: '돈표', url: SITE } };
   const on = (k) => o.nav === k ? ' class="on"' : '';
+  const _dyn = o.noDyn || o.bare || /^\/(about|terms|privacy|method)\//.test(o.url) ? '' : DYN_BANNER;
+  const _mid = _dyn ? midInsert(o.body, _dyn) : null;
   return `<!doctype html>
 <html lang="ko">
 <head>
@@ -202,8 +220,8 @@ ${o.bare ? o.body : `<div class="app">
   <nav class="nav"><a href="/salary/"${on('salary')}>연봉</a><a href="/monthly/"${on('monthly')}>월급</a><a href="/loan/"${on('loan')}>대출</a><a href="/retire/"${on('retire')}>퇴직금</a><a href="/unemployment/"${on('unemployment')}>실업급여</a><a href="/hourly/"${on('hourly')}>알바</a></nav>
   <span class="year-pill">${YEAR} 요율</span>
 </header>
-${o.body}
-${o.noDyn || /^\/(about|terms|privacy|method)\//.test(o.url) ? '' : DYN_BANNER}
+${_mid ?? o.body}
+${_dyn && !_mid ? _dyn : ''}
 <footer class="foot foot2">
   <p class="flabel">계산 찾아보기</p>
   <nav class="fgrid" aria-label="계산 찾아보기"><a href="/salary/">연봉 실수령액</a><a href="/monthly/">월급 실수령액</a><a href="/loan/">대출 상환</a><a href="/retire/">퇴직금</a><a href="/unemployment/">실업급여</a><a href="/hourly/">알바 월급</a><a href="/guide/">서재</a><a href="/method/">계산 기준</a><a href="/updates/">업데이트 기록</a></nav>

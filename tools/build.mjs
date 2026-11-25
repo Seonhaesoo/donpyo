@@ -2270,6 +2270,7 @@ ${section('자주 묻는 것', null, `<div class="doc">
 <p><b>연금저축을 얼마나 넣으면 되나요?</b> 연 900만원(연금저축 600만원 + IRP 300만원)까지 15%를 세액공제받아 최대 135만원(총급여 5,500만원 초과는 108만원)이고, 지방소득세까지 합치면 148만 5천원(118만 8천원)입니다. 다만 결정세액이 그보다 적으면 다 돌려받지 못하고, 연금이 아닌 방식으로 중간에 빼면 공제받은 납입액과 운용수익에 16.5%(기타소득세)를 내야 하니 묶어둘 수 있는 돈만 넣으세요.</p>
 <p><b>맞벌이면 의료비·카드는 누구 앞으로?</b> 의료비는 총급여 3% 문턱이 있으니 소득이 적은 쪽으로 몰고, 카드도 문턱을 넘기기 쉬운 쪽에 몰아주는 것이 보통 유리합니다. 부양가족 기본공제는 소득세율이 높은 쪽이 받는 게 낫습니다. 같은 사람을 부부가 함께 공제하면 나중에 가산세와 함께 추징됩니다.</p>
 </div>`)}
+${section('연봉별 연말정산', '카드를 연봉의 40% 썼을 때 · 환급(+) / 추가 납부(−) · 원 — 누르면 카드 문턱과 연금저축·월세별 표', yeChips(0))}
 ${section('이어서 계산하기', null, list([
   { href: '/salary/', title: '연봉 실수령액표', sub: '매달 손에 쥐는 돈은 얼마인지' },
   { href: '/tax-receipt/', title: '내 세금 영수증', sub: '1년에 나와 회사가 내는 돈' },
@@ -2278,6 +2279,58 @@ ${section('이어서 계산하기', null, list([
 ${guideLinks(['yearend-refund', 'withholding-table', 'dependents'])}
 <p class="note">${YEAR}년 귀속 연말정산 규정을 단순화한 추정치입니다. 주택자금·전통시장·대중교통·문화체육 공제율과 추가 한도·고향사랑 기부금·기부금 한도·의료비 700만원 한도·경로우대·장애인·한부모 공제, 배우자 월세 공제, 중도 입사·퇴사, 상여 원천징수 방식은 반영하지 않았습니다. 정확한 값은 국세청 홈택스 '연말정산 미리보기'와 간소화 자료로 확인하세요. <a href="/method/">계산 기준 보기</a></p>`;
   write(url, shell({ url, title: `${YEAR} 연말정산 환급 계산기 — 공제 항목 체크리스트·${YEAR + 1} 일정`, desc: `${YEAR}년 귀속 연말정산 환급 예상액 계산기. 연봉·신용카드·의료비·연금저축·월세·주택청약·기부금을 넣으면 결정세액과 13월의 월급을 바로 계산하고, 공제 항목별 공제율·문턱·한도와 ${YEAR + 1}년 간소화 서비스·회사 제출·5월 신고 일정을 정리했습니다.`, body, nav: 'salary', scripts: ['/js/engine.js', '/js/yearend.js'] }));
+}
+
+/* ---------- 연봉별 연말정산 (2026-11-25) — 1월 "연봉 4000 연말정산 환급" 같은 검색용. 허브 계산기와 같은 엔진·같은 가정 ---------- */
+const YE_SAL = [2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500, 8000, 9000, 10000];
+const yeSalUrl = (m) => `/yearend/${m}/`;
+const yeLab = (m) => (m >= 10000 ? `${m / 10000}억` : `${num(m)}만`);
+/* 연봉 m만원 · 식대 비과세 월 20만원 · 본인 1인 · 기납부 = 간이세액표 12개월 — 허브 예시와 같은 가정 */
+function yeSetup(m) {
+  const gross = m * 10000 - 2400000, month = Math.round(gross / 12), ins = insurance(month);
+  const base = { gross, dependents: 1, pension: ins.pension * 12, health: (ins.health + ins.care) * 12, employment: ins.employment * 12, prepaid: incomeTax(month, 1, 0).tax * 12 };
+  const run = (o) => YE.yearEnd({ ...base, ...o });
+  const spend = (ratio) => ({ creditCard: Math.round(gross * ratio * 0.6 / 10000) * 10000, checkCard: Math.round(gross * ratio * 0.4 / 10000) * 10000 });
+  return { gross, base, run, spend };
+}
+const yeChips = (on) => chips(YE_SAL.map((v) => { const s = yeSetup(v); return { label: `연봉 ${yeLab(v)}`, value: s.run(s.spend(0.4)).refund, href: yeSalUrl(v), on: v === on }; }));
+function yearendSalaryPages() {
+  for (const m of YE_SAL) {
+    const url = yeSalUrl(m);
+    const { gross, base, run, spend } = yeSetup(m);
+    const res = (r) => (r.refund >= 0 ? `환급 ${won(r.refund)}` : `추가 납부 ${won(-r.refund)}`);
+    const th = Math.round(gross * 0.25), cap = YE.cardCap(gross, 0);
+    const s0 = run(spend(0.2)), s1 = run(spend(0.4)), s2 = run(spend(0.6));
+    const typ = spend(0.4);
+    const rows = [
+      ['카드만 (연봉의 40%)', run(typ)],
+      ['+ 연금저축 300만원', run({ ...typ, pensionAccount: 3000000 })],
+      ['+ 연금저축·IRP 900만원', run({ ...typ, pensionAccount: 9000000 })],
+      ...(gross <= 70000000 ? [['+ 주택청약 300만원 (무주택 세대주)', run({ ...typ, homeless: true, housingSaving: 3000000 })]] : []),
+      ...(gross <= 80000000 ? [['+ 월세 월 50만원', run({ ...typ, renter: true, rent: 6000000 })]] : []),
+      ['+ 의료비 300만원', run({ ...typ, medical: 3000000 })],
+    ];
+    const title = `연봉 ${yeLab(m)}원 연말정산 환급 예상 — 카드 ${num(Math.round(th / 10000))}만원 넘게 써야 공제 (${YEAR}년 귀속)`;
+    const desc = `연봉 ${yeLab(m)}원(식대 비과세 월 20만원·본인 1인) 연말정산 미리보기. 신용카드는 총급여 25%인 ${won(th)}을 넘긴 사용분부터 공제되고 한도는 ${won(cap)}입니다. 카드 사용액·연금저축·주택청약·월세·의료비별 환급 예상액 표.`;
+    const body = `
+${crumb([['/', '홈'], ['/yearend/', '연말정산 미리보기'], [null, `연봉 ${yeLab(m)}원`]])}
+<h1 class="title">연봉 ${yeLab(m)}원 연말정산</h1>
+<p class="meta">${YEAR}년 귀속 · ${YEAR + 1}년 1~2월 정산 · 식대 비과세 월 20만원 · 본인 1인 · 1년 동안 미리 낸 세금 = 간이세액표 12개월분</p>
+${tiles([{ label: '카드 공제 문턱 (총급여 25%)', value: won(th) }, { label: '카드 소득공제 한도', value: won(cap) }, { label: '1년 동안 미리 낸 소득세', value: won(base.prepaid) }])}
+${lead(`연봉 ${yeLab(m)}원이면 식대를 뺀 총급여는 ${won(gross)}입니다. 신용카드·체크카드는 이 금액의 25%인 <b>${won(th)}</b>을 넘게 쓴 부분부터 공제되고, 카드를 연봉의 40%쯤(${won(typ.creditCard + typ.checkCard)}) 쓰면 연말정산 결과는 <b>${res(s1)}</b>(지방소득세 포함) 정도입니다. 아래 표에서 연금저축·주택청약·월세를 더하면 얼마나 달라지는지 보세요.`)}
+<p style="margin:14px 0"><a class="btn" href="/yearend/?a=${m}">내 숫자로 계산하기 →</a></p>
+${section('카드를 얼마나 썼나', '신용 60% · 체크 40%로 나눠 쓴 경우 · 지방소득세 포함', table(['1년 카드 사용', '카드 소득공제', '결과'], [[0.2, s0], [0.4, s1], [0.6, s2]].map(([r, x]) => ({ cells: [`연봉의 ${r * 100}% (${won(Math.round(gross * r / 10000) * 10000)})`, won(x.card), res(x)] }))))}
+${ad()}
+${section('무엇을 더하면 얼마나', '카드 연봉의 40% 기준 · 지방소득세 포함', table(['공제 항목', '결정세액', '결과'], rows.map(([l, x]) => ({ cells: [l, won(x.total), res(x)] }))))}
+${section('다른 연봉', '카드를 연봉의 40% 썼을 때 · 환급(+) / 추가 납부(−) · 원', yeChips(m))}
+${section('이어서 계산하기', null, list([
+  { href: '/yearend/', title: '연말정산 환급 계산기', sub: '내 카드·의료비·월세를 넣어서' },
+  { href: `/salary/${m}/`, title: `연봉 ${yeLab(m)}원 실수령액`, sub: '매달 손에 쥐는 돈' },
+  { href: '/tax-receipt/', title: '내 세금 영수증', sub: '1년에 나와 회사가 내는 돈' },
+]))}
+<p class="note">${YEAR}년 귀속 연말정산 규정을 단순화한 추정치입니다(부양가족·자녀·전통시장·대중교통 공제 등은 넣지 않음). 실제 환급액은 회사 원천징수 방식과 공제 서류에 따라 달라집니다.</p>`;
+    write(url, shell({ url, modified: '2026-11-25', title, desc, body, nav: 'salary' }));
+  }
 }
 
 /* ---------- 임베드 위젯 ---------- */
@@ -3994,7 +4047,7 @@ taxReceiptIndex(); SALARIES.forEach(taxReceiptPage);
 goalIndex(); GOALS.forEach((g) => SAVE_M.forEach((mm) => goalPage(g, mm)));
 negotiateIndex(); SALARIES.forEach(negotiatePage);
 historyIndex(); SALARIES.forEach(historyPage);
-yearendPage(); bonusPage(); embedPages();
+yearendPage(); yearendSalaryPages(); bonusPage(); embedPages();
 giftIndex(); GIFT_RELS.forEach((r) => { giftRelIndex(r); GIFT_AMOUNTS.forEach((m) => giftPage(r, m)); });
 bokbiIndex(); BOKBI.forEach(bokbiPage);
 acqIndex(); ACQ.forEach(acqPage);

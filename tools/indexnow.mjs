@@ -3,6 +3,9 @@
  * 열쇠는 공개값 — 배포물 루트에 <열쇠>.txt 가 있어야 보낸다.
  *   node tools/indexnow.mjs diff <배포 폴더>   배포 전: robots.txt 의 사이트맵(색인 파일이면 하위까지)을 새것·지금 것 모두 읽어 새 주소 목록 저장
  *   node tools/indexnow.mjs send [--dry]       배포 뒤: 저장한 목록을 보낸다. 어떤 실패도 배포를 실패로 만들지 않는다
+ * 2026-11-25 네이버에는 sitemap-naver.xml(구글에만 뺀 숫자 페이지까지 든 목록)의 새 주소도 함께 알린다 — 그동안 이 목록은
+ *   robots.txt 에 없어서 한 번도 알리지 않았고, 네이버에서 방문이 들어오는 페이지는 거의 모두 알린 쪽이었다.
+ *   node tools/indexnow.mjs backfill <배포 폴더> [개수] [--skip=정규식] [--dry]   한 번만: 네이버 전용 주소를 얕은 것부터 네이버에 알린다
  * 사주첩·바디집·돈표·꿈해몽·타로 저장소에 같은 파일이 있다 — 고치면 모두 고칠 것. */
 import fs from 'node:fs';
 import os from 'node:os';
@@ -76,32 +79,66 @@ async function diff(dir) {
   }
   const added = [...fresh].filter((u) => !live.has(u) && new URL(u).host === host)
     .sort((a, b) => a.length - b.length || (a < b ? -1 : 1));
-  fs.writeFileSync(STATE, JSON.stringify({ host, urls: added.slice(0, LIMIT), total: added.length }));
+  /* 네이버 전용 목록 — 배포물에 있을 때만 */
+  let naverAdded = [];
+  const nv = `https://${host}/sitemap-naver.xml`;
+  if (localXml(dir, nv)) {
+    try {
+      const nFresh = await collect([nv], async (u) => localXml(dir, u));
+      const nLive = await collect([nv], liveXml);
+      naverAdded = [...nFresh].filter((u) => !nLive.has(u) && !fresh.has(u) && new URL(u).host === host)
+        .sort((a, b) => a.length - b.length || (a < b ? -1 : 1));
+    } catch (e) { console.warn('네이버 전용 사이트맵을 읽지 못함:', e.message); }
+  }
+  fs.writeFileSync(STATE, JSON.stringify({ host, urls: added.slice(0, LIMIT), naverUrls: naverAdded.slice(0, LIMIT), total: added.length }));
+  if (naverAdded.length) console.log(`네이버 전용 새 주소 ${naverAdded.length}개`);
   console.log(`${host}: 새 사이트맵 ${fresh.size}개 · 지금 떠 있는 ${live.size}개 · 새로 생긴 주소 ${added.length}개${added.length > LIMIT ? ` (짧은 주소부터 ${LIMIT}개만)` : ''}`);
   added.slice(0, 10).forEach((u) => console.log('  +', u));
 }
 
 async function send(dry) {
   if (!fs.existsSync(STATE)) { console.log('보낼 목록이 없어 건너뜀'); return; }
-  const { host, urls } = JSON.parse(fs.readFileSync(STATE, 'utf8'));
-  if (!urls.length) { console.log(host + ': 새로 생긴 주소가 없어 알릴 것 없음'); return; }
-  const body = JSON.stringify({ host, key: KEY, keyLocation: `https://${host}/${KEY}.txt`, urlList: urls });
+  const { host, urls, naverUrls = [] } = JSON.parse(fs.readFileSync(STATE, 'utf8'));
+  await post(host, urls, naverUrls, dry);
+}
+
+/* 네이버는 공통 주소 + 네이버 전용 주소, 빙은 공통 주소만 */
+async function post(host, urls, naverUrls, dry) {
+  if (!urls.length && !naverUrls.length) { console.log(host + ': 새로 생긴 주소가 없어 알릴 것 없음'); return; }
   for (const [name, url] of ENGINES) {
-    if (dry) { console.log(`[연습] ${name} ← ${urls.length}개 (${body.length}바이트)`); continue; }
+    const list = name === '네이버' ? urls.concat(naverUrls).slice(0, LIMIT) : urls;
+    if (!list.length) continue;
+    const body = JSON.stringify({ host, key: KEY, keyLocation: `https://${host}/${KEY}.txt`, urlList: list });
+    if (dry) { console.log(`[연습] ${name} ← ${list.length}개 (${body.length}바이트)`); continue; }
     try {
       const r = await retry(() => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json; charset=utf-8' }, body }), name);
       const t = (await r.text()).replace(/\s+/g, ' ').slice(0, 160);
-      console.log(`${name}: ${urls.length}개 · HTTP ${r.status}${t ? ' ' + t : ''}`);
+      console.log(`${name}: ${list.length}개 · HTTP ${r.status}${t ? ' ' + t : ''}`);
     } catch (e) {
       console.warn(`${name}: 보내지 못함 — ${e.message}`);
     }
   }
 }
 
+/* 한 번만 쓰는 따라잡기 — 지금 떠 있는 네이버 전용 목록 중 robots 사이트맵에 없는 주소를 얕은(경로 칸이 적은) 것부터 n개 */
+async function backfill(dir, n) {
+  const host = fs.readFileSync(path.join(dir, 'CNAME'), 'utf8').trim();
+  const roots = [...fs.readFileSync(path.join(dir, 'robots.txt'), 'utf8').matchAll(/^\s*Sitemap:\s*(\S+)/gim)].map((m) => m[1]);
+  const common = await collect(roots, async (u) => localXml(dir, u));
+  const nv = await collect([`https://${host}/sitemap-naver.xml`], async (u) => localXml(dir, u));
+  const depth = (u) => new URL(u).pathname.split('/').filter(Boolean).length;
+  const skipArg = process.argv.find((x) => x.startsWith('--skip='));
+  const skip = skipArg ? new RegExp(skipArg.slice(7)) : null;   /* 숫자 조합처럼 지금은 알리지 않을 주소 */
+  const list = [...nv].filter((u) => !common.has(u) && !(skip && skip.test(new URL(u).pathname))).sort((a, b) => depth(a) - depth(b) || a.length - b.length || (a < b ? -1 : 1)).slice(0, n);
+  console.log(`${host}: 네이버 전용 ${nv.size - common.size}개 중 ${list.length}개를 알림`);
+  await post(host, [], list, process.argv.includes('--dry'));
+}
+
 const [cmd, arg] = process.argv.slice(2);
 try {
   if (cmd === 'diff') await diff(arg || 'dist');
   else if (cmd === 'send') await send(process.argv.includes('--dry'));
+  else if (cmd === 'backfill') await backfill(arg || 'dist', +(process.argv[4] || 2000));
   else { console.error('사용법: node tools/indexnow.mjs diff <배포 폴더> | send [--dry]'); process.exit(2); }
 } catch (e) {
   console.warn('색인 알림 건너뜀:', e.message);

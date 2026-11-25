@@ -51,7 +51,7 @@ const SRC = path.join(ROOT, 'src');
 const OUT = path.join(ROOT, 'dist');
 const SITE = 'https://donpyo.com';
 const GA_ID = 'G-4M37GXENV1';                       /* GA4 측정 ID — 속성 '돈표' 웹 스트림 (2026-09-06) */
-const ADSENSE = 'ca-pub-9924140539322407';
+const ADSENSE = '';   /* 애드센스 코드는 2026-11-25 뺐다(승인 전이라 수익 0) — 다시 신청할 때 넣는다 (게시자 ID ca-pub-9924140539322407) */
 const SAJU = 'https://sajucheop.com';
 const R0 = RATES[YEAR];
 const CHICKEN = PRICES.find((x) => x.key === 'chicken').price;   /* 치킨 한 마리 — data/prices.mjs 와 같은 값 */

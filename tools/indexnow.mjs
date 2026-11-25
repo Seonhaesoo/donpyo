@@ -14,6 +14,7 @@ import path from 'node:path';
 const KEY = 'd49d364be4edd2e8b512d402529d63f8';
 const ENGINES = [['네이버', 'https://searchadvisor.naver.com/indexnow'], ['빙', 'https://www.bing.com/indexnow']];
 const LIMIT = 10000;
+const NAVER_MAPS = ['sitemap-naver.xml', 'sitemap-all.xml'];
 const STATE = path.join(process.env.RUNNER_TEMP || os.tmpdir(), 'indexnow-urls.json');
 const sleep = (s) => new Promise((r) => setTimeout(r, s * 1000));
 
@@ -68,6 +69,7 @@ async function diff(dir) {
   const roots = [...fs.readFileSync(robotsPath, 'utf8').matchAll(/^\s*Sitemap:\s*(\S+)/gim)].map((m) => m[1]);
   if (!roots.length) { console.log('robots.txt 에 사이트맵이 없어 건너뜀'); return; }
   const host = new URL(roots[0]).host;
+  const origin = new URL(roots[0]).origin;   /* 생일첩은 아직 http */
   if (!fs.existsSync(path.join(dir, KEY + '.txt'))) { console.log('열쇠 파일이 배포물에 없어 건너뜀'); return; }
   const fresh = await collect(roots, async (u) => localXml(dir, u));
   let live;
@@ -81,8 +83,9 @@ async function diff(dir) {
     .sort((a, b) => a.length - b.length || (a < b ? -1 : 1));
   /* 네이버 전용 목록 — 배포물에 있을 때만 */
   let naverAdded = [];
-  const nv = `https://${host}/sitemap-naver.xml`;
-  if (localXml(dir, nv)) {
+  /* 네이버 전용 목록 이름은 사이트마다 다르다 — 돈표·바디집 sitemap-naver.xml, 꿈첩 sitemap-all.xml */
+  const nv = NAVER_MAPS.map((f) => `${origin}/${f}`).find((u) => localXml(dir, u));
+  if (nv) {
     try {
       const nFresh = await collect([nv], async (u) => localXml(dir, u));
       const nLive = await collect([nv], liveXml);
@@ -90,7 +93,7 @@ async function diff(dir) {
         .sort((a, b) => a.length - b.length || (a < b ? -1 : 1));
     } catch (e) { console.warn('네이버 전용 사이트맵을 읽지 못함:', e.message); }
   }
-  fs.writeFileSync(STATE, JSON.stringify({ host, urls: added.slice(0, LIMIT), naverUrls: naverAdded.slice(0, LIMIT), total: added.length }));
+  fs.writeFileSync(STATE, JSON.stringify({ host, origin, urls: added.slice(0, LIMIT), naverUrls: naverAdded.slice(0, LIMIT), total: added.length }));
   if (naverAdded.length) console.log(`네이버 전용 새 주소 ${naverAdded.length}개`);
   console.log(`${host}: 새 사이트맵 ${fresh.size}개 · 지금 떠 있는 ${live.size}개 · 새로 생긴 주소 ${added.length}개${added.length > LIMIT ? ` (짧은 주소부터 ${LIMIT}개만)` : ''}`);
   added.slice(0, 10).forEach((u) => console.log('  +', u));
@@ -98,17 +101,17 @@ async function diff(dir) {
 
 async function send(dry) {
   if (!fs.existsSync(STATE)) { console.log('보낼 목록이 없어 건너뜀'); return; }
-  const { host, urls, naverUrls = [] } = JSON.parse(fs.readFileSync(STATE, 'utf8'));
-  await post(host, urls, naverUrls, dry);
+  const { host, origin, urls, naverUrls = [] } = JSON.parse(fs.readFileSync(STATE, 'utf8'));
+  await post(host, urls, naverUrls, dry, origin);
 }
 
 /* 네이버는 공통 주소 + 네이버 전용 주소, 빙은 공통 주소만 */
-async function post(host, urls, naverUrls, dry) {
+async function post(host, urls, naverUrls, dry, origin = `https://${host}`) {
   if (!urls.length && !naverUrls.length) { console.log(host + ': 새로 생긴 주소가 없어 알릴 것 없음'); return; }
   for (const [name, url] of ENGINES) {
     const list = name === '네이버' ? urls.concat(naverUrls).slice(0, LIMIT) : urls;
     if (!list.length) continue;
-    const body = JSON.stringify({ host, key: KEY, keyLocation: `https://${host}/${KEY}.txt`, urlList: list });
+    const body = JSON.stringify({ host, key: KEY, keyLocation: `${origin}/${KEY}.txt`, urlList: list });
     if (dry) { console.log(`[연습] ${name} ← ${list.length}개 (${body.length}바이트)`); continue; }
     try {
       const r = await retry(() => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json; charset=utf-8' }, body }), name);
@@ -125,13 +128,16 @@ async function backfill(dir, n) {
   const host = fs.readFileSync(path.join(dir, 'CNAME'), 'utf8').trim();
   const roots = [...fs.readFileSync(path.join(dir, 'robots.txt'), 'utf8').matchAll(/^\s*Sitemap:\s*(\S+)/gim)].map((m) => m[1]);
   const common = await collect(roots, async (u) => localXml(dir, u));
-  const nv = await collect([`https://${host}/sitemap-naver.xml`], async (u) => localXml(dir, u));
+  const origin = roots.length ? new URL(roots[0]).origin : `https://${host}`;
+  const nvUrl = NAVER_MAPS.map((f) => `${origin}/${f}`).find((u) => localXml(dir, u));
+  if (!nvUrl) { console.log('네이버 전용 사이트맵이 없음'); return; }
+  const nv = await collect([nvUrl], async (u) => localXml(dir, u));
   const depth = (u) => new URL(u).pathname.split('/').filter(Boolean).length;
   const skipArg = process.argv.find((x) => x.startsWith('--skip='));
   const skip = skipArg ? new RegExp(skipArg.slice(7)) : null;   /* 숫자 조합처럼 지금은 알리지 않을 주소 */
   const list = [...nv].filter((u) => !common.has(u) && !(skip && skip.test(new URL(u).pathname))).sort((a, b) => depth(a) - depth(b) || a.length - b.length || (a < b ? -1 : 1)).slice(0, n);
-  console.log(`${host}: 네이버 전용 ${nv.size - common.size}개 중 ${list.length}개를 알림`);
-  await post(host, [], list, process.argv.includes('--dry'));
+  console.log(`${host}: 네이버 전용 ${[...nv].filter((u) => !common.has(u)).length}개 중 ${list.length}개를 알림`);
+  await post(host, [], list, process.argv.includes('--dry'), origin);
 }
 
 const [cmd, arg] = process.argv.slice(2);

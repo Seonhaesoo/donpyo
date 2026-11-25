@@ -167,15 +167,21 @@ const DYN_BANNER = `<aside class="cp-dyn"><p class="cp-h">쿠팡 추천 상품</
 /* 2026-11-25 쿠팡 다이나믹 배너를 본문 중간으로 — 휴대폰에서 맨 아래까지 내려오는 사람이 적다(사용자 요청).
  * 본문 30% 뒤에서 처음 시작하는 구역·소제목 바로 앞에 넣는다. 그런 자리가 없으면 null — 그때는 맨 아래에 둔다 */
 function midInsert(body, html) {
+  // 2026-11-25 애드센스 자동 광고처럼 글 사이사이에 — 구역(<section, 없으면 <h2) 사이 1/3·2/3 지점 두 곳(구역이 5개 미만이면 가운데 한 곳).
+  // 맨 아래 배너는 shell 이 따로 붙인다
   const s = String(body || '');
-  // 구역(<section)이 둘 이상이면 앞에서 40% 쯤 되는 구역 앞에, 아니면 소제목(<h2) 기준으로 같은 자리에.
-  // 글자 수로 재지 않는다 — 본문 끝에 큰 스크립트가 붙은 페이지에서 자리가 맨 아래로 밀렸다
   for (const re of [/<section\b/g, /<h2\b/g]) {
     const at = [...s.matchAll(re)].map((m) => m.index);
-    if (at.length >= 2) {
-      const i = at[Math.max(1, Math.floor(at.length * 0.4))];
-      return s.slice(0, i) + '\n' + html + '\n' + s.slice(i);
+    if (at.length < 2) continue;
+    const picks = at.length >= 5
+      ? [...new Set([Math.max(1, Math.round(at.length / 3)), Math.round((at.length * 2) / 3)])]
+      : [Math.max(1, Math.floor(at.length * 0.4))];
+    let out = s;
+    for (const k of picks.sort((a, b) => b - a)) {        // 뒤에서부터 넣어야 앞 자리가 안 밀린다
+      const i = at[Math.min(k, at.length - 1)];
+      out = out.slice(0, i) + '\n' + html + '\n' + out.slice(i);
     }
+    return out;
   }
   return null;
 }
@@ -221,7 +227,7 @@ ${o.bare ? o.body : `<div class="app">
   <span class="year-pill">${YEAR} 요율</span>
 </header>
 ${_mid ?? o.body}
-${_dyn && !_mid ? _dyn : ''}
+${_dyn}
 <footer class="foot foot2">
   <p class="flabel">계산 찾아보기</p>
   <nav class="fgrid" aria-label="계산 찾아보기"><a href="/salary/">연봉 실수령액</a><a href="/monthly/">월급 실수령액</a><a href="/loan/">대출 상환</a><a href="/retire/">퇴직금</a><a href="/unemployment/">실업급여</a><a href="/hourly/">알바 월급</a><a href="/guide/">서재</a><a href="/method/">계산 기준</a><a href="/updates/">업데이트 기록</a></nav>

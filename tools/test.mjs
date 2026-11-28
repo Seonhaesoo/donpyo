@@ -6,6 +6,8 @@ import { netPay, insurance, incomeTax, grossForNet } from '../engine/tax.mjs';
 import { YEAR, MONTH_HOURS, RATES } from '../data/rates.mjs';
 import * as YE from '../engine/yearend.mjs';
 import * as GT from '../engine/gift.mjs';
+import * as OSX from '../engine/overseas.mjs';
+import * as MDX from '../engine/median.mjs';
 import * as RE from '../engine/realty.mjs';
 import * as DP from '../engine/deposit.mjs';
 import * as IH from '../engine/inherit.mjs';
@@ -558,6 +560,20 @@ ok(EI.childCredit(10000000, 'single').raw === 0 && EI.eitc({ type: 'single', wag
   ok(B.jongbu(2000000000).total === 2275200 && B.jongbu(3000000000, { age: 70, years: 10 }).total === JB.jongbu(3000000000, { age: 70, years: 10 }).total && B.propertyTax(1500000000).total === 3429000, '번들 jongbu · propertyTax');
   ok(B.bonusWithholding({ monthly: 3500000, nontax: 200000, bonus: 3500000, months: 12 }).tax === 410760 && B.bonusWithholding({ monthly: 3500000, nontax: 200000, bonus: 3500000, months: 12 }).net === 2874320 && B.BONUS_LAW === '소득세법 시행령 제146조', '번들 bonusWithholding');
   ok(B.giftTax(100000000, 'child').tax === GT.giftTax(100000000, 'child').tax && B.giftTax(300000000, 'child', { prior: 50000000, marriage: true }).tax === GT.giftTax(300000000, 'child', { prior: 50000000, marriage: true }).tax && B.giftTax(200000000, 'grandchild').tax === GT.giftTax(200000000, 'grandchild').tax && B.freeLimit('relative') === 10000000 && B.GIFT_RELATIONS.spouse.deduction === 600000000, '번들 giftTax · freeLimit (증여세 계산기)');
+}
+
+/* 2026-11-28 해외주식 양도세 · 기준 중위소득 */
+{
+  ok(OSX.overseasTax(10000000).total === 1650000 && OSX.overseasTax(2500000).total === 0 && OSX.overseasTax(-3000000).total === 0, '해외주식 — 1,000만 → 165만, 250만 이하 0');
+  const p = OSX.overseasPlan(10000000, 3000000); ok(p.saveByLoss === 660000 && p.needLoss === 7500000, '해외주식 — 손실 300만 정리 66만 절세');
+  const q = OSX.overseasPlan(1000000, 0, 2000000); ok(q.now.room === 1500000 && q.harvestTax === 110000, '해외주식 — 남은 공제 150만, 200만 확정하면 50만 초과분 11만');
+  const OFF = { 2027: { living: [875533, 1433806, 1829789, 2217563, 2580166, 2921344], medical: [1094417, 1792258, 2287236, 2771954, 3225208, 3651680], housing: [1313300, 2150710, 2744684, 3326345, 3870249, 4382016], edu: [1368021, 2240323, 2859046, 3464943, 4031510, 4564601] },
+    2026: { living: [820556, 1343773, 1714892, 2078316, 2418150, 2737905], medical: [1025695, 1679717, 2143614, 2597895, 3022688, 3422381], housing: [1230834, 2015660, 2572337, 3117474, 3627225, 4106857], edu: [1282119, 2099646, 2679518, 3247369, 3778360, 4277976] } };
+  let bad = 0; for (const y of [2026, 2027]) for (const b of MDX.BENEFITS) for (let n = 1; n <= 6; n++) if (MDX.pctAmount(y, n, b.pct) !== OFF[y][b.key][n - 1]) bad++;
+  ok(bad === 0, '중위소득 — 급여별 선정기준 48개가 복지부 보도자료(2026-07-28)와 일치', bad);
+  ok(MDX.medianCheck(4000000, 4).pct === 57.7 && MDX.medianCheck(800000, 1).under.join() === 'living,medical,housing,edu', '중위소득 — % 계산·선정기준');
+  const vm2 = await import('node:vm'); const { makeBundle: mb } = await import('./bundle.mjs'); const c2 = { window: {} }; vm2.runInNewContext(mb(200000), c2); const B2 = c2.window.Donpyo;
+  ok(B2.overseasTax(10000000).total === 1650000 && B2.pctAmount(2027, 4, 32) === 2217563 && B2.medianCheck(4000000, 4).pct === 57.7, '번들 overseasTax · pctAmount · medianCheck');
 }
 
 console.log(`test: ${pass} pass, ${fail} fail`);

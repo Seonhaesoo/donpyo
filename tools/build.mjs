@@ -28,6 +28,7 @@ import * as PT from '../engine/property.mjs';
 import * as JB from '../engine/jongbu.mjs';
 import { buildJongbu, JONGBU } from './pages-jongbu.mjs';
 import { buildDependent, depMethod, depSourceList, DEP_URL } from './pages-dependent.mjs';
+import { buildDec } from './pages-dec.mjs';
 import * as CT from '../engine/cartax.mjs';
 import * as LV from '../engine/ltv.mjs';
 import * as SB from '../engine/subscription.mjs';
@@ -41,6 +42,8 @@ import * as AN from '../engine/annual.mjs';
 import * as FR from '../engine/freelance.mjs';
 import * as NH from '../engine/nhis.mjs';
 import * as YE from '../engine/yearend.mjs';
+import * as OS from '../engine/overseas.mjs';
+import * as MD from '../engine/median.mjs';
 import * as BN from '../engine/bonus.mjs';
 import { makeBundle } from './bundle.mjs';
 import { guideContext as makeGuideContext } from './guide-context.mjs';
@@ -873,6 +876,7 @@ ${section('대출·저축·제도', null, `<div class="dict">
 <a href="/rates/"><b>${YEAR}년 4대보험 요율표</b><span>근로자 부담 국민연금 <span class="num">${pct(R0.pension, 2)}</span> · 건강보험 <span class="num">${pct(R0.health, 3)}</span></span></a>
 </div>`)}
 ${section('세금·부동산', null, `<div class="dict">
+<a href="/overseas-stock/"><b>해외주식 양도세</b><span>1,000만원 벌면 <span class="num">${num(OS.overseasTax(10000000).total)}</span>원 · 250만원 공제 · 연말 손실 정리</span></a>
 <a href="/gift-tax/"><b>증여세</b><span>자녀에게 1억 → <span class="num">${num(GT.giftTax(100000000, 'child').tax)}</span>원 · 배우자는 6억까지 0원</span></a>
 <a href="/bokbi/"><b>부동산 복비</b><span>5억 매매 → 최대 <span class="num">${num(RE.brokerage(500000000).fee)}</span>원 · 전세 2억 <span class="num">${num(RE.brokerage(200000000, 'rent').fee)}</span>원</span></a>
 <a href="/acquisition-tax/"><b>주택 취득세</b><span>5억 1주택 → <span class="num">${num(RE.acquisitionTax(500000000).total)}</span>원 · 생애최초는 200만원 감면</span></a>
@@ -885,6 +889,7 @@ ${section('세금·부동산', null, `<div class="dict">
 <a href="/deposit/"><b>예금 이자</b><span>1억 1년 3% → 세후 <span class="num">${num(DP.deposit(100000000, 12, 0.03).net)}</span>원 · 매달 받으면 <span class="num">${num(DP.deposit(100000000, 12, 0.03).monthlyNet)}</span>원</span></a>
 <a href="/subscription/"><b>청약 가점</b><span>무주택 10년·부양가족 2명·통장 15년 → <span class="num">${SB.subscriptionScore({ homelessYears: 10, family: 2, accountMonths: 180 }).total}</span>점 (84점 만점)</span></a>
 <a href="/capgain/"><b>양도소득세</b><span>9억에 산 집 15억에 팔면 (1주택·5년) <span class="num">${num(capThree(1500000000, 900000000).one.total)}</span>원 · 12억 이하는 비과세</span></a>
+<a href="/median-income/"><b>2027 기준 중위소득</b><span>4인 <span class="num">${num(MD.medianOf(2027, 4))}</span>원 · 우리 집 몇 % · 급여별 기준</span></a>
 <a href="/eitc/"><b>근로장려금</b><span>총급여 1,500만 홑벌이 → <span class="num">${num(EI.eitc({ type: 'one', wage: 15000000 }).work)}</span>원 · 자녀 1명당 +<span class="num">${num(EI.eitc({ type: 'one', wage: 15000000, children: 1 }).perChild)}</span>원</span></a>
 </div>`)}
 ${section('가족·생활', null, `<div class="dict">
@@ -4173,6 +4178,7 @@ carcostIndex(); CARCOST_P.forEach(carcostPage);
 annualIndex(); ANNUAL_YEARS.forEach(annualYearPage); ANNUAL_PAYS.forEach(annualPayPage);
 nhisIndex(); NHIS_E.forEach(nhisEmpPage); NHIS_L.forEach(nhisLocalPage);
 buildDependent({ write, shell, crumb, lead, section, table, list, ad, YEAR });
+buildDec({ write, shell, crumb, lead, section, table, tiles, list, ad });   /* 2026-11-28 해외주식 양도세 · 2027 기준 중위소득 */
 fs.writeFileSync(path.join(OUT, 'js', 'engine.js'), makeBundle(NT));
 docs();
 

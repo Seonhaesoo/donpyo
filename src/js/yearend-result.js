@@ -5,10 +5,14 @@
   var num = function (v) { return Math.round(v).toLocaleString('ko-KR'); };
   var won = function (v) { return num(v) + '원'; };
   var f10 = function (v) { return Math.floor(v / 10) * 10; };
+  /* 2026-11-28 Fable 점검: 예시 값(placeholder)은 네 칸이 모두 비었을 때만 쓴다 — 한 칸만 넣었는데 예시 숫자와 섞이지 않게. 총급여가 비면 비교를 건너뛴다 */
+  var IDS = ['yr-det', 'yr-cur', 'yr-prev', 'yr-gross'];
+  var raw = function (id) { return ($(id).value || '').replace(/[^0-9]/g, ''); };
   var val = function (id) {
-    var el = $(id), raw = (el.value || '').replace(/[^0-9]/g, '');
-    if (raw === '') raw = (el.getAttribute('placeholder') || '0').replace(/[^0-9]/g, '');
-    var v = parseInt(raw || '0', 10);
+    var useEx = IDS.every(function (k) { return raw(k) === ''; });
+    var r = raw(id);
+    if (r === '' && useEx) r = ($(id).getAttribute('placeholder') || '0').replace(/[^0-9]/g, '');
+    var v = parseInt(r || '0', 10);
     return isNaN(v) ? 0 : v;
   };
   var TYP = window.YE_TYPICAL || [];

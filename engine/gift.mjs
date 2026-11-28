@@ -29,26 +29,30 @@ export function progressive(base) {
   return { rate: 0, calc: 0, deduct: 0 };
 }
 
-/* amount: 이번 증여액(원) · rel: RELATIONS 키 · opts: { marriage: 혼인·출산 공제, prior: 10년 내 같은 사람에게서 받은 증여 합계, priorDeductionUsed: 그때 쓴 공제 } */
+/* amount: 이번 증여액(원) · rel: RELATIONS 키 · opts: { marriage: 혼인·출산 공제, prior: 10년 안에 '같은 증여자(직계존속이면 그 배우자 포함)'에게 받은 증여 합계,
+ *   usedOther: 같은 공제 묶음의 '다른' 증여자에게 받으며 이미 쓴 기본 공제 }
+ * 2026-11-28 Fable 점검: 세율 합산은 같은 증여자(+직계존속의 배우자)만(상증법 제47조 제2항), 공제는 묶음 단위(제53조). 예전엔 묶음 전체를 합산해 세금이 과다했고,
+ * 혼인 공제를 켜면 이전 증여분 세액(기납부세액)을 0으로 계산했다 — 이전분은 그때 쓴 기본 공제로만 세액을 다시 구한다 */
 export function giftTax(amount, rel = 'child', opts = {}) {
   const R = RELATIONS[rel] || RELATIONS.other;
   const marriage = (opts.marriage && R.lineal) ? MARRIAGE_DEDUCTION : 0;
-  const limit = R.deduction + marriage;
-  const prior = opts.prior || 0;
+  const basic = Math.max(0, R.deduction - Math.max(0, opts.usedOther || 0));
+  const limit = basic + marriage;
+  const prior = Math.max(0, opts.prior || 0);
   const total = amount + prior;
   const deduction = Math.min(total, limit);
   const base = Math.max(0, total - deduction);
   const p = progressive(base);
   let calc = p.calc;
   if (prior > 0) {
-    const priorBase = Math.max(0, prior - Math.min(prior, limit));
+    const priorBase = Math.max(0, prior - Math.min(prior, basic));
     calc = Math.max(0, calc - progressive(priorBase).calc);
   }
   const surcharge = R.surcharge ? Math.floor(calc * R.surcharge) : 0;
   const gross = calc + surcharge;
   const credit = Math.floor(gross * REPORT_CREDIT);
   const tax = gross - credit;
-  return { amount, rel, label: R.label, deduction: Math.min(amount, Math.max(0, limit - Math.min(prior, limit))), marriage, base, rate: p.rate, progressiveDeduct: p.deduct, calc, surcharge, credit, tax, net: amount - tax, effective: amount ? tax / amount : 0 };
+  return { amount, rel, label: R.label, deduction: Math.max(0, deduction - Math.min(prior, limit)), limit, basic, marriage, base, rate: p.rate, progressiveDeduct: p.deduct, calc, surcharge, credit, tax, net: amount - tax, effective: amount ? tax / amount : 0 };
 }
 
 /* 세금 없이 줄 수 있는 최대 금액 (10년 기준) */

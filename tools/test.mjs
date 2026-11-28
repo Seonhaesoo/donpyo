@@ -198,6 +198,9 @@ ok(GT.giftTax(100000000, 'child').tax === 4850000, '자녀 1억 증여세 485만
 ok(GT.giftTax(500000000, 'child').tax === 77600000, '자녀 5억 7,760만', GT.giftTax(500000000, 'child').tax);
 ok(GT.giftTax(1000000000, 'spouse').tax === 67900000, '배우자 10억 6,790만', GT.giftTax(1000000000, 'spouse').tax);
 ok(GT.giftTax(600000000, 'spouse').tax === 0, '배우자 6억 면세');
+ok(GT.giftTax(100000000, 'grandchild', { usedOther: 50000000 }).tax === 12610000, '할아버지 1억(아버지에게 받으며 공제 5천 씀) — 다른 증여자는 합산하지 않고 공제만 공유', GT.giftTax(100000000, 'grandchild', { usedOther: 50000000 }).tax);
+ok(GT.giftTax(100000000, 'child', { prior: 100000000, marriage: true }).tax === 0, '이전 1억(485만 냄) + 이번 1억 + 혼인 공제 → 0원 (이전분 세액은 기본 공제로)', GT.giftTax(100000000, 'child', { prior: 100000000, marriage: true }).tax);
+ok(GT.giftTax(300000000, 'child', { prior: 50000000 }).tax === 48500000, '자녀 이전 5천 + 3억', GT.giftTax(300000000, 'child', { prior: 50000000 }).tax);
 ok(GT.giftTax(100000000, 'minor').tax === 7760000, '미성년 1억 776만', GT.giftTax(100000000, 'minor').tax);
 ok(GT.giftTax(100000000, 'grandchild').tax === 6305000, '손자녀 1억 세대생략 할증 630.5만', GT.giftTax(100000000, 'grandchild').tax);
 ok(GT.giftTax(150000000, 'child', { marriage: true }).tax === 0, '혼인·출산 공제 1.5억 면세');

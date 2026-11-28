@@ -2375,7 +2375,7 @@ ${inp('yr-cur', '기납부세액 주(현)근무지 — 소득세 (원)', num(exP
 ${inp('yr-prev', '기납부세액 종(전)근무지 — 소득세 (원 · 이직했다면)', '0')}
 ${inp('yr-gross', '총급여 (원 · 선택)', num(r.gross))}
 </div>
-<p class="sub" style="margin-top:4px">영수증의 소득세 칸 숫자를 그대로 넣으세요. 지방소득세는 소득세의 10%로 따로 계산해 더합니다. 총급여를 넣으면 같은 총급여의 보통 결정세액과 견주어 봅니다. 빈칸이면 연봉 ${yeLab(5000)}원 예시 값으로 계산합니다.</p>
+<p class="sub" style="margin-top:4px">영수증의 소득세 칸 숫자를 그대로 넣으세요. 지방소득세는 소득세의 10%로 따로 계산해 더합니다. 총급여를 넣으면 같은 총급여의 보통 결정세액과 견주어 봅니다. 네 칸이 모두 비어 있으면 연봉 ${yeLab(5000)}원 예시 값으로 보여 줍니다.</p>
 </form>
 <div class="hero"><div class="hero-label" id="yr-label">연말정산 결과</div><div class="hero-num"><span class="num" id="yr-result">0</span><span class="unit">원</span></div><div class="hero-sub" id="yr-sub">계산 중</div></div>
 <div id="yr-tips"></div>
@@ -2402,7 +2402,7 @@ ${section('돌려받는 날 · 더 내는 날', null, `<div class="doc">
 <p><b>환급·추가 납부는 2월분 급여에서.</b> 회사는 다음 해 2월분 급여를 줄 때 연말정산을 합니다(<a href="${SOURCES.lawIncome}" target="_blank" rel="noopener">소득세법</a> 제137조). 2월분 급여를 3월에 주는 회사는 3월에 들어오거나 빠집니다.</p>
 <p><b>추가 납부가 10만원을 넘으면 나눠 낼 수 있습니다.</b> 추가 납부세액이 10만원을 넘으면 회사가 2월분부터 4월분 급여까지 나눠 뗄 수 있습니다(같은 법 제137조 제4항). 공제 신고서의 분납 신청란에 표시하거나 급여 담당자에게 요청하세요.</p>
 <p><b>결과가 틀렸거나 공제를 빠뜨렸다면.</b> 회사에 다시 정산을 부탁하지 않아도 5월 1~31일 종합소득세 확정신고 때 빠진 공제를 넣어 신고하면 됩니다. 5월이 지나도 법정 신고기한부터 5년 안에는 홈택스 경정청구로 돌려받을 수 있습니다(<a href="${SOURCES.lawBasic}" target="_blank" rel="noopener">국세기본법</a> 제45조의2).</p>
-<p><b>영수증은 어디서.</b> 회사 급여 담당자나 사내 급여 시스템에서 받습니다. 회사는 3월 10일까지 근로소득 지급명세서를 세무서에 내므로(소득세법 제164조), 그 뒤에는 홈택스의 지급명세서 조회 메뉴에서도 볼 수 있습니다.</p>
+<p><b>영수증은 어디서.</b> 회사 급여 담당자나 사내 급여 시스템에서 받는 것이 가장 빠릅니다. 회사는 3월 10일까지 근로소득 지급명세서를 세무서에 내야 하고(소득세법 제164조), 세무서에 들어간 뒤에는 홈택스에서도 조회할 수 있습니다.</p>
 </div>`)}
 ${section('이어서 계산하기', null, list([
   { href: '/yearend/', title: '연말정산 환급 계산기', sub: '정산 전에 미리 — 카드·의료비·연금저축을 넣어서' },
@@ -2458,7 +2458,7 @@ const REL_FROM = { child: '부모가 성년 자녀에게', minor: '부모가 미
 const REL_RULE = {
   child: '부모·조부모 등 직계존속 전체를 합쳐 10년에 5,000만원까지 공제됩니다. 혼인·출산 시기라면 1억원이 더 붙어 1억 5,000만원까지 세금이 없습니다.',
   minor: '미성년자(만 19세 미만)는 10년에 2,000만원까지 공제됩니다. 성년이 된 뒤 새 10년이 시작되면 5,000만원 공제를 다시 받습니다.',
-  grandchild: '조부모가 손자녀에게 바로 주면 공제는 자녀와 같은 5,000만원이지만 산출세액에 30%가 할증됩니다(미성년 손자녀에게 20억원 초과 시 40%). 부모가 먼저 사망한 대습상속 관계면 할증이 없습니다.',
+  grandchild: '조부모가 손자녀에게 바로 주면 공제는 자녀와 같은 5,000만원(미성년 손자녀는 2,000만원)이지만 산출세액에 30%가 할증됩니다(미성년 손자녀에게 20억원 초과 시 40%). 부모가 먼저 사망한 대습상속 관계면 할증이 없습니다.',
   spouse: '배우자 사이는 10년에 6억원까지 공제됩니다. 혼인신고가 된 법률혼만 해당하며 사실혼은 타인으로 봅니다.',
   parent: '자녀가 부모에게 드리는 돈도 증여이며 10년에 5,000만원까지 공제됩니다. 생활비·병원비를 실제로 그 용도로 쓰면 증여로 보지 않습니다.',
   relative: '형제자매, 6촌 이내 혈족, 4촌 이내 인척(사위·며느리·처남·시누이 등)은 10년에 1,000만원까지 공제됩니다.',
@@ -2476,10 +2476,11 @@ function giftCalc(rel = 'child', amount = 10000) {
 <div class="ye-grid">
 <label class="ye-f"><span>누구에게 주나</span><select id="gc-rel">${opts}</select></label>
 <label class="ye-f"><span>이번 증여액 (만원)</span><input id="gc-amount" type="text" inputmode="numeric" value="${num(amount)}"></label>
-<label class="ye-f"><span>받는 사람이 10년 안에 이미 받은 증여 (만원 · 선택)</span><input id="gc-prior" type="text" inputmode="numeric" placeholder="0"></label>
+<label class="ye-f"><span>같은 사람에게 10년 안에 받은 증여 (만원 · 선택)</span><input id="gc-prior" type="text" inputmode="numeric" placeholder="0"></label>
+<label class="ye-f"><span>다른 가족에게 받으며 이미 쓴 공제 (만원 · 선택)</span><input id="gc-used" type="text" inputmode="numeric" placeholder="0"></label>
 </div>
 <div class="ye-checks"><label><input type="checkbox" id="gc-marriage"> 혼인·출산 공제 1억원 (부모·조부모에게서, 혼인신고 전후 2년 또는 출생 후 2년 안)</label></div>
-<p class="sub" style="margin-top:4px">증여세는 받는 사람이 냅니다. 이미 받은 증여는 이번과 공제를 함께 쓰는 쪽에게서 받은 것만 넣으세요 — 부모·조부모(외가 포함)는 한 묶음, 배우자, 형제·친족은 각각 따로입니다. 10년 안의 증여는 합쳐서 세율을 매기고 그때 낸 세금(산출세액)을 뺍니다.</p>
+<p class="sub" style="margin-top:4px">증여세는 받는 사람이 냅니다. <b>같은 사람</b>(부모·조부모라면 그 배우자 포함 — 아버지와 어머니는 한 사람으로 봄)에게 10년 안에 받은 증여는 이번 것과 합쳐 세율을 매기고 그때 낸 세금을 뺍니다(상속세 및 증여세법 제47조). 공제는 묶음으로 함께 씁니다 — 부모·조부모·외조부모는 한 묶음이라, 예를 들어 할아버지가 줄 때 아버지에게 받으며 이미 쓴 공제가 있으면 <b>다른 가족에게 받으며 이미 쓴 공제</b> 칸에 넣으세요.</p>
 </form>
 <div class="hero"><div class="hero-label" id="gc-label">납부할 증여세</div><div class="hero-num"><span class="num" id="gc-result">0</span><span class="unit">원</span></div><div class="hero-sub" id="gc-sub">계산 중</div></div>
 <div id="gc-tips"></div>
@@ -2556,7 +2557,7 @@ ${section('자주 묻는 것', null, `<div class="doc">
 <p><b>상속세와 무엇이 다른가요?</b> 상속은 사망 시점에 전체 재산에 매기며 일괄공제 5억원과 배우자공제(최소 5억원)가 있어 대개 10억원까지 세금이 없습니다. 증여는 살아 있을 때 나눠 주는 것이고 사망 전 10년(상속인 외는 5년) 안의 증여는 상속재산에 다시 합산됩니다.</p>
 </div>`)}
 ${GIFT_NOTE}`;
-  write('/gift-tax/', shell({ url: '/gift-tax/', title: `증여세 계산기 — 자녀·배우자·부모·친족 금액별 증여세 (${YEAR}년)`, desc: '관계와 금액, 10년 안에 받은 증여, 혼인·출산 공제를 넣으면 증여세를 바로 계산합니다. 자녀 1억, 배우자 10억처럼 금액·관계별 표도 함께. 10년 합산 공제(배우자 6억·자녀 5,000만·혼인 출산 1억), 10~50% 세율, 신고세액공제 3% 반영.', body, scripts: ['/js/engine.js', '/js/gift.js'] }));
+  write('/gift-tax/', shell({ url: '/gift-tax/', title: `증여세 계산표 — 자녀·배우자·부모·친족 금액별 세금 (${YEAR}년)`, desc: '관계와 금액, 10년 안에 받은 증여, 혼인·출산 공제를 넣으면 증여세를 바로 계산합니다. 자녀 1억, 배우자 10억처럼 금액·관계별 표도 함께. 10년 합산 공제(배우자 6억·자녀 5,000만·혼인 출산 1억), 10~50% 세율, 신고세액공제 3% 반영.', body, scripts: ['/js/engine.js', '/js/gift.js'] }));
 }
 
 /* ---------- 복비 (중개보수) ---------- */

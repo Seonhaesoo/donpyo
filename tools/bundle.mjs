@@ -42,8 +42,9 @@ export function makeBundle(NT = 200000) {
     wrap('JB', strip(read('property.mjs')) + '\n' + strip(read('jongbu.mjs')), ['jongbu', 'propertyTax', 'oneHomeRatio', 'JB_ASOF', 'JB_DEDUCT', 'JB_TWO', 'JB_THREE', 'AGE_CREDIT', 'HOLD_CREDIT', 'CREDIT_MAX']),
     wrap('GT', strip(read('gift.mjs')), ['giftTax', 'freeLimit', 'GIFT_RELATIONS: RELATIONS', 'GIFT_BRACKETS', 'MARRIAGE_DEDUCTION']),   /* 2026-11-28 증여세 계산기 */
     wrap('OS', strip(read('overseas.mjs')), ['OS_DEDUCTION', 'OS_RATE', 'OS_LOCAL', 'overseasTax', 'overseasPlan']),   /* 2026-11-28 해외주식 양도세 */
+    wrap('WS', 'const { yearEnd } = Y; const { insurance } = T;' + String.fromCharCode(10) + strip(read('wolse.mjs')), ['WOLSE_LIMIT', 'WOLSE_GROSS_MAX', 'wolseRate', 'wolseCredit']),   /* 2026-11-28 월세 세액공제 */
     wrap('MD', strip(read('median.mjs')), ['MEDIAN', 'BENEFITS', 'COMMON_PCTS', 'medianOf', 'pctAmount', 'medianCheck']),   /* 2026-11-28 기준 중위소득 */
-    `window.Donpyo = Object.assign({ YEAR, RATES, NT: ${NT} }, F, T, L, K, A, G, Y, S, P, E, EI, NP, CG, CC, AN, FL, NH, JB, DEP, GT, OS, MD);`,
+    `window.Donpyo = Object.assign({ YEAR, RATES, NT: ${NT} }, F, T, L, K, A, G, Y, S, P, E, EI, NP, CG, CC, AN, FL, NH, JB, DEP, GT, OS, MD, WS);`,
   ];
   return `/* 돈표 계산 엔진 — 브라우저용, 빌드 때 engine/*.mjs 에서 생성 */\n(function(){\n${parts.join('\n')}\n})();\n`;
 }

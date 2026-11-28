@@ -1,8 +1,10 @@
 /* 2026-11-28 12월용 두 장 — 한 주제 한 페이지(숫자별 페이지는 만들지 않음)
  *  /overseas-stock/  해외주식 양도소득세 계산기 — 연말 손실 정리·250만원 공제 채우기 (engine/overseas.mjs)
- *  /median-income/   2027 기준 중위소득 — 우리 집은 몇 %? (engine/median.mjs, 복지부 2026-07-28 보도자료) */
+ *  /median-income/   2027 기준 중위소득 — 우리 집은 몇 %? (engine/median.mjs, 복지부 2026-07-28 보도자료)
+ *  /wolse/           월세 세액공제 계산기 — 결정세액 한도·표준세액공제까지 반영한 '실제로 줄어드는 세금' (engine/wolse.mjs) */
 import * as OS from '../engine/overseas.mjs';
 import * as MD from '../engine/median.mjs';
+import * as WS from '../engine/wolse.mjs';
 import { num, won, manwon } from '../engine/fmt.mjs';
 
 const ext = (href, text) => `<a href="${href}" target="_blank" rel="noopener">${text}</a>`;
@@ -103,5 +105,54 @@ ${section('이어서 계산하기', null, list([
     const title = `${Y} 기준 중위소득표 — 1~6인 가구 금액과 우리 집 몇 % 계산 · 생계·의료·주거·교육급여 기준`;
     const desc = `${Y}년 기준 중위소득 4인 가구 ${num(MD.medianOf(Y, 4))}원(6.70% 인상), 1인 ${num(MD.medianOf(Y, 1))}원. 가구원 수와 월 소득을 넣으면 중위소득 몇 %인지, 생계(32%)·의료(40%)·주거(48%)·교육급여(50%) 선정기준과 50~180% 금액표까지 보건복지부 발표로 정리했습니다.`;
     write(url, shell({ url, modified: MOD, title, desc, body, nav: 'salary', scripts: ['/js/engine.js', '/js/median.js'] }));
+  }
+
+  /* ---------- 월세 세액공제 ---------- */
+  {
+    const url = '/wolse/', MOD = '2026-11-28';
+    const SAL = [2800, 3500, 4000, 4500, 5000, 6000, 7000, 8000];
+    const cell = (a, r) => { const x = WS.wolseCredit({ annual: a * 10000, rent: r }); return x.eligible ? num(x.save) : '대상 아님'; };
+    const rows = SAL.map((a) => ({ cells: [`${num(a)}만`, cell(a, 500000), cell(a, 700000), cell(a, 900000)] }));
+    const e45 = WS.wolseCredit({ annual: 45000000, rent: 600000 }), e28 = WS.wolseCredit({ annual: 28000000, rent: 600000 });
+    const body = `
+${crumb([['/', '홈'], ['/yearend/', '연말정산'], [null, '월세 세액공제']])}
+<h1 class="title">월세 세액공제 계산기 — 연말정산에서 얼마 돌려받나</h1>
+<p class="meta">2026년 귀속 · 총급여 8,000만원 이하 무주택 세대주 · 연 1,000만원 한도 · 총급여 5,500만원 이하 17% · 그 초과 15% · 지방소득세 10% 별도</p>
+${tiles([{ label: '공제율 (총급여 5,500만 이하)', value: '17%' }, { label: '공제율 (5,500만~8,000만)', value: '15%' }, { label: '1년 한도', value: '1,000만원' }])}
+${lead(`월세 세액공제는 낸 월세의 15~17%를 세금에서 바로 빼 줍니다. 다만 <b>내가 낼 세금(결정세액)보다 많이 돌려받을 수는 없고</b>, 월세를 받으면 표준세액공제 13만원 대신이라 실제로 줄어드는 금액은 계산해 봐야 압니다. 연봉 4,500만원에 월세 60만원이면 계산상 최대 ${won(e45.maxWithLocal)}(지방소득세 포함)이고 실제로도 ${won(e45.save)} 줄지만, 연봉 2,800만원이면 낼 세금이 적어 ${won(e28.save)}만 줄어듭니다.`)}
+<form class="quick ye-form" id="ws-form">
+<div class="ye-grid">
+${inp('ws-annual', '연봉 (세전 · 만원)', '4,500')}
+${inp('ws-rent', '월세 (한 달 · 만원)', '60')}
+${inp('ws-months', '올해 낸 달 수', '12')}
+${inp('ws-dep', '부양가족 수 (본인 포함)', '1')}
+</div>
+<div class="ye-checks"><label><input type="checkbox" id="ws-ok" checked> 무주택 세대주(또는 요건을 갖춘 세대원·배우자)이고, 계약서 주소로 전입신고를 했다</label></div>
+<p class="sub" style="margin-top:4px">식대 비과세 월 20만원, 카드를 연봉의 40% 쓴 것으로 보고 결정세액을 어림합니다. 정확한 금액은 연말정산 미리보기의 내 숫자로 보세요.</p>
+</form>
+<div class="hero"><div class="hero-label" id="ws-label">실제로 줄어드는 세금 (지방소득세 포함)</div><div class="hero-num"><span class="num" id="ws-result">0</span><span class="unit">원</span></div><div class="hero-sub" id="ws-sub">계산 중</div></div>
+<div id="ws-tips"></div>
+${section('연봉·월세별로 줄어드는 세금', '원 · 1년 12개월 · 본인 1인 · 카드 연봉의 40% · 지방소득세 포함 · 결정세액과 표준세액공제를 반영한 실제 차이', table(['연봉', '월세 50만', '월세 70만', '월세 90만'], rows) + '<p class="sub">연봉이 낮을수록 낼 세금 자체가 적어 공제를 다 받지 못합니다. 월세 90만원은 1년 1,080만원이라 1,000만원까지만 셉니다.</p>')}
+${section('받을 수 있는 사람', '조세특례제한법 제95조의2', `<div class="doc">
+<p><b>① 무주택 세대주</b>: 12월 31일 기준으로 세대원 모두 집이 없어야 합니다. 세대주가 주택 관련 공제를 받지 않았다면 요건을 갖춘 세대원도 받을 수 있고, 2026년 지급분부터는 다른 시·군·구에 따로 사는 배우자도 요건을 갖추면 공제받습니다(부부 합쳐 1,000만원 한도).</p>
+<p><b>② 소득</b>: 총급여 8,000만원 이하(종합소득이 있으면 종합소득금액 7,000만원 이하).</p>
+<p><b>③ 집</b>: 국민주택규모(전용 85㎡) 이하이거나 기준시가 4억원 이하인 주택. 주거용 오피스텔과 고시원도 됩니다.</p>
+<p><b>④ 전입신고</b>: 임대차계약서의 주소와 주민등록 주소가 같아야 합니다. 확정일자는 필수가 아닙니다.</p>
+</div>`)}
+${ad()}
+${section('신청하는 법', null, `<div class="doc">
+<p><b>연말정산 때 회사에</b> 임대차계약서 사본과 월세를 낸 증빙(계좌이체 내역 등)을 냅니다. 집주인 동의는 필요 없습니다.</p>
+<p><b>회사에 못 냈다면</b> 5월 종합소득세 신고 때 넣거나, 5년 안에 홈택스에서 경정청구로 돌려받을 수 있습니다.</p>
+<p><b>요건이 안 되면 현금영수증</b>: 세액공제 요건을 못 채우는 경우에도 홈택스에서 '주택임차료 현금영수증'을 신청하면 월세가 신용카드 등 사용액(30%)에 들어가 소득공제를 받을 수 있습니다. 두 가지를 겹쳐 받지는 않습니다.</p>
+</div>`)}
+${section('이어서 계산하기', null, list([
+  { href: '/yearend/', title: '연말정산 환급 계산기', sub: '월세·카드·연금저축을 함께 넣어서' },
+  { href: '/jeonse/', title: '전세 vs 월세', sub: '전세대출 이자와 월세 비교' },
+  { href: '/yearend/result/', title: '연말정산 결과 보는 법', sub: '2월 원천징수영수증 읽기' },
+]))}
+<p class="note">${ext('https://www.law.go.kr/법령/조세특례제한법', '조세특례제한법')} 제95조의2(월세액에 대한 세액공제)와 이 사이트의 연말정산 계산(근로소득공제·기본공제·보험료 특별소득공제·카드 공제·근로소득세액공제·표준세액공제)으로 어림한 값입니다. 다른 세액공제(자녀·연금계좌·의료비 등)가 많으면 결정세액이 줄어 월세 공제를 다 받지 못할 수 있습니다. <a href="/method/">계산 기준 보기</a></p>`;
+    const title = '월세 세액공제 계산기 — 연봉·월세별 실제 환급액, 17%·15%·1,000만원 한도 (2026년 귀속)';
+    const desc = `월세 세액공제를 바로 계산합니다. 총급여 5,500만원 이하 17%, 8,000만원 이하 15%, 연 1,000만원 한도에 내 결정세액과 표준세액공제까지 반영한 실제로 줄어드는 세금. 연봉 4,500만원·월세 60만원이면 ${won(e45.save)}. 받을 수 있는 사람과 신청법.`;
+    write(url, shell({ url, modified: MOD, title, desc, body, nav: 'yearend', scripts: ['/js/engine.js', '/js/wolse.js'] }));
   }
 }

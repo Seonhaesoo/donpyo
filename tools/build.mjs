@@ -44,6 +44,7 @@ import * as NH from '../engine/nhis.mjs';
 import * as YE from '../engine/yearend.mjs';
 import * as OS from '../engine/overseas.mjs';
 import * as MD from '../engine/median.mjs';
+import * as WS from '../engine/wolse.mjs';
 import * as BN from '../engine/bonus.mjs';
 import { makeBundle } from './bundle.mjs';
 import { guideContext as makeGuideContext } from './guide-context.mjs';
@@ -889,6 +890,7 @@ ${section('세금·부동산', null, `<div class="dict">
 <a href="/deposit/"><b>예금 이자</b><span>1억 1년 3% → 세후 <span class="num">${num(DP.deposit(100000000, 12, 0.03).net)}</span>원 · 매달 받으면 <span class="num">${num(DP.deposit(100000000, 12, 0.03).monthlyNet)}</span>원</span></a>
 <a href="/subscription/"><b>청약 가점</b><span>무주택 10년·부양가족 2명·통장 15년 → <span class="num">${SB.subscriptionScore({ homelessYears: 10, family: 2, accountMonths: 180 }).total}</span>점 (84점 만점)</span></a>
 <a href="/capgain/"><b>양도소득세</b><span>9억에 산 집 15억에 팔면 (1주택·5년) <span class="num">${num(capThree(1500000000, 900000000).one.total)}</span>원 · 12억 이하는 비과세</span></a>
+<a href="/wolse/"><b>월세 세액공제</b><span>연봉 4,500만·월세 60만 → <span class="num">${num(WS.wolseCredit({ annual: 45000000, rent: 600000 }).save)}</span>원 환급 · 17%·15%</span></a>
 <a href="/median-income/"><b>2027 기준 중위소득</b><span>4인 <span class="num">${num(MD.medianOf(2027, 4))}</span>원 · 우리 집 몇 % · 급여별 기준</span></a>
 <a href="/eitc/"><b>근로장려금</b><span>총급여 1,500만 홑벌이 → <span class="num">${num(EI.eitc({ type: 'one', wage: 15000000 }).work)}</span>원 · 자녀 1명당 +<span class="num">${num(EI.eitc({ type: 'one', wage: 15000000, children: 1 }).perChild)}</span>원</span></a>
 </div>`)}
@@ -2295,6 +2297,7 @@ ${section('자주 묻는 것', null, `<div class="doc">
 ${section('연봉별 연말정산', '카드를 연봉의 40% 썼을 때 · 환급(+) / 추가 납부(−) · 원 — 누르면 카드 문턱과 연금저축·월세별 표', yeChips(0))}
 ${section('이어서 계산하기', null, list([
   { href: '/yearend/result/', title: '연말정산 결과 보는 법', sub: '2월에 받은 원천징수영수증 — 결정세액·차감징수세액 숫자만 넣으면 환급인지 추가 납부인지, 왜 그런지' },
+  { href: '/wolse/', title: '월세 세액공제 계산기', sub: '연봉·월세로 실제 줄어드는 세금 · 받을 수 있는 사람' },
   { href: '/salary/', title: '연봉 실수령액표', sub: '매달 손에 쥐는 돈은 얼마인지' },
   { href: '/tax-receipt/', title: '내 세금 영수증', sub: '1년에 나와 회사가 내는 돈' },
   { href: '/rates/', title: `${YEAR}년 4대보험 요율표`, sub: '소득공제에 들어가는 보험료율' },

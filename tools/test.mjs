@@ -573,6 +573,10 @@ ok(EI.childCredit(10000000, 'single').raw === 0 && EI.eitc({ type: 'single', wag
   ok(bad === 0, '중위소득 — 급여별 선정기준 48개가 복지부 보도자료(2026-07-28)와 일치', bad);
   ok(MDX.medianCheck(4000000, 4).pct === 57.7 && MDX.medianCheck(800000, 1).under.join() === 'living,medical,housing,edu', '중위소득 — % 계산·선정기준');
   const vm2 = await import('node:vm'); const { makeBundle: mb } = await import('./bundle.mjs'); const c2 = { window: {} }; vm2.runInNewContext(mb(200000), c2); const B2 = c2.window.Donpyo;
+  const WSX = await import('../engine/wolse.mjs');
+  const w45 = WSX.wolseCredit({ annual: 45000000, rent: 600000 }), w28 = WSX.wolseCredit({ annual: 28000000, rent: 600000 }), w85 = WSX.wolseCredit({ annual: 85000000, rent: 600000 }), w90 = WSX.wolseCredit({ annual: 45000000, rent: 900000 });
+  ok(w45.max === 1224000 && w45.save === 1346400 && w28.save < w28.maxWithLocal && w28.capped && !w85.eligible && w85.save === 0 && w90.counted === 10000000, '월세 — 17%·결정세액 한도·8천만 초과·1,000만 한도', JSON.stringify([w45.save, w28.save, w90.counted]));
+  ok(B2.wolseCredit({ annual: 45000000, rent: 600000 }).save === w45.save, '번들 wolseCredit');
   ok(B2.overseasTax(10000000).total === 1650000 && B2.pctAmount(2027, 4, 32) === 2217563 && B2.medianCheck(4000000, 4).pct === 57.7, '번들 overseasTax · pctAmount · medianCheck');
 }
 

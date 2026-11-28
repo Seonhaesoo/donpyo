@@ -116,7 +116,10 @@ const DEP_DATE = '2026-11-14';
 const YE_DATE = '2026-11-16';
 /* 2026-11-21: 월급·실수령 역산 허브와 금액 페이지, 연봉 허브에 2027년을 2026년과 나란히(제목·H1·설명은 2027 먼저), 1월 연말정산 미리보기 상자를 더하고 소식에 적은 날 */
 const SEASON_DATE = '2026-11-21';
+/* 2026-11-28: 연말정산 결과 해석기(/yearend/result/)를 더하고 소식에 적은 날 — 상단 메뉴·연결 링크만 바뀐 페이지는 날짜를 올리지 않는다 */
+const YE_RESULT_DATE = '2026-11-28';
 const PAGE_LASTMOD = [
+  [/^\/(yearend\/result|updates)\/$/, YE_RESULT_DATE],
   [/^\/((monthly|net)\/(\d+\/)?|salary\/|updates\/)$/, SEASON_DATE],
   [/^\/(yearend|method|updates)\/$/, YE_DATE],
   [/^\/car-tax\/$/, '2026-11-16'],                   /* 연납 시기별 표를 더한 날 */
@@ -134,7 +137,7 @@ const PAGE_LASTMOD = [
  * 2026-09-06~10-08 GA4 방문 또는 구글 노출 10회 이상)만 색인하고 나머지는 noindex — 페이지·링크·계산은 그대로 둔다.
  * 허브(1단계 주소)·서재·2027·최저임금·관계별 증여세/상속세 표·전기차 자동차세는 늘 색인. 수요가 새로 생긴 주소는 index-keep.json 에 더한다. */
 const INDEX_KEEP = new Set(JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'index-keep.json'), 'utf8')).keep);
-const ALWAYS_INDEX = /^\/(guide|2027|minimum-wage|updates)\/|^\/nhis\/dependent\/$|^\/gift-tax\/[a-z]+\/$|^\/inheritance-tax\/[a-z0-9]+\/$|^\/car-tax\/ev\/$/;
+const ALWAYS_INDEX = /^\/(guide|2027|minimum-wage|updates)\/|^\/nhis\/dependent\/$|^\/gift-tax\/[a-z]+\/$|^\/inheritance-tax\/[a-z0-9]+\/$|^\/car-tax\/ev\/$|^\/yearend\/result\/$/;
 const thinPage = (u) => u.split('/').filter(Boolean).length >= 2 && !ALWAYS_INDEX.test(u) && !INDEX_KEEP.has(u);
 const GUIDES = [...BASE_GUIDES, ...GUIDES_A, ...GUIDES_B, ...GUIDES_C];   /* 서재: 기본 10편 + 2026-09-13 추가분(세금·부동산, 연금·보험·생활) + 2026-10-08 2027·퇴사 3편 */
 
@@ -186,6 +189,9 @@ function midInsert(body, html) {
   return null;
 }
 
+/* 2026-11-28 11월~3월에는 상단 메뉴에 '연말정산' — 1~2월 정산·3월 지급명세서까지가 검색이 몰리는 때. 빌드한 달로 정하므로 4월 이후 첫 배포 때 빠진다.
+ * 휴대폰에서 메뉴가 두 줄이 되지 않게 그동안 좁은 화면에선 '실업급여'를 메뉴에서 숨긴다(.nav-x — 실업급여 페이지 안에서는 거꾸로 연말정산을 숨긴다. 바닥글·홈에는 둘 다 늘 있음) */
+const YE_NAV = (() => { const mo = new Date().getMonth() + 1; return mo >= 11 || mo <= 3; })();
 function shell(o) {
   /* 금액 조합 페이지는 구글에만 뺀다('google' → googlebot noindex). 네이버 유입 대부분이 이 페이지들이라
    * robots noindex(모든 검색엔진)로 두면 네이버에서도 빠진다 (2026-10-24 감사). noindex: true 는 약관·위젯·부가 페이지처럼 어디서도 뺄 것 */
@@ -223,14 +229,14 @@ ${o.noindex === 'google' ? '<meta name="robots" content="max-image-preview:large
 ${o.bare ? o.body : `<div class="app">
 <header class="hdr">
   <a class="brand" href="/">${LOGO}<span class="brand-name">돈표</span></a>
-  <nav class="nav"><a href="/salary/"${on('salary')}>연봉</a><a href="/monthly/"${on('monthly')}>월급</a><a href="/loan/"${on('loan')}>대출</a><a href="/retire/"${on('retire')}>퇴직금</a><a href="/unemployment/"${on('unemployment')}>실업급여</a><a href="/hourly/"${on('hourly')}>알바</a></nav>
+  <nav class="nav"><a href="/salary/"${on('salary')}>연봉</a><a href="/monthly/"${on('monthly')}>월급</a>${YE_NAV ? `<a href="/yearend/"${o.nav === 'unemployment' ? ' class="nav-x"' : on('yearend')}>연말정산</a>` : ''}<a href="/loan/"${on('loan')}>대출</a><a href="/retire/"${on('retire')}>퇴직금</a><a href="/unemployment/"${YE_NAV ? (o.nav === 'unemployment' ? ' class="on"' : ' class="nav-x"') : on('unemployment')}>실업급여</a><a href="/hourly/"${on('hourly')}>알바</a></nav>
   <span class="year-pill">${YEAR} 요율</span>
 </header>
 ${_mid ?? o.body}
 ${_dyn}
 <footer class="foot foot2">
   <p class="flabel">계산 찾아보기</p>
-  <nav class="fgrid" aria-label="계산 찾아보기"><a href="/salary/">연봉 실수령액</a><a href="/monthly/">월급 실수령액</a><a href="/loan/">대출 상환</a><a href="/retire/">퇴직금</a><a href="/unemployment/">실업급여</a><a href="/hourly/">알바 월급</a><a href="/guide/">서재</a><a href="/method/">계산 기준</a><a href="/updates/">업데이트 기록</a></nav>
+  <nav class="fgrid" aria-label="계산 찾아보기"><a href="/salary/">연봉 실수령액</a><a href="/monthly/">월급 실수령액</a><a href="/loan/">대출 상환</a><a href="/retire/">퇴직금</a><a href="/unemployment/">실업급여</a><a href="/hourly/">알바 월급</a><a href="/yearend/">연말정산</a><a href="/guide/">서재</a><a href="/method/">계산 기준</a><a href="/updates/">업데이트 기록</a></nav>
   <div class="frow2"><nav><a href="/about/">소개</a><a href="/embed/">위젯</a><a href="/terms/">이용약관</a><a href="/privacy/">개인정보</a></nav><span>© 돈표 · ${YEAR}년 1월 요율 · 갱신 ${CONTENT_DATE}</span></div>
   <p class="fnote">계산 결과는 참고용입니다. 회사의 비과세 항목·상여·연말정산, 은행별 계산 방식에 따라 실제 금액과 다를 수 있습니다.</p>
 </footer>
@@ -379,6 +385,14 @@ const netNY = (o) => netPay({ ...o, year: NY });
 const nyRateText = () => `국민연금 보험료율 ${pct(RATES[YEAR].pension * 2, 1).replace(/\.0%$/, '%')} → ${pct(RATES[NY].pension * 2, 1).replace(/\.0%$/, '%')}(근로자 ${pct(RATES[YEAR].pension, 2)} → ${pct(RATES[NY].pension, 2)})${RATES[NY].health === RATES[YEAR].health ? `, 건강보험료율 ${pct(RATES[NY].health * 2, 2)} 동결` : ''}`;
 const nyShort = () => `국민연금 ${pct(RATES[NY].pension * 2, 1).replace(/\.0%$/, '%')}${RATES[NY].health === RATES[YEAR].health ? '·건강보험 동결' : ''}`;
 const nyNote = () => { const pv = provisionalNote(RATES[NY], NY); return pv ? `<p class="note">${NY}년 값: ${pv}</p>` : ''; };
+/* 2026-11-28 연봉·월급 금액 페이지의 연말정산 링크 — 가까운 연봉별 연말정산 페이지(YE_SAL, 10% 안쪽)로, 없으면 계산기에 연봉을 채워서.
+ * 네이버 유입이 많은 금액 페이지에서 1월 '연봉 4000 연말정산' 페이지로 길을 낸다 */
+function yeLink(m) {
+  const y = nearest(YE_SAL, m);   /* 10% 안쪽이면 가까운 연봉 페이지(4,200 → 4,000), 아니면 계산기 */
+  return Math.abs(y - m) <= m * 0.1
+    ? { href: yeSalUrl(y), title: `연봉 ${yeLab(y)}원 연말정산 환급 예상`, sub: '카드 공제 문턱과 연금저축·월세·의료비를 더하면 얼마나 달라지는지' }
+    : { href: `/yearend/?a=${m}`, title: '연말정산 미리보기', sub: '카드·의료비·연금저축을 넣으면 환급인지 추가 납부인지' };
+}
 /* 1월 연말정산 미리보기 상자 — 월급·실수령 역산·연봉 허브와 홈. 일정은 /yearend/ 표와 같은 '예년 기준' */
 const yearendFeature = () => `<a class="feature" href="/yearend/"><span class="feature-mark">13</span><span class="feature-text"><b>1월 연말정산 미리보기 — ${YEAR}년 귀속 환급 계산기</b><span>${YEAR + 1}년 1월 15일 무렵(예년 기준) 간소화 서비스가 열리기 전에, 연봉·카드·의료비·연금저축만 넣으면 돌려받을지 더 낼지 · ${YEAR}년 12월 31일까지 할 수 있는 것</span></span>${CHEV}</a>`;
 
@@ -395,7 +409,7 @@ function useBlock(p, annual) {
   return section('이 월급으로 할 수 있는 것', null, `<div class="tiles"><div class="tile"><small>세후 시급</small>${n(Math.round(hn))}</div><div class="tile"><small>치킨 한 마리는</small><span class="num">${hoursText(CHICKEN / hn)}</span></div><div class="tile"><small>실수령 30% 저축 → 1억까지</small><span class="num">${GO.fmtMonths(GO.monthsToGoal(100000000, g30, 0.03))}</span></div></div>` + list([
     { href: `/goal/10000/${nearest(SAVE_M, Math.round(p.net * 0.3 / 10000))}/`, title: '1억 모으기 시계', sub: '저축액·금리별 도달 기간, 물가 반영' },
     { href: `/negotiate/${sm}/`, title: '연봉 협상 근거 만들기', sub: '상위 %, 나이대 평균, 물가·최저임금 인상률을 한 장으로' },
-    { href: `/yearend/?a=${sm}`, title: '연말정산 미리보기', sub: '카드·의료비·연금저축을 넣으면 환급인지 추가 납부인지' },
+    yeLink(sm),
   ]));
 }
 function loanBlock(annual, net) {
@@ -455,7 +469,7 @@ ${section('이 연봉으로 할 수 있는 것', null, (() => { const hn = p.net
   { href: `/negotiate/${m}/`, title: '연봉 협상 근거 만들기', sub: '상위 %, 나이대 평균, 물가·최저임금 인상률을 한 장으로' },
   { href: `/tax-receipt/${m}/`, title: '내 세금 영수증', sub: '1년에 나와 회사가 내는 돈, 어디로 가나' },
   { href: `/history/${m}/`, title: '2020년부터의 실수령 변화', sub: '같은 연봉이 요율 인상으로 얼마나 줄었나' },
-  { href: `/yearend/?a=${m}`, title: '연말정산 미리보기', sub: '카드·의료비·연금저축을 넣으면 환급인지 추가 납부인지' },
+  yeLink(m),
   { href: '/couple/', title: '둘이 합쳐 얼마까지 빌릴까', sub: '링크 하나로 상대 연봉 받아 합산 한도 계산' },
 ]))}
 ${section('연봉이 오르면 손에 오는 돈', '인상액 가운데 4대보험과 세금을 뺀 몫만 손에 옵니다. 마지막 열이 그 비율입니다', table(['인상', '월 실수령', '월 증가', '인상액 대비'], raises))}
@@ -1853,6 +1867,7 @@ const guideModified = (g) => g.modified || ((g.published || '2026-09-06') > '202
 
 /* 업데이트 기록 — 이용자에게 보이는 변경만, 최근 것부터. 글·요율을 고칠 때 맨 위에 한 줄 더한다 */
 const UPDATES = [
+  { date: '2026-11-28', text: '<a href="/yearend/result/">연말정산 결과 보는 법</a>을 더했습니다 — 2월에 받는 원천징수영수증의 결정세액·기납부세액을 넣으면 차감징수세액과 지방소득세까지 합친 환급·추가 납부액, 10만원 넘는 추가 납부의 분납(소득세법 제137조 제4항), 같은 총급여의 보통 결정세액과 비교를 보여 줍니다. 11월부터 3월까지 상단 메뉴에 연말정산을 두고, 연봉·월급 금액 페이지에서 <a href="/yearend/4000/">연봉별 연말정산</a> 페이지로 바로 이어지게 했습니다.' },
   { date: '2026-11-21', text: '<a href="/monthly/">월급 실수령액표</a>·<a href="/net/">실수령액으로 연봉 찾기</a>·<a href="/salary/">연봉 실수령액표</a>를 2027년과 2026년 나란히 보여 주도록 바꿨습니다 — 2027년 실수령(또는 필요 연봉)을 앞에 두고 2026년과 차이를 함께 적었으며, 월급·실수령 금액 페이지 맨 위에도 2027년 1월부터의 금액을 먼저 보여 줍니다. 아직 확정되지 않은 2027년 요율은 표 아래에 적었습니다. 1월 연말정산을 앞두고 이 세 표와 홈에 <a href="/yearend/">연말정산 미리보기</a> 바로 가기를 두었습니다.' },
   { date: '2026-11-16', text: '<a href="/yearend/">연말정산 환급 계산기(미리보기)</a>에 2027년 연말정산 일정(법정 기한과 예년 기준 간소화 일정을 나눠 표시), 2026년 귀속 공제 항목 체크리스트(신용카드·주택청약·연금저축·의료비·월세·교육비·기부금·고향사랑·자녀·결혼, 법제처 조문 근거), 12월 31일까지 할 수 있는 것, 연봉 5,000만원 예시를 더했습니다. 계산기에 2026년부터 늘어난 자녀 수별 신용카드 공제 한도(7세 이하 자녀 칸 추가), 주택청약 소득공제, 기부금 세액공제를 넣었습니다.' },
   { date: '2026-11-14', text: '<a href="/nhis/dependent/">건강보험 피부양자 자격 판정기</a>를 더했습니다 — 관계, 연금·근로·사업·이자·배당 소득, 사업자등록 여부, 재산세 과세표준을 넣으면 부양·소득·재산요건을 하나씩 판정하고 기준까지 남은 금액을 보여 줍니다(국민건강보험법 시행규칙 별표 1·별표 1의2, 참고용).' },
@@ -2272,13 +2287,14 @@ ${section('자주 묻는 것', null, `<div class="doc">
 </div>`)}
 ${section('연봉별 연말정산', '카드를 연봉의 40% 썼을 때 · 환급(+) / 추가 납부(−) · 원 — 누르면 카드 문턱과 연금저축·월세별 표', yeChips(0))}
 ${section('이어서 계산하기', null, list([
+  { href: '/yearend/result/', title: '연말정산 결과 보는 법', sub: '2월에 받은 원천징수영수증 — 결정세액·차감징수세액 숫자만 넣으면 환급인지 추가 납부인지, 왜 그런지' },
   { href: '/salary/', title: '연봉 실수령액표', sub: '매달 손에 쥐는 돈은 얼마인지' },
   { href: '/tax-receipt/', title: '내 세금 영수증', sub: '1년에 나와 회사가 내는 돈' },
   { href: '/rates/', title: `${YEAR}년 4대보험 요율표`, sub: '소득공제에 들어가는 보험료율' },
 ]))}
 ${guideLinks(['yearend-refund', 'withholding-table', 'dependents'])}
 <p class="note">${YEAR}년 귀속 연말정산 규정을 단순화한 추정치입니다. 주택자금·전통시장·대중교통·문화체육 공제율과 추가 한도·고향사랑 기부금·기부금 한도·의료비 700만원 한도·경로우대·장애인·한부모 공제, 배우자 월세 공제, 중도 입사·퇴사, 상여 원천징수 방식은 반영하지 않았습니다. 정확한 값은 국세청 홈택스 '연말정산 미리보기'와 간소화 자료로 확인하세요. <a href="/method/">계산 기준 보기</a></p>`;
-  write(url, shell({ url, title: `${YEAR} 연말정산 환급 계산기 — 공제 항목 체크리스트·${YEAR + 1} 일정`, desc: `${YEAR}년 귀속 연말정산 환급 예상액 계산기. 연봉·신용카드·의료비·연금저축·월세·주택청약·기부금을 넣으면 결정세액과 13월의 월급을 바로 계산하고, 공제 항목별 공제율·문턱·한도와 ${YEAR + 1}년 간소화 서비스·회사 제출·5월 신고 일정을 정리했습니다.`, body, nav: 'salary', scripts: ['/js/engine.js', '/js/yearend.js'] }));
+  write(url, shell({ url, title: `${YEAR} 연말정산 환급 계산기 — 공제 항목 체크리스트·${YEAR + 1} 일정`, desc: `${YEAR}년 귀속 연말정산 환급 예상액 계산기. 연봉·신용카드·의료비·연금저축·월세·주택청약·기부금을 넣으면 결정세액과 13월의 월급을 바로 계산하고, 공제 항목별 공제율·문턱·한도와 ${YEAR + 1}년 간소화 서비스·회사 제출·5월 신고 일정을 정리했습니다.`, body, nav: 'yearend', scripts: ['/js/engine.js', '/js/yearend.js'] }));
 }
 
 /* ---------- 연봉별 연말정산 (2026-11-25) — 1월 "연봉 4000 연말정산 환급" 같은 검색용. 허브 계산기와 같은 엔진·같은 가정 ---------- */
@@ -2325,12 +2341,75 @@ ${section('무엇을 더하면 얼마나', '카드 연봉의 40% 기준 · 지�
 ${section('다른 연봉', '카드를 연봉의 40% 썼을 때 · 환급(+) / 추가 납부(−) · 원', yeChips(m))}
 ${section('이어서 계산하기', null, list([
   { href: '/yearend/', title: '연말정산 환급 계산기', sub: '내 카드·의료비·월세를 넣어서' },
+  { href: '/yearend/result/', title: '연말정산 결과 보는 법', sub: '원천징수영수증의 결정세액·차감징수세액 읽기' },
   { href: `/salary/${m}/`, title: `연봉 ${yeLab(m)}원 실수령액`, sub: '매달 손에 쥐는 돈' },
   { href: '/tax-receipt/', title: '내 세금 영수증', sub: '1년에 나와 회사가 내는 돈' },
 ]))}
 <p class="note">${YEAR}년 귀속 연말정산 규정을 단순화한 추정치입니다(부양가족·자녀·전통시장·대중교통 공제 등은 넣지 않음). 실제 환급액은 회사 원천징수 방식과 공제 서류에 따라 달라집니다.</p>`;
-    write(url, shell({ url, modified: '2026-11-25', title, desc, body, nav: 'salary' }));
+    write(url, shell({ url, modified: '2026-11-25', title, desc, body, nav: 'yearend' }));
   }
+}
+
+/* ---------- 연말정산 결과 보는 법 (2026-11-28) — 2월에 받는 원천징수영수증의 결정세액·기납부세액·차감징수세액을 넣으면
+ * 환급인지 추가 납부인지, 지방소득세까지 얼마인지, 분납이 되는지, 같은 총급여의 보통 결정세액과 견주어 보여 준다.
+ * 2월 '차감징수세액 마이너스', '결정세액 0원', '연말정산 토해내는 이유' 검색용. 예시·표는 /yearend/ 와 같은 엔진·같은 가정 ---------- */
+function yearendResultPage() {
+  const url = '/yearend/result/';
+  const inp = (id, label, ph) => `<label class="ye-f"><span>${label}</span><input id="${id}" type="text" inputmode="numeric" placeholder="${ph}"></label>`;
+  const ex = (() => { const s = yeSetup(5000); return { s, r: s.run(s.spend(0.4)) }; })();
+  const r = ex.r, exPre = r.prepaid, exDiff = r.determined - exPre;
+  const sign = (v) => (v < 0 ? `−${num(-v)}` : num(v));
+  const typical = YE_SAL.map((m) => { const s = yeSetup(m); const x = s.run(s.spend(0.4)); return { a: m, g: s.gross, d: x.determined, p: x.prepaid }; });
+  const rows = typical.map((t) => ({ cells: [`<a href="${yeSalUrl(t.a)}">연봉 ${yeLab(t.a)}원</a>`, num(t.g), num(t.d), `${(t.d / t.g * 100).toFixed(1)}%`, num(t.p), sign(t.d - t.p)] }));
+  const body = `
+${crumb([['/', '홈'], ['/yearend/', '연말정산 미리보기'], [null, '결과 보는 법']])}
+<h1 class="title">연말정산 결과 보는 법 — 차감징수세액이 마이너스면 환급</h1>
+<p class="meta">${YEAR}년 귀속 · ${YEAR + 1}년 2월 무렵 회사가 주는 근로소득 원천징수영수증 기준 · 입력값은 이 기기 밖으로 나가지 않습니다</p>
+${lead(`연말정산 결과는 원천징수영수증 아래쪽 <b>세액 명세</b>의 세 줄로 정해집니다. <b>결정세액</b>은 1년 동안 실제로 내야 할 소득세, <b>기납부세액</b>은 매달 월급에서 미리 뗀 소득세, <b>차감징수세액</b>은 둘의 차이(결정세액 − 기납부세액)입니다. 차감징수세액이 마이너스(−)면 그만큼 돌려받고, 플러스면 더 냅니다. 소득세·지방소득세 칸이 따로 있으니 둘을 더한 것이 실제로 오가는 돈입니다.`)}
+<form class="quick ye-form" id="yr-form">
+<div class="ye-grid">
+${inp('yr-det', '결정세액 — 소득세 (원)', num(r.determined))}
+${inp('yr-cur', '기납부세액 주(현)근무지 — 소득세 (원)', num(exPre))}
+${inp('yr-prev', '기납부세액 종(전)근무지 — 소득세 (원 · 이직했다면)', '0')}
+${inp('yr-gross', '총급여 (원 · 선택)', num(r.gross))}
+</div>
+<p class="sub" style="margin-top:4px">영수증의 소득세 칸 숫자를 그대로 넣으세요. 지방소득세는 소득세의 10%로 따로 계산해 더합니다. 총급여를 넣으면 같은 총급여의 보통 결정세액과 견주어 봅니다. 빈칸이면 연봉 ${yeLab(5000)}원 예시 값으로 계산합니다.</p>
+</form>
+<div class="hero"><div class="hero-label" id="yr-label">연말정산 결과</div><div class="hero-num"><span class="num" id="yr-result">0</span><span class="unit">원</span></div><div class="hero-sub" id="yr-sub">계산 중</div></div>
+<div id="yr-tips"></div>
+<script>window.YE_TYPICAL=${JSON.stringify(typical)}</script>
+${section('원천징수영수증, 어디를 보나', `연봉 ${yeLab(5000)}원 예시 · 식대 비과세 월 20만원 · 본인 1인 · 카드를 연봉의 40% 사용 · 미리 낸 세금은 간이세액표 12개월분 · 원`, table(['영수증 항목', '예시'], [
+  ['<b>총급여</b>', '1년 급여에서 식대 같은 비과세를 뺀 금액', num(r.gross)],
+  ['근로소득금액', '총급여 − 근로소득공제(급여 구간별 70~2%)', num(r.income)],
+  ['종합소득 과세표준', '근로소득금액 − 기본공제(1인 150만원)·국민연금·건강·고용보험료·신용카드 등 소득공제', num(r.base)],
+  ['산출세액', '과세표준 × 기본세율(6~45%)', num(r.calc)],
+  ['세액공제', `근로소득세액공제 ${num(r.earned)}${r.usedStandard ? ` · 표준세액공제 ${num(r.standard)}` : ''} 등 — 자녀·연금계좌·보험료·의료비·교육비·월세·기부금`, `−${num(r.credits)}`],
+  ['<b>결정세액</b>', '1년 동안 실제로 낼 소득세 (산출세액 − 세액공제, 0원 아래로 내려가지 않음)', `<b>${num(r.determined)}</b>`],
+  ['<b>기납부세액</b>', '1~12월 월급에서 미리 뗀 소득세 — 이직했다면 종(전)근무지 몫이 따로 적힘', `<b>${num(exPre)}</b>`],
+  ['<b>차감징수세액</b>', '결정세액 − 기납부세액 · 마이너스면 환급, 플러스면 추가 납부', `<b>${sign(exDiff)}</b>`],
+].map(([k, d, v]) => ({ cells: [`${k}<span class="ye-def">${d}</span>`, v] }))) + `<p class="sub">지방소득세 칸도 같은 순서로 결정세액 ${num(r.local)} − 기납부 ${num(r.prepaidLocal)} = ${sign(r.local - r.prepaidLocal)}원이라, 이 예시는 모두 합쳐 <b>${r.refund >= 0 ? `${won(r.refund)} 환급` : `${won(-r.refund)} 추가 납부`}</b>입니다. <a href="${yeSalUrl(5000)}">연봉 ${yeLab(5000)}원 연말정산 표</a>에서 연금저축·월세를 더한 경우도 볼 수 있습니다.</p>`)}
+${section('연봉별 보통 결정세액', '식대 비과세 월 20만원 · 본인 1인 · 카드를 연봉의 40% 사용 · 다른 공제 없음 · 소득세 기준(지방소득세 제외) · 원 · 차감징수세액 −는 환급', table(['연봉', '총급여', '결정세액', '실효세율', '미리 낸 소득세', '차감징수세액'], rows) + '<p class="sub">실효세율은 결정세액 ÷ 총급여입니다. 내 결정세액이 같은 총급여의 이 표보다 많이 낮으면 부양가족·자녀·연금저축 같은 공제를 많이 받은 것이고, 높으면 공제가 적었거나 다른 소득이 합쳐진 경우가 많습니다.</p>')}
+${section('더 내게 되는 흔한 이유', '차감징수세액이 플러스일 때 먼저 볼 것', `<div class="doc">
+<p><b>① 미리 뗀 세금이 적었다.</b> 회사는 매달 간이세액표로 소득세를 뗍니다. 부양가족 수를 실제보다 많이 신고해 두었거나, 원천징수 비율을 80%로 골랐다면 1년 동안 덜 떼어 2월에 한꺼번에 냅니다. 내 급여명세서의 소득세가 <a href="/guide/withholding-table/">간이세액표</a>와 맞는지 보세요.</p>
+<p><b>② 성과급·상여가 많았다.</b> 상여를 받은 달에 뗀 세금이 1년 전체 세율보다 적으면 정산 때 차이를 냅니다. <a href="/bonus/">성과급 실수령 계산기</a>로 상여 때 얼마를 뗐는지 볼 수 있습니다.</p>
+<p><b>③ 카드 공제 문턱을 못 넘겼다.</b> 신용카드 등은 총급여의 25%를 넘게 쓴 부분부터 공제됩니다. 문턱 아래면 카드 공제는 0원입니다.</p>
+<p><b>④ 부양가족 공제가 빠졌거나 줄었다.</b> 부모님·자녀를 다른 형제나 배우자가 공제받았거나, 가족의 연간 소득금액이 100만원(근로소득만 있으면 총급여 500만원)을 넘으면 기본공제가 빠집니다. 같은 사람을 두 사람이 공제받으면 나중에 가산세와 함께 추징됩니다.</p>
+<p><b>⑤ 이직해서 두 회사 소득이 합쳐졌다.</b> 전 직장 소득을 합쳐 정산하면 과세표준이 올라 세율 구간이 바뀔 수 있습니다. 반대로 전 직장 원천징수영수증을 내지 않아 합쳐지지 않았다면 5월 종합소득세 신고 때 합산해야 하고, 그때 세금을 더 낼 수 있습니다.</p>
+</div>`)}
+${section('돌려받는 날 · 더 내는 날', null, `<div class="doc">
+<p><b>환급·추가 납부는 2월분 급여에서.</b> 회사는 다음 해 2월분 급여를 줄 때 연말정산을 합니다(<a href="${SOURCES.lawIncome}" target="_blank" rel="noopener">소득세법</a> 제137조). 2월분 급여를 3월에 주는 회사는 3월에 들어오거나 빠집니다.</p>
+<p><b>추가 납부가 10만원을 넘으면 나눠 낼 수 있습니다.</b> 추가 납부세액이 10만원을 넘으면 회사가 2월분부터 4월분 급여까지 나눠 뗄 수 있습니다(같은 법 제137조 제4항). 공제 신고서의 분납 신청란에 표시하거나 급여 담당자에게 요청하세요.</p>
+<p><b>결과가 틀렸거나 공제를 빠뜨렸다면.</b> 회사에 다시 정산을 부탁하지 않아도 5월 1~31일 종합소득세 확정신고 때 빠진 공제를 넣어 신고하면 됩니다. 5월이 지나도 법정 신고기한부터 5년 안에는 홈택스 경정청구로 돌려받을 수 있습니다(<a href="${SOURCES.lawBasic}" target="_blank" rel="noopener">국세기본법</a> 제45조의2).</p>
+<p><b>영수증은 어디서.</b> 회사 급여 담당자나 사내 급여 시스템에서 받습니다. 회사는 3월 10일까지 근로소득 지급명세서를 세무서에 내므로(소득세법 제164조), 그 뒤에는 홈택스의 지급명세서 조회 메뉴에서도 볼 수 있습니다.</p>
+</div>`)}
+${section('이어서 계산하기', null, list([
+  { href: '/yearend/', title: '연말정산 환급 계산기', sub: '정산 전에 미리 — 카드·의료비·연금저축을 넣어서' },
+  { href: '/bonus/', title: '성과급·상여금 실수령', sub: '상여 때 뗀 세금이 정산에 어떻게 이어지는지' },
+  { href: '/salary/', title: '연봉 실수령액표', sub: '매달 손에 쥐는 돈' },
+]))}
+${guideLinks(['yearend-refund', 'withholding-table', 'dependents'])}
+<p class="note">입력한 소득세에 지방소득세(10%, 10원 미만 버림)를 더해 계산합니다. 납부특례세액, 외국인·중소기업 취업자 감면은 넣지 않았습니다. 정확한 금액은 회사가 발급한 원천징수영수증과 급여명세서로 확인하세요. <a href="/method/">계산 기준 보기</a></p>`;
+  write(url, shell({ url, title: `연말정산 결과 보는 법 — 결정세액·기납부세액·차감징수세액 마이너스면 환급 (${YEAR}년 귀속)`, desc: `원천징수영수증의 결정세액과 기납부세액을 넣으면 차감징수세액, 지방소득세까지 합친 환급·추가 납부액, 10만원 넘는 추가 납부의 분납, 같은 총급여의 보통 결정세액과 비교를 바로 보여 줍니다. 연봉 ${yeLab(5000)}원이면 결정세액 ${won(r.determined)}, 차감징수세액 ${sign(exDiff)}원.`, body, nav: 'yearend', scripts: ['/js/yearend-result.js'] }));
 }
 
 /* ---------- 임베드 위젯 ---------- */
@@ -4047,7 +4126,7 @@ taxReceiptIndex(); SALARIES.forEach(taxReceiptPage);
 goalIndex(); GOALS.forEach((g) => SAVE_M.forEach((mm) => goalPage(g, mm)));
 negotiateIndex(); SALARIES.forEach(negotiatePage);
 historyIndex(); SALARIES.forEach(historyPage);
-yearendPage(); yearendSalaryPages(); bonusPage(); embedPages();
+yearendPage(); yearendSalaryPages(); yearendResultPage(); bonusPage(); embedPages();
 giftIndex(); GIFT_RELS.forEach((r) => { giftRelIndex(r); GIFT_AMOUNTS.forEach((m) => giftPage(r, m)); });
 bokbiIndex(); BOKBI.forEach(bokbiPage);
 acqIndex(); ACQ.forEach(acqPage);

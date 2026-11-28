@@ -40,7 +40,8 @@ export function makeBundle(NT = 200000) {
     wrap('NH', strip(read('nhis.mjs')), ['nhisEmployee: employee', 'nhisLocal: local', 'longTerm', 'propertyPoints', 'PROPERTY_TABLE', 'HEALTH_RATE', 'HALF_RATE', 'CARE_RATE', 'WAGE_MAX', 'WAGE_MIN', 'PREMIUM_MAX', 'PREMIUM_MIN', 'POINT_VALUE', 'LOCAL_MIN', 'LOCAL_MIN_INCOME', 'PROPERTY_DEDUCTION', 'NHIS_ASOF', 'NHIS_URL', 'HEALTH_PCT', 'HALF_PCT', 'CARE_PCT']),
     wrap('DEP', strip(read('dependent.mjs')), ['dependent', 'supportTest', 'explainDependent: explain', 'dependentLocalIncome: localIncome', 'DEP_STATUS', 'DEP_VERDICT', 'DEP_RELATIONS', 'DEP_INCOME_LIMIT', 'DEP_FINANCE_FLOOR', 'DEP_BUSINESS_LIMIT', 'DEP_PROPERTY_LOW', 'DEP_PROPERTY_HIGH', 'DEP_PROPERTY_MID_INCOME', 'DEP_PROPERTY_SIBLING', 'DEP_SIBLING_YOUNG', 'DEP_SIBLING_OLD', 'DEP_ASOF']),
     wrap('JB', strip(read('property.mjs')) + '\n' + strip(read('jongbu.mjs')), ['jongbu', 'propertyTax', 'oneHomeRatio', 'JB_ASOF', 'JB_DEDUCT', 'JB_TWO', 'JB_THREE', 'AGE_CREDIT', 'HOLD_CREDIT', 'CREDIT_MAX']),
-    `window.Donpyo = Object.assign({ YEAR, RATES, NT: ${NT} }, F, T, L, K, A, G, Y, S, P, E, EI, NP, CG, CC, AN, FL, NH, JB, DEP);`,
+    wrap('GT', strip(read('gift.mjs')), ['giftTax', 'freeLimit', 'GIFT_RELATIONS: RELATIONS', 'GIFT_BRACKETS', 'MARRIAGE_DEDUCTION']),   /* 2026-11-28 증여세 계산기 */
+    `window.Donpyo = Object.assign({ YEAR, RATES, NT: ${NT} }, F, T, L, K, A, G, Y, S, P, E, EI, NP, CG, CC, AN, FL, NH, JB, DEP, GT);`,
   ];
   return `/* 돈표 계산 엔진 — 브라우저용, 빌드 때 engine/*.mjs 에서 생성 */\n(function(){\n${parts.join('\n')}\n})();\n`;
 }

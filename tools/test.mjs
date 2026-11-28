@@ -554,6 +554,7 @@ ok(EI.childCredit(10000000, 'single').raw === 0 && EI.eitc({ type: 'single', wag
   ok(B.nhisEmployee(3000000).employee === NH.employee(3000000).employee && B.nhisLocal({ income: 30000000 }).total === 203360 && B.propertyPoints(300000000) === 100 && B.POINT_VALUE === 211.5, '번들 nhisEmployee · nhisLocal · propertyPoints');
   ok(B.jongbu(2000000000).total === 2275200 && B.jongbu(3000000000, { age: 70, years: 10 }).total === JB.jongbu(3000000000, { age: 70, years: 10 }).total && B.propertyTax(1500000000).total === 3429000, '번들 jongbu · propertyTax');
   ok(B.bonusWithholding({ monthly: 3500000, nontax: 200000, bonus: 3500000, months: 12 }).tax === 410760 && B.bonusWithholding({ monthly: 3500000, nontax: 200000, bonus: 3500000, months: 12 }).net === 2874320 && B.BONUS_LAW === '소득세법 시행령 제146조', '번들 bonusWithholding');
+  ok(B.giftTax(100000000, 'child').tax === GT.giftTax(100000000, 'child').tax && B.giftTax(300000000, 'child', { prior: 50000000, marriage: true }).tax === GT.giftTax(300000000, 'child', { prior: 50000000, marriage: true }).tax && B.giftTax(200000000, 'grandchild').tax === GT.giftTax(200000000, 'grandchild').tax && B.freeLimit('relative') === 10000000 && B.GIFT_RELATIONS.spouse.deduction === 600000000, '번들 giftTax · freeLimit (증여세 계산기)');
 }
 
 console.log(`test: ${pass} pass, ${fail} fail`);

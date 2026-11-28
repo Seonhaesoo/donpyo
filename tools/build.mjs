@@ -120,6 +120,7 @@ const SEASON_DATE = '2026-11-21';
 const YE_RESULT_DATE = '2026-11-28';
 const PAGE_LASTMOD = [
   [/^\/(yearend\/result|updates)\/$/, YE_RESULT_DATE],
+  [/^\/gift-tax\/([a-z]+\/)?$/, YE_RESULT_DATE],      /* 2026-11-28 증여세 허브·관계별 허브에 입력 계산기 */
   [/^\/((monthly|net)\/(\d+\/)?|salary\/|updates\/)$/, SEASON_DATE],
   [/^\/(yearend|method|updates)\/$/, YE_DATE],
   [/^\/car-tax\/$/, '2026-11-16'],                   /* 연납 시기별 표를 더한 날 */
@@ -1867,6 +1868,7 @@ const guideModified = (g) => g.modified || ((g.published || '2026-09-06') > '202
 
 /* 업데이트 기록 — 이용자에게 보이는 변경만, 최근 것부터. 글·요율을 고칠 때 맨 위에 한 줄 더한다 */
 const UPDATES = [
+  { date: '2026-11-28', text: '<a href="/gift-tax/">증여세</a> 허브와 관계별 표(<a href="/gift-tax/child/">자녀</a>·<a href="/gift-tax/relative/">형제·친족</a> 등)에 증여세 계산기를 넣었습니다 — 관계와 금액, 받는 사람이 10년 안에 이미 받은 증여, 혼인·출산 공제 1억원을 넣으면 공제·과세표준·세율·할증·신고세액공제와 남은 공제, 분납·연부연납 가능 여부를 바로 보여 줍니다. 금액별 페이지에서도 버튼으로 이어집니다.' },
   { date: '2026-11-28', text: '<a href="/yearend/result/">연말정산 결과 보는 법</a>을 더했습니다 — 2월에 받는 원천징수영수증의 결정세액·기납부세액을 넣으면 차감징수세액과 지방소득세까지 합친 환급·추가 납부액, 10만원 넘는 추가 납부의 분납(소득세법 제137조 제4항), 같은 총급여의 보통 결정세액과 비교를 보여 줍니다. 11월부터 3월까지 상단 메뉴에 연말정산을 두고, 연봉·월급 금액 페이지에서 <a href="/yearend/4000/">연봉별 연말정산</a> 페이지로 바로 이어지게 했습니다.' },
   { date: '2026-11-21', text: '<a href="/monthly/">월급 실수령액표</a>·<a href="/net/">실수령액으로 연봉 찾기</a>·<a href="/salary/">연봉 실수령액표</a>를 2027년과 2026년 나란히 보여 주도록 바꿨습니다 — 2027년 실수령(또는 필요 연봉)을 앞에 두고 2026년과 차이를 함께 적었으며, 월급·실수령 금액 페이지 맨 위에도 2027년 1월부터의 금액을 먼저 보여 줍니다. 아직 확정되지 않은 2027년 요율은 표 아래에 적었습니다. 1월 연말정산을 앞두고 이 세 표와 홈에 <a href="/yearend/">연말정산 미리보기</a> 바로 가기를 두었습니다.' },
   { date: '2026-11-16', text: '<a href="/yearend/">연말정산 환급 계산기(미리보기)</a>에 2027년 연말정산 일정(법정 기한과 예년 기준 간소화 일정을 나눠 표시), 2026년 귀속 공제 항목 체크리스트(신용카드·주택청약·연금저축·의료비·월세·교육비·기부금·고향사랑·자녀·결혼, 법제처 조문 근거), 12월 31일까지 할 수 있는 것, 연봉 5,000만원 예시를 더했습니다. 계산기에 2026년부터 늘어난 자녀 수별 신용카드 공제 한도(7세 이하 자녀 칸 추가), 주택청약 소득공제, 기부금 세액공제를 넣었습니다.' },
@@ -2466,6 +2468,24 @@ const led = (title, unit, rows) => `<div class="ledger"><div class="lg-head"><h2
 const neg = (v) => v ? '−' + num(v) : '0';
 const GIFT_NOTE = `<p class="note">상속세 및 증여세법 기준의 추정입니다. 증여재산가액은 시가(아파트는 유사 매매사례가액, 없으면 공시가격 등)로 평가하고, 부담부증여의 채무·감정평가수수료·기납부세액은 반영하지 않았습니다. 금액이 크면 세무사 상담을 권합니다. <a href="/method/">계산 기준 보기</a></p>`;
 
+/* 2026-11-28 증여세 계산기 — 관계·금액·10년 안 이전 증여·혼인·출산 공제를 넣으면 그 자리에서 계산(src/js/gift.js, 브라우저 엔진 = engine/gift.mjs).
+ * 증여세 허브와 관계별 허브(/gift-tax/relative/ 는 돈표 조회 3위인데 표만 있었다)에 둔다. 금액 페이지에서는 버튼으로 이어 준다 */
+function giftCalc(rel = 'child', amount = 10000) {
+  const opts = GIFT_RELS.map((r) => `<option value="${r}"${r === rel ? ' selected' : ''}>${GT.RELATIONS[r].label}</option>`).join('');
+  return `<form class="quick ye-form" id="gc-form">
+<div class="ye-grid">
+<label class="ye-f"><span>누구에게 주나</span><select id="gc-rel">${opts}</select></label>
+<label class="ye-f"><span>이번 증여액 (만원)</span><input id="gc-amount" type="text" inputmode="numeric" value="${num(amount)}"></label>
+<label class="ye-f"><span>받는 사람이 10년 안에 이미 받은 증여 (만원 · 선택)</span><input id="gc-prior" type="text" inputmode="numeric" placeholder="0"></label>
+</div>
+<div class="ye-checks"><label><input type="checkbox" id="gc-marriage"> 혼인·출산 공제 1억원 (부모·조부모에게서, 혼인신고 전후 2년 또는 출생 후 2년 안)</label></div>
+<p class="sub" style="margin-top:4px">증여세는 받는 사람이 냅니다. 이미 받은 증여는 이번과 공제를 함께 쓰는 쪽에게서 받은 것만 넣으세요 — 부모·조부모(외가 포함)는 한 묶음, 배우자, 형제·친족은 각각 따로입니다. 10년 안의 증여는 합쳐서 세율을 매기고 그때 낸 세금(산출세액)을 뺍니다.</p>
+</form>
+<div class="hero"><div class="hero-label" id="gc-label">납부할 증여세</div><div class="hero-num"><span class="num" id="gc-result">0</span><span class="unit">원</span></div><div class="hero-sub" id="gc-sub">계산 중</div></div>
+<div id="gc-tips"></div>
+<div class="ledger"><div class="lg-head"><h2>계산 흐름</h2><span>원</span></div><div id="gc-rows"></div></div>`;
+}
+
 function giftPage(rel, m) {
   const A = m * 10000, url = giftUrl(rel, m), R = GT.RELATIONS[rel];
   const g = GT.giftTax(A, rel);
@@ -2482,6 +2502,7 @@ ${crumb([['/gift-tax/', '증여세'], [giftUrl(rel), R.label], [null, manwon(A)]
 ${lead(g.base === 0 ? `${manwon(A)}은 ${R.label} 공제 ${manwon(GT.freeLimit(rel))} 안에 들어 과세표준이 없고 증여세도 없습니다. 세금이 없어도 신고는 해 두는 편이 나중에 자금 출처를 밝힐 때 편합니다.` : `${g.deduction ? `${manwon(A)} 중 ${manwon(g.deduction)}은 공제되어 과세표준은 ${manwon(g.base)}` : `${manwon(A)}은 공제 없이 전액인 ${manwon(g.base)}이 과세표준`}, 여기에 ${pct(g.rate, 0)} 세율${g.progressiveDeduct ? `(누진공제 ${manwon(g.progressiveDeduct)})` : ''}을 적용한 ${won(g.calc)}${g.surcharge ? `에 세대생략 할증 30%를 더하고` : '에서'} 신고세액공제 3%를 빼면 ${won(g.tax)}, 증여액의 ${pct(g.effective, 1)}입니다.`)}
 ${hero({ label: '납부할 증여세', value: g.tax, sub: g.tax ? `증여액의 ${pct(g.effective, 1)} · 받는 사람 손에 ${won(g.net)}` : `${R.label} 공제 ${manwon(R.deduction)} 안이라 세금 없음` })}
 ${led('계산 흐름', '원', rows)}
+<p style="margin:14px 0"><a class="btn" href="${giftUrl(rel)}?a=${m}#calc">다른 금액·10년 안에 받은 증여까지 계산하기 →</a></p>
 ${mg ? section('혼인·출산 공제를 받으면', '혼인신고 전후 2년 또는 자녀 출생 후 2년 안에 직계존속에게 받는 증여는 1억원을 더 공제 (기본 공제와 합쳐 최대 1억 5,000만원)', tiles([{ label: '공제 합계', value: mg.deduction }, { label: '과세표준', value: mg.base }, { label: '증여세', value: mg.tax }])) : ''}
 ${section('같은 금액, 다른 관계', `${manwon(A)}을 누구에게 주느냐에 따라`, table(['관계', '공제', '과세표준', '증여세'], GIFT_RELS.map((r) => { const x = GT.giftTax(A, r); return { cls: r === rel ? 'on' : '', cells: [r === rel ? GT.RELATIONS[r].label : `<a href="${giftUrl(r, m)}">${GT.RELATIONS[r].label}</a>`, num(x.deduction), num(x.base), num(x.tax)] }; })))}
 ${section('금액이 바뀌면', `${R.label} 기준 증여세`, chips(neighbors(GIFT_AMOUNTS, m, 3).map((x) => ({ label: short(x * 10000), value: GT.giftTax(x * 10000, rel).tax, href: giftUrl(rel, x), on: x === m }))))}
@@ -2506,11 +2527,13 @@ ${crumb([['/gift-tax/', '증여세'], [null, R.label]])}
 <h1 class="title">${REL_TO[rel]} 증여할 때 증여세 — 금액별</h1>
 <p class="meta">${REL_FROM[rel]} 주는 경우 · ${GT.freeLimit(rel) ? `공제 ${manwon(GT.freeLimit(rel))} (10년 합산)` : '공제 없음'} · 신고세액공제 3% 반영</p>
 ${lead(REL_RULE[rel])}
+<div id="calc"></div>
+${giftCalc(rel, rel === 'spouse' ? 70000 : rel === 'relative' || rel === 'other' || rel === 'minor' ? 3000 : 10000)}
 ${section('금액별 증여세', '원 · 금액을 누르면 계산 흐름과 절세 방법', table(['증여액', '공제', '과세표준', '증여세', '실효세율'], rows))}
 ${section('다른 관계', null, chips(GIFT_RELS.filter((r) => r !== rel).map((r) => ({ label: GT.RELATIONS[r].short, value: GT.giftTax(100000000, r).tax, href: giftUrl(r) }))))}
 <p class="sub">칩의 숫자는 1억원을 줄 때의 증여세입니다.</p>
 ${GIFT_NOTE}`;
-  write(url, shell({ url, title: `${REL_TO[rel]} 증여세 계산표 — 1,000만원부터 50억원까지 (${YEAR}년)`, desc: `${REL_FROM[rel]} 증여할 때 금액별 증여세. ${GT.freeLimit(rel) ? `공제 ${manwon(GT.freeLimit(rel))}` : '공제 없음'}, 세율 10~50%, 신고세액공제 3%를 반영했습니다.`, body }));
+  write(url, shell({ url, title: `${REL_TO[rel]} 증여세 계산표 — 1,000만원부터 50억원까지 (${YEAR}년)`, desc: `${REL_FROM[rel]} 증여할 때 증여세 계산기와 금액별 표. 금액과 10년 안에 받은 증여를 넣으면 바로 계산합니다. ${GT.freeLimit(rel) ? `공제 ${manwon(GT.freeLimit(rel))}` : '공제 없음'}, 세율 10~50%, 신고세액공제 3%를 반영했습니다.`, body, scripts: ['/js/engine.js', '/js/gift.js'] }));
 }
 
 function giftIndex() {
@@ -2520,6 +2543,8 @@ ${crumb([['/', '홈'], [null, '증여세']])}
 <h1 class="title">증여세 계산표 — 자녀·배우자·부모·친족·타인</h1>
 <p class="meta">${YEAR}년 상속세 및 증여세법 · 10년 합산 공제와 10~50% 누진세율, 신고세액공제 3% 반영</p>
 ${lead(`증여세는 받는 사람이 냅니다. 배우자에게는 6억원, 부모가 자녀에게는 5,000만원(미성년 2,000만원), 혼인·출산 때는 1억원을 더해 세금 없이 줄 수 있고, 그 위로는 1억원까지 10%부터 30억원 초과 50%까지 올라갑니다. 자녀에게 1억원을 주면 ${won(GT.giftTax(100000000, 'child').tax)}, 3억원이면 ${won(GT.giftTax(300000000, 'child').tax)}입니다.`)}
+<div id="calc"></div>
+${giftCalc('child', 10000)}
 ${section('금액 × 관계', '증여세(원) · 칸을 누르면 계산 흐름', table(['증여액', '성년 자녀', '미성년 자녀', '배우자', '형제·친족', '타인'], rows))}
 ${section('관계별로 보기', '10년 동안 세금 없이 줄 수 있는 금액', list(GIFT_RELS.map((r) => ({ href: giftUrl(r), title: GT.RELATIONS[r].label, sub: r === 'grandchild' ? '공제 5,000만원 · 산출세액 30% 할증' : GT.freeLimit(r) ? `공제 ${manwon(GT.freeLimit(r))}${GT.RELATIONS[r].lineal ? ' · 혼인·출산 시 +1억' : ''}` : '공제 없음 · 전액 과세', value: GT.freeLimit(r) }))))}
 ${ad()}
@@ -2531,7 +2556,7 @@ ${section('자주 묻는 것', null, `<div class="doc">
 <p><b>상속세와 무엇이 다른가요?</b> 상속은 사망 시점에 전체 재산에 매기며 일괄공제 5억원과 배우자공제(최소 5억원)가 있어 대개 10억원까지 세금이 없습니다. 증여는 살아 있을 때 나눠 주는 것이고 사망 전 10년(상속인 외는 5년) 안의 증여는 상속재산에 다시 합산됩니다.</p>
 </div>`)}
 ${GIFT_NOTE}`;
-  write('/gift-tax/', shell({ url: '/gift-tax/', title: `증여세 계산표 — 자녀·배우자·부모·친족 금액별 세금 (${YEAR}년)`, desc: '자녀 1억, 배우자 10억처럼 금액과 관계별로 증여세를 미리 계산했습니다. 10년 합산 공제(배우자 6억·자녀 5,000만·혼인 출산 1억), 10~50% 세율, 신고세액공제 3% 반영.', body }));
+  write('/gift-tax/', shell({ url: '/gift-tax/', title: `증여세 계산기 — 자녀·배우자·부모·친족 금액별 증여세 (${YEAR}년)`, desc: '관계와 금액, 10년 안에 받은 증여, 혼인·출산 공제를 넣으면 증여세를 바로 계산합니다. 자녀 1억, 배우자 10억처럼 금액·관계별 표도 함께. 10년 합산 공제(배우자 6억·자녀 5,000만·혼인 출산 1억), 10~50% 세율, 신고세액공제 3% 반영.', body, scripts: ['/js/engine.js', '/js/gift.js'] }));
 }
 
 /* ---------- 복비 (중개보수) ---------- */
